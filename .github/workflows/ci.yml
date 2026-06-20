@@ -86,7 +86,7 @@ jobs:
 
       - name: Install test dependencies
         run: |
-          uv pip install pytest pytest-asyncio pytest-cov httpx freezegun alembic \
+          uv pip install pytest "pytest-asyncio==0.23.8" pytest-cov httpx freezegun alembic \
             "python-jose[cryptography]" pydantic "pydantic[email]" pydantic-settings \
             structlog passlib pyotp fastapi sqlalchemy "sqlalchemy[asyncio]" asyncpg
 
