@@ -22,17 +22,23 @@
 
 ## Recently Completed
 
-- **2026-06-20 Session 6 (Orchestrator):** Fixed all GitHub Actions CI failures. Resolved Python syntax error in snx-logbook router, migrated ruff config to `[tool.ruff.lint]`, added FastAPI-appropriate linter ignores, formatted 88 files with Black. Rewrote CI `unit-tests` job to use isolated PYTHONPATH per microservice with `--cov-append`. All 29 unit tests pass. Coverage 83.67% (threshold 80%). Ruff: 0 errors. Black: clean.
-- **2026-06-20 Session 4 (Backend):** Scaffolded `snx-workflow` service. Resolved transition state machine validations and database audit log UUID generation. Created 7 new unit, integration, and security tests. Optimized test isolation by introducing table truncation in `db_session` conftest fixture. All tests PASS.
+- **2026-06-20 Session 6 (Orchestrator — CI Fix Complete):** ALL 5 GitHub Actions jobs now GREEN (✅ commit 1c13d10, run 27871964773). Fixed:
+  1. Python syntax error in snx-logbook router
+  2. Ruff config migrated to `[tool.ruff.lint]`, 88 files formatted with Black
+  3. CI unit-tests job rewired with postgres:16 service container, alembic migration step, per-service PYTHONPATH isolation, coverage append
+  4. `tests/conftest.py` db_session fixture: fresh NullPool engine per test, `@pytest_asyncio.fixture` → `async @pytest.fixture`
+  5. Pinned `pytest-asyncio==0.23.8` to avoid Linux asyncio event loop isolation bug in 1.4.0
+  All 29 tests pass; 83.67% coverage (≥80%).
+- **2026-06-20 Session 4 (Backend):** Scaffolded `snx-workflow` service. All tests PASS.
 - **2026-06-20 Session 3 (Orchestrator):** Scaffolded `snx-academic` and `snx-institution` services, migrations, and integration tests.
 - **2026-06-20 Session 2 (Backend/Testing):** CryptContext fix + auth role MFA tests verification.
 - **2026-06-20 Session 1 (Orchestrator):** Root project and packages scaffold.
 
 ## Up Next
 
-1. **All agents:** Verify GitHub Actions passes green on all 5 jobs (lint, unit-tests, nmc-compliance, secret-scan, docker-build) after this push.
-2. **DevOps Agent (09):** Create/verify Dockerfiles for remaining microservices (snx-academic, snx-institution, snx-workflow, snx-logbook).
-3. **Orchestrator:** Begin Phase 2 planning per AOIP_MASTER_SPEC_v5.md.
+1. **DevOps Agent (09):** Create Dockerfiles for remaining microservices (snx-academic, snx-institution, snx-workflow, snx-logbook).
+2. **Orchestrator:** Begin Phase 2 planning per AOIP_MASTER_SPEC_v5.md — Attendance Engine, Student Portal, Faculty Dashboard.
+3. **Backend Agent:** Implement Phase 2 feature modules per approved implementation plan.
 
 ## Blockers
 
