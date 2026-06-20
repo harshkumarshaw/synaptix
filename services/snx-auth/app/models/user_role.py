@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
+
 from packages.shared.db.base import TenantScopedBase
 
 
@@ -24,7 +24,5 @@ class UserRole(TenantScopedBase):
     role_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("roles.id", ondelete="CASCADE"), nullable=False
     )
-    granted_at: Mapped[datetime] = mapped_column(
-        nullable=False, server_default="NOW()"
-    )
-    granted_by_user_id: Mapped[Optional[uuid.UUID]] = mapped_column(nullable=True)
+    granted_at: Mapped[datetime] = mapped_column(nullable=False, server_default="NOW()")
+    granted_by_user_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)

@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import uuid
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -22,7 +21,7 @@ class FacultyResponse(BaseModel):
     tenant_id: uuid.UUID
     user_id: uuid.UUID
     full_name: str
-    email: Optional[str]
+    email: str | None
     department_id: uuid.UUID
     designation: str
     employee_id: str
@@ -37,9 +36,9 @@ class StudentResponse(BaseModel):
     tenant_id: uuid.UUID
     user_id: uuid.UUID
     full_name: str
-    email: Optional[str]
+    email: str | None
     batch_id: uuid.UUID
-    section_id: Optional[uuid.UUID]
+    section_id: uuid.UUID | None
     roll_number: str
     admission_year: int
     status: str
@@ -49,4 +48,6 @@ class StudentResponse(BaseModel):
 
 
 class StudentStatusUpdateRequest(BaseModel):
-    status: str = Field(..., description="New student status, e.g. detained, transferred, active, graduated")
+    status: str = Field(
+        ..., description="New student status, e.g. detained, transferred, active, graduated"
+    )

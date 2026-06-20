@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, BigInteger
+from typing import Any
+
+from app.models.user import User
+from sqlalchemy import BigInteger, ForeignKeyConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
 from packages.shared.db.base import TenantScopedBase
-from app.models.user import User
 
 
 class DigitalAsset(TenantScopedBase):
@@ -18,7 +20,9 @@ class DigitalAsset(TenantScopedBase):
     storage_path: Mapped[str] = mapped_column(nullable=False)
     uploaded_by: Mapped[uuid.UUID] = mapped_column(nullable=False)
     sha256: Mapped[str] = mapped_column(nullable=False)
-    meta_attributes: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default="{}", nullable=False)
+    meta_attributes: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default="{}", nullable=False
+    )
 
     # Composite Foreign Key Constraints
     __table_args__ = (

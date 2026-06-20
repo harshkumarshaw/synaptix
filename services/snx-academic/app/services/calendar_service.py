@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-import uuid
 import datetime
-from typing import Annotated, List, Optional
-from fastapi import Depends
-from sqlalchemy import select, update, and_
-from sqlalchemy.orm import selectinload, joinedload
-from sqlalchemy.ext.asyncio import AsyncSession
+import uuid
+from typing import Annotated
 
+from fastapi import Depends
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
+
+from app.models.calendar import Event, EventCourse, EventFaculty
+from app.models.course import Course
+from app.schemas.calendar import EventCreate
+from app.services.audit_logger import write_audit_log
 from packages.shared.db.session import get_db
 from packages.shared.logging import get_logger
-from app.models.calendar import Event, EventFaculty, EventCourse
-from app.models.course import Course
-from app.schemas.calendar import EventCreate, EventUpdate
-from app.services.audit_logger import write_audit_log
 
 logger = get_logger(__name__)
 
@@ -23,7 +24,7 @@ class CalendarService:
         self.db = db
 
     async def create_event(
-        self, tenant_id: uuid.UUID, event_in: EventCreate, actor_id: Optional[uuid.UUID] = None
+        self, tenant_id: uuid.UUID, event_in: EventCreate, actor_id: uuid.UUID | None = None
     ) -> Event:
         # Determine the primary course from event_in.courses to fetch default_attendance_category
         primary_course_id = None
@@ -31,16 +32,18 @@ class CalendarService:
             if course_item.is_primary:
                 primary_course_id = course_item.course_id
                 break
-        
+
         # Fallback if no course is marked is_primary
         if not primary_course_id and event_in.courses:
             primary_course_id = event_in.courses[0].course_id
-            
+
         if not primary_course_id:
             raise ValueError("An event must have at least one course associated with it.")
 
         # Fetch course default_attendance_category (EC-014 compliance)
-        course_stmt = select(Course).where(Course.tenant_id == tenant_id, Course.id == primary_course_id)
+        course_stmt = select(Course).where(
+            Course.tenant_id == tenant_id, Course.id == primary_course_id
+        )
         res = await self.db.execute(course_stmt)
         course = res.scalar_one_or_none()
         if not course:
@@ -91,21 +94,19 @@ class CalendarService:
                 tenant_id=tenant_id,
                 event_id=event.id,
                 course_id=course_item.course_id,
-                is_primary=(course_item.course_id == primary_course_id)
+                is_primary=(course_item.course_id == primary_course_id),
             )
             self.db.add(ec)
 
         # Insert event faculty
         for fac_item in event_in.assigned_faculty:
             ef = EventFaculty(
-                tenant_id=tenant_id,
-                event_id=event.id,
-                faculty_id=fac_item.faculty_id
+                tenant_id=tenant_id, event_id=event.id, faculty_id=fac_item.faculty_id
             )
             self.db.add(ef)
 
         await self.db.flush()
-        
+
         # Write to audit log
         await write_audit_log(
             db=self.db,
@@ -118,19 +119,16 @@ class CalendarService:
                 "title": event.title,
                 "event_type": event.event_type,
                 "attendance_category": event.attendance_category,
-                "date": str(event.date)
-            }
+                "date": str(event.date),
+            },
         )
 
         return event
 
-    async def get_event(self, tenant_id: uuid.UUID, event_id: uuid.UUID) -> Optional[Event]:
+    async def get_event(self, tenant_id: uuid.UUID, event_id: uuid.UUID) -> Event | None:
         stmt = (
             select(Event)
-            .options(
-                selectinload(Event.courses),
-                selectinload(Event.assigned_faculty)
-            )
+            .options(selectinload(Event.courses), selectinload(Event.assigned_faculty))
             .where(Event.tenant_id == tenant_id, Event.id == event_id, Event.deleted_at.is_(None))
         )
         res = await self.db.execute(stmt)
@@ -138,7 +136,7 @@ class CalendarService:
 
     async def cancel_event(
         self, tenant_id: uuid.UUID, event_id: uuid.UUID, reason: str, actor_id: uuid.UUID
-    ) -> Optional[Event]:
+    ) -> Event | None:
         event = await self.get_event(tenant_id, event_id)
         if not event:
             return None
@@ -147,7 +145,7 @@ class CalendarService:
         event.cancellation_reason = reason
         event.cancelled_by = actor_id
         event.updated_by = actor_id
-        
+
         await self.db.flush()
 
         await write_audit_log(
@@ -157,22 +155,24 @@ class CalendarService:
             action="CANCEL",
             resource_type="event",
             resource_id=event.id,
-            new_values={"status": "cancelled", "reason": reason}
+            new_values={"status": "cancelled", "reason": reason},
         )
         return event
 
     async def reschedule_event(
-        self, tenant_id: uuid.UUID, event_id: uuid.UUID, new_date: datetime.date,
-        new_start: datetime.time, new_end: datetime.time, actor_id: uuid.UUID
+        self,
+        tenant_id: uuid.UUID,
+        event_id: uuid.UUID,
+        new_date: datetime.date,
+        new_start: datetime.time,
+        new_end: datetime.time,
+        actor_id: uuid.UUID,
     ) -> Event:
         # Rescheduling (EC-110 compliance)
         # 1. Fetch original event
         stmt = (
             select(Event)
-            .options(
-                selectinload(Event.courses),
-                selectinload(Event.assigned_faculty)
-            )
+            .options(selectinload(Event.courses), selectinload(Event.assigned_faculty))
             .where(Event.tenant_id == tenant_id, Event.id == event_id)
         )
         res = await self.db.execute(stmt)
@@ -202,7 +202,7 @@ class CalendarService:
             status="scheduled",
             parent_event_id=original.id,  # Maintains reference to original
             created_by=actor_id,
-            updated_by=actor_id
+            updated_by=actor_id,
         )
         self.db.add(new_event)
         await self.db.flush()
@@ -213,16 +213,12 @@ class CalendarService:
                 tenant_id=tenant_id,
                 event_id=new_event.id,
                 course_id=c.course_id,
-                is_primary=c.is_primary
+                is_primary=c.is_primary,
             )
             self.db.add(ec)
 
         for f in original.assigned_faculty:
-            ef = EventFaculty(
-                tenant_id=tenant_id,
-                event_id=new_event.id,
-                faculty_id=f.faculty_id
-            )
+            ef = EventFaculty(tenant_id=tenant_id, event_id=new_event.id, faculty_id=f.faculty_id)
             self.db.add(ef)
 
         await self.db.flush()
@@ -234,7 +230,7 @@ class CalendarService:
             action="RESCHEDULE",
             resource_type="event",
             resource_id=new_event.id,
-            new_values={"parent_event_id": str(original.id), "date": str(new_date)}
+            new_values={"parent_event_id": str(original.id), "date": str(new_date)},
         )
 
         return new_event

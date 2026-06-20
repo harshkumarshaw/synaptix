@@ -1,27 +1,27 @@
 from app.schemas.academic import (
-    ProgramResponse,
-    CourseResponse,
     BatchResponse,
-    TimetableSlotResponse,
+    CourseResponse,
+    ProgramResponse,
     TimetableEntryResponse,
+    TimetableSlotResponse,
 )
 from app.schemas.calendar import (
     EventCreate,
-    EventUpdate,
     EventResponse,
-)
-from app.schemas.lesson_plan import (
-    LessonPlanCreate,
-    LessonPlanUpdate,
-    LessonPlanResponse,
-)
-from app.schemas.session import (
-    SessionCreate,
-    SessionResponse,
+    EventUpdate,
 )
 from app.schemas.curriculum_migration import (
     CurriculumMigrationAuditCreate,
     CurriculumMigrationAuditResponse,
+)
+from app.schemas.lesson_plan import (
+    LessonPlanCreate,
+    LessonPlanResponse,
+    LessonPlanUpdate,
+)
+from app.schemas.session import (
+    SessionCreate,
+    SessionResponse,
 )
 
 __all__ = [

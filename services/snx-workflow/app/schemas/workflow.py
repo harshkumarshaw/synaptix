@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime
-from typing import Any, Optional
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from typing import Any
+
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class WorkflowStepItem(BaseModel):
@@ -15,7 +16,7 @@ class WorkflowStepItem(BaseModel):
 class WorkflowDefinitionBase(BaseModel):
     name: str
     code: str
-    description: Optional[str] = None
+    description: str | None = None
     steps: dict[str, WorkflowStepItem]
     is_active: bool = True
 
@@ -29,7 +30,9 @@ class WorkflowDefinitionCreate(WorkflowDefinitionBase):
         for step_name, step_item in v.items():
             for next_step in step_item.next_steps:
                 if next_step not in v and next_step not in ("approved", "rejected", "cancelled"):
-                    raise ValueError(f"Step '{step_name}' has invalid transition target '{next_step}'")
+                    raise ValueError(
+                        f"Step '{step_name}' has invalid transition target '{next_step}'"
+                    )
         return v
 
 
@@ -40,7 +43,7 @@ class WorkflowDefinitionResponse(BaseModel):
     tenant_id: uuid.UUID
     name: str
     code: str
-    description: Optional[str]
+    description: str | None
     version: int
     is_current: bool
     steps: dict[str, WorkflowStepItem]
@@ -65,14 +68,14 @@ class WorkflowInstanceResponse(BaseModel):
     entity_id: uuid.UUID
     current_step: str
     status: str
-    current_assignee_id: Optional[uuid.UUID]
-    current_assignee_role: Optional[str]
-    due_at: Optional[datetime]
+    current_assignee_id: uuid.UUID | None
+    current_assignee_role: str | None
+    due_at: datetime | None
     history: list[dict[str, Any]]
     context: dict[str, Any]
 
 
 class WorkflowTransitionCreate(BaseModel):
     to_step: str
-    comment: Optional[str] = None
+    comment: str | None = None
     # actor_id is extracted from JWT user context

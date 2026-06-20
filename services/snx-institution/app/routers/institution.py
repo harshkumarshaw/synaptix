@@ -5,8 +5,6 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from packages.shared.auth.dependencies import get_current_user, require_roles
-from packages.shared.auth.jwt import TokenPayload
 from app.schemas.institution import (
     DepartmentResponse,
     FacultyResponse,
@@ -14,6 +12,8 @@ from app.schemas.institution import (
     StudentStatusUpdateRequest,
 )
 from app.services.institution_service import InstitutionService
+from packages.shared.auth.dependencies import get_current_user, require_roles
+from packages.shared.auth.jwt import TokenPayload
 
 router = APIRouter(prefix="/institution", tags=["institution"])
 
@@ -103,9 +103,7 @@ async def update_student_status(
     ],
     service: Annotated[InstitutionService, Depends(InstitutionService)],
 ) -> StudentResponse:
-    s = await service.update_student_status(
-        current_user.tenant_uuid, student_id, body.status
-    )
+    s = await service.update_student_status(current_user.tenant_uuid, student_id, body.status)
     return StudentResponse(
         id=s.id,
         tenant_id=s.tenant_id,

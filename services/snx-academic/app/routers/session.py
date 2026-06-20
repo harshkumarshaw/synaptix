@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.schemas.session import SessionCreate, SessionResponse
+from app.services.session_tracking_service import SessionTrackingService
 from packages.shared.auth.dependencies import get_current_user
 from packages.shared.auth.jwt import TokenPayload
 from packages.shared.errors import ResourceNotFoundError, ValidationError
-from app.schemas.session import SessionCreate, SessionResponse
-from app.services.session_tracking_service import SessionTrackingService
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
@@ -28,7 +29,7 @@ async def conduct_session(
         session = await service.conduct_session(
             tenant_id=current_user.tenant_uuid,
             session_in=session_in,
-            actor_id=current_user.user_uuid
+            actor_id=current_user.user_uuid,
         )
         # Fetch detailed session with relations
         return await service.get_session(current_user.tenant_uuid, session.id)
@@ -69,9 +70,7 @@ async def calculate_syllabus_coverage(
 ) -> dict:
     try:
         return await service.calculate_syllabus_coverage(
-            tenant_id=current_user.tenant_uuid,
-            course_id=course_id,
-            curriculum_id=curriculum_id
+            tenant_id=current_user.tenant_uuid, course_id=course_id, curriculum_id=curriculum_id
         )
     except Exception as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))

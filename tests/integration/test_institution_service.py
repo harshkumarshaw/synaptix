@@ -1,16 +1,16 @@
 import uuid
-import pytest
-from sqlalchemy import select
 
-from packages.shared.errors import StudentNotFoundError
+import pytest
+from app.models.batch import Batch
 from app.models.department import Department
 from app.models.faculty import Faculty
-from app.models.student import Student
-from app.models.user import User
-from app.models.batch import Batch
 from app.models.section import Section
+from app.models.student import Student
 from app.models.tenant import Tenant
+from app.models.user import User
 from app.services.institution_service import InstitutionService
+
+from packages.shared.errors import StudentNotFoundError
 
 
 @pytest.mark.anyio
@@ -33,18 +33,27 @@ async def test_institution_service_flows(db_session, tenant_id):
 
     # 1b. Clean up existing test data for this tenant to ensure idempotency
     from sqlalchemy import text
-    await db_session.execute(text("DELETE FROM timetable_entries WHERE tenant_id = :id"), {"id": tenant_id})
-    await db_session.execute(text("DELETE FROM timetable_slots WHERE tenant_id = :id"), {"id": tenant_id})
+
+    await db_session.execute(
+        text("DELETE FROM timetable_entries WHERE tenant_id = :id"), {"id": tenant_id}
+    )
+    await db_session.execute(
+        text("DELETE FROM timetable_slots WHERE tenant_id = :id"), {"id": tenant_id}
+    )
     await db_session.execute(text("DELETE FROM students WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM faculty WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM users WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM sections WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM batches WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM courses WHERE tenant_id = :id"), {"id": tenant_id})
-    await db_session.execute(text("DELETE FROM departments WHERE tenant_id = :id"), {"id": tenant_id})
+    await db_session.execute(
+        text("DELETE FROM departments WHERE tenant_id = :id"), {"id": tenant_id}
+    )
     await db_session.execute(text("DELETE FROM curricula WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM programs WHERE tenant_id = :id"), {"id": tenant_id})
-    await db_session.execute(text("DELETE FROM academic_years WHERE tenant_id = :id"), {"id": tenant_id})
+    await db_session.execute(
+        text("DELETE FROM academic_years WHERE tenant_id = :id"), {"id": tenant_id}
+    )
     await db_session.commit()
 
     # 2. Seed Department
@@ -67,24 +76,25 @@ async def test_institution_service_flows(db_session, tenant_id):
     # Since those tables exist, let's just insert them using raw SQL or define dummy objects using SQLAlchemy metadata!
     # Let's insert them using raw connection SQL to make it extremely independent of other models:
     from sqlalchemy import text
+
     ay_id = uuid.uuid4()
     prog_id = uuid.uuid4()
-    
+
     await db_session.execute(
         text(
             "INSERT INTO academic_years (id, tenant_id, name, start_date, end_date) "
             "VALUES (:id, :tenant_id, '2026-2027', '2026-08-01', '2027-07-31')"
         ),
-        {"id": ay_id, "tenant_id": tenant_id}
+        {"id": ay_id, "tenant_id": tenant_id},
     )
     await db_session.execute(
         text(
             "INSERT INTO programs (id, tenant_id, name, code, type, duration_years) "
             "VALUES (:id, :tenant_id, 'MBBS', 'MBBS-CBME', 'professional_phase', 5)"
         ),
-        {"id": prog_id, "tenant_id": tenant_id}
+        {"id": prog_id, "tenant_id": tenant_id},
     )
-    
+
     batch = Batch(
         id=uuid.uuid4(),
         tenant_id=tenant_id,
@@ -92,8 +102,8 @@ async def test_institution_service_flows(db_session, tenant_id):
         code="MBBS-2026",
     )
     # Map the academic_year_id and program_id dynamically by setting attributes
-    setattr(batch, "academic_year_id", ay_id)
-    setattr(batch, "program_id", prog_id)
+    batch.academic_year_id = ay_id
+    batch.program_id = prog_id
     db_session.add(batch)
     await db_session.commit()
 
@@ -164,6 +174,4 @@ async def test_institution_service_flows(db_session, tenant_id):
 
     # Test not found Student update
     with pytest.raises(StudentNotFoundError):
-        await institution_service.update_student_status(
-            tenant_id, uuid.uuid4(), "active"
-        )
+        await institution_service.update_student_status(tenant_id, uuid.uuid4(), "active")

@@ -1,8 +1,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import date, time
-from typing import Optional
+from datetime import time
 
 from pydantic import BaseModel
 
@@ -52,7 +51,7 @@ class TimetableSlotResponse(BaseModel):
     day_of_week: int
     start_time: time
     end_time: time
-    name: Optional[str]
+    name: str | None
 
     class Config:
         from_attributes = True
@@ -67,7 +66,7 @@ class TimetableEntryResponse(BaseModel):
     faculty_id: uuid.UUID
     faculty_name: str
     slot: TimetableSlotResponse
-    room_number: Optional[str]
+    room_number: str | None
 
     class Config:
         from_attributes = True

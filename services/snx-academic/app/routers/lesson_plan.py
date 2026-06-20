@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.schemas.lesson_plan import LessonPlanCreate, LessonPlanResponse, LessonPlanUpdate
+from app.services.lesson_plan_service import LessonPlanService
 from packages.shared.auth.dependencies import get_current_user
 from packages.shared.auth.jwt import TokenPayload
-from packages.shared.errors import ResourceNotFoundError, ValidationError, DuplicateRecordError
-from app.schemas.lesson_plan import LessonPlanCreate, LessonPlanUpdate, LessonPlanResponse
-from app.services.lesson_plan_service import LessonPlanService
+from packages.shared.errors import DuplicateRecordError, ResourceNotFoundError, ValidationError
 
 router = APIRouter(prefix="/lesson-plans", tags=["lesson-plans"])
 
@@ -26,9 +27,7 @@ async def create_lesson_plan(
 ) -> LessonPlanResponse:
     try:
         lp = await service.create_lesson_plan(
-            tenant_id=current_user.tenant_uuid,
-            lp_in=lp_in,
-            actor_id=current_user.user_uuid
+            tenant_id=current_user.tenant_uuid, lp_in=lp_in, actor_id=current_user.user_uuid
         )
         return lp
     except DuplicateRecordError as e:
@@ -72,7 +71,7 @@ async def update_lesson_plan(
             tenant_id=current_user.tenant_uuid,
             lp_id=lp_id,
             lp_in=lp_in,
-            actor_id=current_user.user_uuid
+            actor_id=current_user.user_uuid,
         )
         return lp
     except ResourceNotFoundError as e:
@@ -96,9 +95,7 @@ async def submit_for_approval(
 ) -> LessonPlanResponse:
     try:
         lp = await service.submit_for_approval(
-            tenant_id=current_user.tenant_uuid,
-            lp_id=lp_id,
-            actor_id=current_user.user_uuid
+            tenant_id=current_user.tenant_uuid, lp_id=lp_id, actor_id=current_user.user_uuid
         )
         return lp
     except ResourceNotFoundError as e:

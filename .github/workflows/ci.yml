@@ -69,9 +69,46 @@ jobs:
             "python-jose[cryptography]" pydantic "pydantic[email]" structlog \
             passlib pyotp fastapi sqlalchemy asyncpg
 
-      - name: Run unit tests
+      # Each service has its own 'app' namespace so tests must run with an
+      # isolated PYTHONPATH per service.  Coverage is accumulated with
+      # --cov-append so the final report reflects all suites together.
+
+      - name: Run shared/auth unit tests (jwt)
         run: |
-          PYTHONPATH=$GITHUB_WORKSPACE uv run pytest tests/unit -v --tb=short --cov=packages --cov-report=xml
+          PYTHONPATH=$GITHUB_WORKSPACE \
+          uv run pytest tests/unit/test_jwt_utils.py \
+            -v --tb=short \
+            --cov=packages --cov=services --cov-append --cov-fail-under=0 --cov-report=
+        env:
+          SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
+          SNX_ENV: "test"
+
+      - name: Run snx-academic unit tests
+        run: |
+          PYTHONPATH=$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/services/snx-academic \
+          uv run pytest tests/unit/academic/ \
+            -v --tb=short \
+            --cov=packages --cov=services --cov-append --cov-fail-under=0 --cov-report=
+        env:
+          SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
+          SNX_ENV: "test"
+
+      - name: Run snx-workflow / mdm / assets unit tests
+        run: |
+          PYTHONPATH=$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/services/snx-workflow \
+          uv run pytest tests/unit/workflow/ tests/unit/mdm/ tests/unit/assets/ \
+            -v --tb=short \
+            --cov=packages --cov=services --cov-append --cov-fail-under=0 --cov-report=
+        env:
+          SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
+          SNX_ENV: "test"
+
+      - name: Run snx-logbook unit tests (final — enforces 80% coverage)
+        run: |
+          PYTHONPATH=$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/services/snx-logbook \
+          uv run pytest tests/unit/logbook/ \
+            -v --tb=short \
+            --cov=packages --cov=services --cov-append --cov-report=xml
         env:
           SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
           SNX_ENV: "test"

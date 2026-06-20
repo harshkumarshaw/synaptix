@@ -5,16 +5,16 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, status
 
-from packages.shared.auth.dependencies import get_current_user, require_roles
-from packages.shared.auth.jwt import TokenPayload
 from app.schemas.academic import (
-    ProgramResponse,
-    CourseResponse,
     BatchResponse,
+    CourseResponse,
+    ProgramResponse,
     TimetableEntryResponse,
     TimetableSlotResponse,
 )
 from app.services.academic_service import AcademicService
+from packages.shared.auth.dependencies import get_current_user
+from packages.shared.auth.jwt import TokenPayload
 
 router = APIRouter(prefix="/academic", tags=["academic"])
 

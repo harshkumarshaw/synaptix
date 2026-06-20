@@ -1,19 +1,19 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
+
+from app.schemas.master_data import (
+    MasterDataEntityCreate,
+    MasterDataEntityResponse,
+    MasterDataEntityUpdate,
+)
+from app.services.master_data_service import MasterDataService
 from fastapi import APIRouter, Depends, Request, status
 
 from packages.shared.auth.dependencies import get_current_user, require_roles
 from packages.shared.auth.jwt import TokenPayload
 from packages.shared.auth.tenant_context import require_tenant_context
-
-from app.schemas.master_data import (
-    MasterDataEntityCreate,
-    MasterDataEntityUpdate,
-    MasterDataEntityResponse,
-)
-from app.services.master_data_service import MasterDataService
 
 router = APIRouter(prefix="/workflow/master-data", tags=["master-data"])
 
@@ -28,7 +28,7 @@ router = APIRouter(prefix="/workflow/master-data", tags=["master-data"])
 async def list_entities(
     request: Request,
     category: str,
-    curriculum_id: Optional[uuid.UUID] = None,
+    curriculum_id: uuid.UUID | None = None,
     current_user: Annotated[TokenPayload, Depends(get_current_user)] = None,
     service: Annotated[MasterDataService, Depends(MasterDataService)] = None,
 ) -> list[MasterDataEntityResponse]:

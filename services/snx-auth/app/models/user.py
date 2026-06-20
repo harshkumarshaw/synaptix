@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import uuid
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
+
 from packages.shared.db.base import TenantScopedBase
 
 
@@ -18,18 +16,17 @@ class User(TenantScopedBase):
 
     __tablename__ = "users"
 
-    email: Mapped[Optional[str]] = mapped_column(nullable=True)
-    mobile: Mapped[Optional[str]] = mapped_column(nullable=True)
+    email: Mapped[str | None] = mapped_column(nullable=True)
+    mobile: Mapped[str | None] = mapped_column(nullable=True)
     full_name: Mapped[str] = mapped_column(nullable=False)
-    display_name: Mapped[Optional[str]] = mapped_column(nullable=True)
-    password_hash: Mapped[Optional[str]] = mapped_column(nullable=True)
-    mfa_secret: Mapped[Optional[str]] = mapped_column(nullable=True)
+    display_name: Mapped[str | None] = mapped_column(nullable=True)
+    password_hash: Mapped[str | None] = mapped_column(nullable=True)
+    mfa_secret: Mapped[str | None] = mapped_column(nullable=True)
     mfa_enabled: Mapped[bool] = mapped_column(default=False, server_default="false")
-    google_sub: Mapped[Optional[str]] = mapped_column(nullable=True)
-    microsoft_sub: Mapped[Optional[str]] = mapped_column(nullable=True)
+    google_sub: Mapped[str | None] = mapped_column(nullable=True)
+    microsoft_sub: Mapped[str | None] = mapped_column(nullable=True)
     is_active: Mapped[bool] = mapped_column(default=True, server_default="true")
-    last_login_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    consent_given_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-    otp_code: Mapped[Optional[str]] = mapped_column(nullable=True)
-    otp_expires_at: Mapped[Optional[datetime]] = mapped_column(nullable=True)
-
+    last_login_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    consent_given_at: Mapped[datetime | None] = mapped_column(nullable=True)
+    otp_code: Mapped[str | None] = mapped_column(nullable=True)
+    otp_expires_at: Mapped[datetime | None] = mapped_column(nullable=True)

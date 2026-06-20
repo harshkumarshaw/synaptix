@@ -1,10 +1,11 @@
-import pytest
 import datetime
 import uuid
-from app.services.calendar_service import CalendarService
+
+import pytest
 from app.models.course import Course
 from app.models.tenant import Tenant
-from app.schemas.calendar import EventCreate, EventCourseBase, EventFacultyBase
+from app.schemas.calendar import EventCourseBase, EventCreate, EventFacultyBase
+from app.services.calendar_service import CalendarService
 from sqlalchemy import text
 
 
@@ -26,20 +27,26 @@ async def test_calendar_engine_lifecycle(db_session, tenant_id):
     # Create dummy dependencies
     dept_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO departments (id, tenant_id, name, code) VALUES (:id, :t_id, 'Anatomy Dept', 'ANAT_C')"),
-        {"id": dept_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO departments (id, tenant_id, name, code) VALUES (:id, :t_id, 'Anatomy Dept', 'ANAT_C')"
+        ),
+        {"id": dept_id, "t_id": tenant_id},
     )
 
     prog_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO programs (id, tenant_id, name, code, type, duration_years) VALUES (:id, :t_id, 'MBBS', 'MBBS-CBME', 'professional_phase', 5)"),
-        {"id": prog_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO programs (id, tenant_id, name, code, type, duration_years) VALUES (:id, :t_id, 'MBBS', 'MBBS-CBME', 'professional_phase', 5)"
+        ),
+        {"id": prog_id, "t_id": tenant_id},
     )
-    
+
     curr_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO curricula (id, tenant_id, program_id, name, version_code) VALUES (:id, :t_id, :p_id, 'CBME 2023', 'CBME-2023')"),
-        {"id": curr_id, "t_id": tenant_id, "p_id": prog_id}
+        text(
+            "INSERT INTO curricula (id, tenant_id, program_id, name, version_code) VALUES (:id, :t_id, :p_id, 'CBME 2023', 'CBME-2023')"
+        ),
+        {"id": curr_id, "t_id": tenant_id, "p_id": prog_id},
     )
 
     course_id = uuid.uuid4()
@@ -50,32 +57,40 @@ async def test_calendar_engine_lifecycle(db_session, tenant_id):
         department_id=dept_id,
         name="Anatomy Course",
         code="ANAT-TEST-C",
-        default_attendance_category="practical"
+        default_attendance_category="practical",
     )
     db_session.add(course)
 
     # Seed Academic Year, Program, Batch, Faculty
     ay_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO academic_years (id, tenant_id, name, start_date, end_date, is_current) VALUES (:id, :t_id, '2026-2027', '2026-08-01', '2027-07-31', true)"),
-        {"id": ay_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO academic_years (id, tenant_id, name, start_date, end_date, is_current) VALUES (:id, :t_id, '2026-2027', '2026-08-01', '2027-07-31', true)"
+        ),
+        {"id": ay_id, "t_id": tenant_id},
     )
     batch_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO batches (id, tenant_id, academic_year_id, program_id, name, code) VALUES (:id, :t_id, :ay_id, :prog_id, 'MBBS 2026', 'MBBS2026')"),
-        {"id": batch_id, "t_id": tenant_id, "ay_id": ay_id, "prog_id": prog_id}
+        text(
+            "INSERT INTO batches (id, tenant_id, academic_year_id, program_id, name, code) VALUES (:id, :t_id, :ay_id, :prog_id, 'MBBS 2026', 'MBBS2026')"
+        ),
+        {"id": batch_id, "t_id": tenant_id, "ay_id": ay_id, "prog_id": prog_id},
     )
 
     faculty_user_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO users (id, tenant_id, email, full_name, is_active) VALUES (:id, :t_id, 'fac@jmn.edu', 'Faculty Anat', true)"),
-        {"id": faculty_user_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO users (id, tenant_id, email, full_name, is_active) VALUES (:id, :t_id, 'fac@jmn.edu', 'Faculty Anat', true)"
+        ),
+        {"id": faculty_user_id, "t_id": tenant_id},
     )
 
     faculty_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO faculty (id, tenant_id, user_id, department_id, designation, employee_id) VALUES (:id, :t_id, :u_id, :d_id, 'Prof', 'EMP-01')"),
-        {"id": faculty_id, "t_id": tenant_id, "u_id": faculty_user_id, "d_id": dept_id}
+        text(
+            "INSERT INTO faculty (id, tenant_id, user_id, department_id, designation, employee_id) VALUES (:id, :t_id, :u_id, :d_id, 'Prof', 'EMP-01')"
+        ),
+        {"id": faculty_id, "t_id": tenant_id, "u_id": faculty_user_id, "d_id": dept_id},
     )
     await db_session.commit()
 
@@ -92,7 +107,7 @@ async def test_calendar_engine_lifecycle(db_session, tenant_id):
         start_time=datetime.time(9, 0),
         end_time=datetime.time(11, 0),
         courses=[EventCourseBase(course_id=course_id, is_primary=True)],
-        assigned_faculty=[EventFacultyBase(faculty_id=faculty_id)]
+        assigned_faculty=[EventFacultyBase(faculty_id=faculty_id)],
     )
 
     event = await calendar_service.create_event(tenant_id, event_in, actor_id=faculty_user_id)
@@ -112,16 +127,16 @@ async def test_calendar_engine_lifecycle(db_session, tenant_id):
     new_date = datetime.date(2026, 9, 11)
     new_start = datetime.time(10, 0)
     new_end = datetime.time(12, 0)
-    
+
     new_event = await calendar_service.reschedule_event(
         tenant_id=tenant_id,
         event_id=event.id,
         new_date=new_date,
         new_start=new_start,
         new_end=new_end,
-        actor_id=faculty_user_id
+        actor_id=faculty_user_id,
     )
-    
+
     # Original event should now be status='rescheduled'
     orig_event = await calendar_service.get_event(tenant_id, event.id)
     assert orig_event.status == "rescheduled"
@@ -145,7 +160,7 @@ async def test_calendar_engine_lifecycle(db_session, tenant_id):
         tenant_id=tenant_id,
         event_id=new_event.id,
         reason="Holiday declared",
-        actor_id=faculty_user_id
+        actor_id=faculty_user_id,
     )
     assert cancelled_event.status == "cancelled"
     assert cancelled_event.cancellation_reason == "Holiday declared"

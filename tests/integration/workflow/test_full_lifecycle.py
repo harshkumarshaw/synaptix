@@ -1,27 +1,34 @@
-import pytest
 import uuid
-from app.services.workflow_service import WorkflowService
-from app.schemas.workflow import WorkflowDefinitionCreate, WorkflowStepItem, WorkflowInstanceCreate
+
+import pytest
 from app.models.user import User
-from packages.shared.errors import InvalidStateTransitionError, PermissionDeniedError
+from app.schemas.workflow import WorkflowDefinitionCreate, WorkflowInstanceCreate, WorkflowStepItem
+from app.services.workflow_service import WorkflowService
+
+from packages.shared.errors import InvalidStateTransitionError
 
 
 @pytest.mark.anyio
 async def test_workflow_full_lifecycle(db_session, tenant_id, test_user_id):
     """Test a full end-to-end multi-step workflow lifecycle, transitions, history, and constraints.
-    
+
     Manifest IDs: WFL-004, WFL-005, WFL-007, EC-111, EC-112
     """
-    
+
     # Clean up old data to ensure idempotency
-    from sqlalchemy import delete
     from app.models.workflow import WorkflowDefinition, WorkflowInstance, WorkflowTransition
-    await db_session.execute(delete(WorkflowTransition).where(WorkflowTransition.tenant_id == tenant_id))
-    await db_session.execute(delete(WorkflowInstance).where(WorkflowInstance.tenant_id == tenant_id))
+    from sqlalchemy import delete
+
+    await db_session.execute(
+        delete(WorkflowTransition).where(WorkflowTransition.tenant_id == tenant_id)
+    )
+    await db_session.execute(
+        delete(WorkflowInstance).where(WorkflowInstance.tenant_id == tenant_id)
+    )
     await db_session.execute(
         delete(WorkflowDefinition).where(
             WorkflowDefinition.tenant_id == tenant_id,
-            WorkflowDefinition.code == "exemption_approval"
+            WorkflowDefinition.code == "exemption_approval",
         )
     )
     await db_session.commit()
@@ -63,8 +70,8 @@ async def test_workflow_full_lifecycle(db_session, tenant_id, test_user_id):
                     required_role="dean",
                     next_steps=["approved", "rejected"],
                 ),
-            }
-        )
+            },
+        ),
     )
 
     assert definition.code == "exemption_approval"
@@ -81,7 +88,7 @@ async def test_workflow_full_lifecycle(db_session, tenant_id, test_user_id):
             entity_id=entity_id,
             context=context,
             initial_step="draft",
-        )
+        ),
     )
 
     assert instance.entity_id == entity_id
@@ -101,7 +108,7 @@ async def test_workflow_full_lifecycle(db_session, tenant_id, test_user_id):
                 entity_id=entity_id,
                 context=context,
                 initial_step="draft",
-            )
+            ),
         )
 
     # 5. Transition 1: draft -> hod_review

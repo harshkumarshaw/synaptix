@@ -1,22 +1,24 @@
-import pytest
 import uuid
-import packages.shared.db.session as db_session_mod
-from app.services.workflow_service import WorkflowService
-from app.schemas.workflow import WorkflowDefinitionCreate, WorkflowStepItem, WorkflowInstanceCreate
+
+import pytest
 from app.models.tenant import Tenant
 from app.models.user import User
+from app.schemas.workflow import WorkflowDefinitionCreate, WorkflowInstanceCreate, WorkflowStepItem
+from app.services.workflow_service import WorkflowService
+
+import packages.shared.db.session as db_session_mod
 from packages.shared.errors import ResourceNotFoundError
 
 
 @pytest.mark.anyio
 async def test_tenant_isolation_rls(db_session, tenant_id, test_user_id):
     """Test that database Row Level Security (RLS) restricts access across tenants.
-    
+
     Manifest IDs: WFL-006, EC-113, TNT-002, TNT-003, TNT-004, AUD-002, AUD-003
     """
     # 1. Create a second tenant B
     tenant_b_id = uuid.UUID("00000000-0000-0000-0000-000000000002")
-    
+
     tenant_b_exists = await db_session.get(Tenant, tenant_b_id)
     if not tenant_b_exists:
         tenant_b = Tenant(
@@ -53,8 +55,12 @@ async def test_tenant_isolation_rls(db_session, tenant_id, test_user_id):
         WorkflowDefinitionCreate(
             name="Workflow A",
             code="workflow_shared_code",
-            steps={"start": WorkflowStepItem(name="start", required_role="faculty", next_steps=["approved"])}
-        )
+            steps={
+                "start": WorkflowStepItem(
+                    name="start", required_role="faculty", next_steps=["approved"]
+                )
+            },
+        ),
     )
 
     # Create instance A
@@ -66,7 +72,7 @@ async def test_tenant_isolation_rls(db_session, tenant_id, test_user_id):
             entity_id=uuid.uuid4(),
             initial_step="start",
             context={},
-        )
+        ),
     )
 
     # 3. Switch context to Tenant B and create Definition & Instance with same code
@@ -76,8 +82,12 @@ async def test_tenant_isolation_rls(db_session, tenant_id, test_user_id):
         WorkflowDefinitionCreate(
             name="Workflow B",
             code="workflow_shared_code",
-            steps={"start": WorkflowStepItem(name="start", required_role="faculty", next_steps=["approved"])}
-        )
+            steps={
+                "start": WorkflowStepItem(
+                    name="start", required_role="faculty", next_steps=["approved"]
+                )
+            },
+        ),
     )
 
     inst_b = await service.create_instance(
@@ -88,7 +98,7 @@ async def test_tenant_isolation_rls(db_session, tenant_id, test_user_id):
             entity_id=uuid.uuid4(),
             initial_step="start",
             context={},
-        )
+        ),
     )
 
     # 4. Under Tenant B context, query definition by Tenant A's ID. Should fail.

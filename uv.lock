@@ -4,7 +4,11 @@ requires-python = "==3.12.*"
 
 [manifest]
 members = [
+    "snx-academic",
     "snx-auth",
+    "snx-institution",
+    "snx-logbook",
+    "snx-workflow",
     "synaptix",
     "synaptix-migrations",
     "synaptix-shared",
@@ -922,9 +926,77 @@ wheels = [
 ]
 
 [[package]]
+name = "snx-academic"
+version = "0.1.0"
+source = { virtual = "services/snx-academic" }
+dependencies = [
+    { name = "python-dotenv" },
+    { name = "synaptix-shared" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "synaptix-shared", editable = "packages/shared" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+]
+
+[[package]]
 name = "snx-auth"
 version = "0.1.0"
 source = { virtual = "services/snx-auth" }
+dependencies = [
+    { name = "python-dotenv" },
+    { name = "synaptix-shared" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "synaptix-shared", editable = "packages/shared" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+]
+
+[[package]]
+name = "snx-institution"
+version = "0.1.0"
+source = { virtual = "services/snx-institution" }
+dependencies = [
+    { name = "python-dotenv" },
+    { name = "synaptix-shared" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "synaptix-shared", editable = "packages/shared" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+]
+
+[[package]]
+name = "snx-logbook"
+version = "0.1.0"
+source = { virtual = "services/snx-logbook" }
+dependencies = [
+    { name = "python-dotenv" },
+    { name = "synaptix-shared" },
+    { name = "uvicorn", extra = ["standard"] },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "python-dotenv", specifier = ">=1.0" },
+    { name = "synaptix-shared", editable = "packages/shared" },
+    { name = "uvicorn", extras = ["standard"], specifier = ">=0.30" },
+]
+
+[[package]]
+name = "snx-workflow"
+version = "0.1.0"
+source = { virtual = "services/snx-workflow" }
 dependencies = [
     { name = "python-dotenv" },
     { name = "synaptix-shared" },

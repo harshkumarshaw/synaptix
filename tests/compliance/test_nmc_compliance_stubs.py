@@ -6,14 +6,16 @@ All tests are stubbed and marked with xfail or skip until the engines are implem
 """
 
 from __future__ import annotations
+
 import datetime
-import pytest
 import uuid
 
+import pytest
 
 # ============================================================================
 # Attendance Pools (75% Theory, 80% Practical) Tests
 # ============================================================================
+
 
 @pytest.mark.compliance
 @pytest.mark.xfail(reason="Attendance engine not implemented until Phase 2")
@@ -156,6 +158,7 @@ def test_att_nmc_019_cancelled_session_not_in_denominator() -> None:
 # Foundation Course & ECE & Clinical Posting Scheduling Tests
 # ============================================================================
 
+
 @pytest.mark.compliance
 @pytest.mark.xfail(reason="Calendar scheduler validations not implemented until Phase 1B execution")
 def test_fc_nmc_001_foundation_course_scheduled_block() -> None:
@@ -167,7 +170,7 @@ def test_fc_nmc_001_foundation_course_scheduled_block() -> None:
     phase_i_start = datetime.date(2026, 8, 1)
     event_date = datetime.date(2026, 8, 15)
     event_type = "foundation_course"
-    
+
     assert event_type == "foundation_course"
     assert (event_date - phase_i_start).days <= 31
 
@@ -207,6 +210,7 @@ def test_ece_nmc_002_clinical_posting_not_allowed_in_phase_i() -> None:
 # AETCOM Scheduling & Progression Tests
 # ============================================================================
 
+
 @pytest.mark.compliance
 @pytest.mark.xfail(reason="Logbook service not implemented until Phase 1B execution")
 def test_aet_nmc_001_aetcom_session_supported() -> None:
@@ -241,6 +245,7 @@ def test_aet_nmc_005_aetcom_completion_required_per_phase() -> None:
 # ============================================================================
 # Curriculum Scoping Tests
 # ============================================================================
+
 
 @pytest.mark.compliance
 @pytest.mark.xfail(reason="Lesson plan validations not implemented until Phase 1B execution")

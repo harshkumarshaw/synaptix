@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import uuid
+
 from sqlalchemy.orm import Mapped, mapped_column
+
 from packages.shared.db.base import TenantScopedBase
 
 

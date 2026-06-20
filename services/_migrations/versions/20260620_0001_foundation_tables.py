@@ -19,8 +19,8 @@ from __future__ import annotations
 
 import textwrap
 
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # Alembic revision identifiers
@@ -34,8 +34,7 @@ def upgrade() -> None:
     """Create foundation tables."""
 
     # ── Helper function (created first, used by triggers below) ────────────
-    op.execute(
-        textwrap.dedent("""
+    op.execute(textwrap.dedent("""
         CREATE OR REPLACE FUNCTION fn_update_updated_at()
         RETURNS TRIGGER AS $$
         BEGIN
@@ -43,43 +42,68 @@ def upgrade() -> None:
             RETURN NEW;
         END;
         $$ LANGUAGE plpgsql;
-        """)
-    )
+        """))
 
     # ── Audit log append-only enforcement function ──────────────────────────
-    op.execute(
-        textwrap.dedent("""
+    op.execute(textwrap.dedent("""
         CREATE OR REPLACE FUNCTION fn_audit_log_no_update()
         RETURNS TRIGGER AS $$
         BEGIN
             RAISE EXCEPTION 'audit_log is append-only — updates and deletes are forbidden';
         END;
         $$ LANGUAGE plpgsql;
-        """)
-    )
+        """))
 
     # ── tenants (GLOBAL table — no RLS, no tenant_id FK) ───────────────────
     op.create_table(
         "tenants",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True,
-                  server_default=sa.text("gen_random_uuid()")),
-        sa.Column("code", sa.String(20), nullable=False, unique=True,
-                  comment="Short identifier, e.g. JMN, IINR"),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
+        sa.Column(
+            "code",
+            sa.String(20),
+            nullable=False,
+            unique=True,
+            comment="Short identifier, e.g. JMN, IINR",
+        ),
         sa.Column("name", sa.String(200), nullable=False),
-        sa.Column("institution_type", sa.String(50), nullable=False,
-                  comment="medical | nursing | allied_health | pharmacy | engineering | university | school"),
-        sa.Column("regulatory_body", sa.String(50), nullable=False,
-                  comment="NMC | INC | PCI | AICTE | UGC | state_board"),
+        sa.Column(
+            "institution_type",
+            sa.String(50),
+            nullable=False,
+            comment="medical | nursing | allied_health | pharmacy | engineering | university | school",
+        ),
+        sa.Column(
+            "regulatory_body",
+            sa.String(50),
+            nullable=False,
+            comment="NMC | INC | PCI | AICTE | UGC | state_board",
+        ),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("logo_url", sa.Text(), nullable=True),
-        sa.Column("primary_color", sa.String(7), nullable=True,
-                  comment="Hex color for branding, e.g. #1A73E8"),
-        sa.Column("timezone", sa.String(50), nullable=False,
-                  server_default="'Asia/Kolkata'"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("NOW()")),
+        sa.Column(
+            "primary_color",
+            sa.String(7),
+            nullable=True,
+            comment="Hex color for branding, e.g. #1A73E8",
+        ),
+        sa.Column("timezone", sa.String(50), nullable=False, server_default="'Asia/Kolkata'"),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
     )
     op.create_index("idx_tenants_code", "tenants", ["code"], unique=True)
     op.execute(
@@ -90,42 +114,63 @@ def upgrade() -> None:
     # ── users (tenant-scoped) ───────────────────────────────────────────────
     op.create_table(
         "users",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True,
-                  server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("tenant_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("email", sa.String(255), nullable=True, comment="-- PII"),
         sa.Column("mobile", sa.String(15), nullable=True, comment="-- PII"),
         sa.Column("full_name", sa.String(200), nullable=False, comment="-- PII"),
         sa.Column("display_name", sa.String(100), nullable=True),
-        sa.Column("password_hash", sa.Text(), nullable=True,
-                  comment="bcrypt hash — NULL if SSO-only"),
-        sa.Column("mfa_secret", sa.Text(), nullable=True,
-                  comment="TOTP secret — NULL if MFA not enrolled"),
+        sa.Column(
+            "password_hash", sa.Text(), nullable=True, comment="bcrypt hash — NULL if SSO-only"
+        ),
+        sa.Column(
+            "mfa_secret", sa.Text(), nullable=True, comment="TOTP secret — NULL if MFA not enrolled"
+        ),
         sa.Column("mfa_enabled", sa.Boolean(), nullable=False, server_default="false"),
-        sa.Column("google_sub", sa.String(255), nullable=True,
-                  comment="Google SSO subject ID"),
-        sa.Column("microsoft_sub", sa.String(255), nullable=True,
-                  comment="Microsoft SSO subject ID"),
+        sa.Column("google_sub", sa.String(255), nullable=True, comment="Google SSO subject ID"),
+        sa.Column(
+            "microsoft_sub", sa.String(255), nullable=True, comment="Microsoft SSO subject ID"
+        ),
         sa.Column("is_active", sa.Boolean(), nullable=False, server_default="true"),
         sa.Column("last_login_at", sa.DateTime(timezone=True), nullable=True),
-        sa.Column("consent_given_at", sa.DateTime(timezone=True), nullable=True,
-                  comment="DPDP Act 2023 — explicit consent timestamp"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("NOW()")),
+        sa.Column(
+            "consent_given_at",
+            sa.DateTime(timezone=True),
+            nullable=True,
+            comment="DPDP Act 2023 — explicit consent timestamp",
+        ),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="RESTRICT"),
         sa.UniqueConstraint("tenant_id", "email", name="uq_users_tenant_email"),
         sa.UniqueConstraint("tenant_id", "mobile", name="uq_users_tenant_mobile"),
     )
-    op.create_index("idx_users_tenant", "users", ["tenant_id"],
-                    postgresql_where=sa.text("deleted_at IS NULL"))
-    op.create_index("idx_users_tenant_email", "users", ["tenant_id", "email"],
-                    postgresql_where=sa.text("email IS NOT NULL AND deleted_at IS NULL"))
-    op.execute(
-        "ALTER TABLE users ENABLE ROW LEVEL SECURITY;"
+    op.create_index(
+        "idx_users_tenant", "users", ["tenant_id"], postgresql_where=sa.text("deleted_at IS NULL")
     )
+    op.create_index(
+        "idx_users_tenant_email",
+        "users",
+        ["tenant_id", "email"],
+        postgresql_where=sa.text("email IS NOT NULL AND deleted_at IS NULL"),
+    )
+    op.execute("ALTER TABLE users ENABLE ROW LEVEL SECURITY;")
     op.execute(
         "CREATE POLICY tenant_isolation_users ON users "
         "USING (tenant_id = current_setting('snx.current_tenant_id', true)::UUID);"
@@ -138,19 +183,34 @@ def upgrade() -> None:
     # ── roles (tenant-scoped) ───────────────────────────────────────────────
     op.create_table(
         "roles",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True,
-                  server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("tenant_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("name", sa.String(100), nullable=False,
-                  comment="e.g. faculty, hod, principal"),
+        sa.Column("name", sa.String(100), nullable=False, comment="e.g. faculty, hod, principal"),
         sa.Column("display_name", sa.String(200), nullable=False),
-        sa.Column("is_system_role", sa.Boolean(), nullable=False,
-                  server_default="false",
-                  comment="System roles cannot be deleted"),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("NOW()")),
+        sa.Column(
+            "is_system_role",
+            sa.Boolean(),
+            nullable=False,
+            server_default="false",
+            comment="System roles cannot be deleted",
+        ),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="RESTRICT"),
         sa.UniqueConstraint("tenant_id", "name", name="uq_roles_tenant_name"),
     )
@@ -164,18 +224,34 @@ def upgrade() -> None:
     # ── user_roles (many-to-many: users ↔ roles) ───────────────────────────
     op.create_table(
         "user_roles",
-        sa.Column("id", postgresql.UUID(as_uuid=True), primary_key=True,
-                  server_default=sa.text("gen_random_uuid()")),
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            primary_key=True,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
         sa.Column("tenant_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("user_id", postgresql.UUID(as_uuid=True), nullable=False),
         sa.Column("role_id", postgresql.UUID(as_uuid=True), nullable=False),
-        sa.Column("granted_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("NOW()")),
+        sa.Column(
+            "granted_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
         sa.Column("granted_by_user_id", postgresql.UUID(as_uuid=True), nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("NOW()")),
-        sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False,
-                  server_default=sa.text("NOW()")),
+        sa.Column(
+            "created_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
+        sa.Column(
+            "updated_at",
+            sa.DateTime(timezone=True),
+            nullable=False,
+            server_default=sa.text("NOW()"),
+        ),
         sa.ForeignKeyConstraint(["tenant_id"], ["tenants.id"], ondelete="RESTRICT"),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["role_id"], ["roles.id"], ondelete="CASCADE"),
@@ -191,8 +267,7 @@ def upgrade() -> None:
 
     # ── audit_log (append-only, tenant-scoped) ─────────────────────────────
     # Partitioned by academic_year for performance at 100M+ rows
-    op.execute(
-        textwrap.dedent("""
+    op.execute(textwrap.dedent("""
         CREATE TABLE audit_log (
             id UUID NOT NULL DEFAULT gen_random_uuid(),
             tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
@@ -210,23 +285,18 @@ def upgrade() -> None:
             -- Partition key
             partition_key DATE NOT NULL DEFAULT CURRENT_DATE
         ) PARTITION BY RANGE (partition_key);
-        """)
-    )
+        """))
 
     # Create initial partition (2026)
-    op.execute(
-        textwrap.dedent("""
+    op.execute(textwrap.dedent("""
         CREATE TABLE audit_log_2026 PARTITION OF audit_log
             FOR VALUES FROM ('2026-01-01') TO ('2027-01-01');
-        """)
-    )
+        """))
 
-    op.execute(
-        textwrap.dedent("""
+    op.execute(textwrap.dedent("""
         CREATE TABLE audit_log_2027 PARTITION OF audit_log
             FOR VALUES FROM ('2027-01-01') TO ('2028-01-01');
-        """)
-    )
+        """))
 
     op.create_index(
         "idx_audit_log_tenant_resource",
@@ -240,9 +310,7 @@ def upgrade() -> None:
     )
 
     # Enforce append-only
-    op.execute(
-        "ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;"
-    )
+    op.execute("ALTER TABLE audit_log ENABLE ROW LEVEL SECURITY;")
     op.execute(
         "CREATE POLICY tenant_isolation_audit_log ON audit_log "
         "USING (tenant_id = current_setting('snx.current_tenant_id', true)::UUID);"
@@ -254,8 +322,7 @@ def upgrade() -> None:
     )
 
     # ── Seed: JMN tenant ────────────────────────────────────────────────────
-    op.execute(
-        textwrap.dedent("""
+    op.execute(textwrap.dedent("""
         INSERT INTO tenants (id, code, name, institution_type, regulatory_body, timezone)
         VALUES (
             '00000000-0000-0000-0000-000000000001',
@@ -266,12 +333,10 @@ def upgrade() -> None:
             'Asia/Kolkata'
         )
         ON CONFLICT (code) DO NOTHING;
-        """)
-    )
+        """))
 
     # ── Seed: System roles for JMN ─────────────────────────────────────────
-    op.execute(
-        textwrap.dedent("""
+    op.execute(textwrap.dedent("""
         INSERT INTO roles (id, tenant_id, name, display_name, is_system_role)
         VALUES
             (gen_random_uuid(), '00000000-0000-0000-0000-000000000001',
@@ -301,8 +366,7 @@ def upgrade() -> None:
             (gen_random_uuid(), '00000000-0000-0000-0000-000000000001',
              'inspector', 'NMC/NAAC Inspector (time-limited)', true)
         ON CONFLICT DO NOTHING;
-        """)
-    )
+        """))
 
 
 def downgrade() -> None:

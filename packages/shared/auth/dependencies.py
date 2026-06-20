@@ -29,7 +29,7 @@ from typing import Annotated
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from packages.shared.auth.jwt import MFA_REQUIRED_ROLES, TokenPayload, decode_token
+from packages.shared.auth.jwt import TokenPayload, decode_token
 from packages.shared.errors import (
     AuthenticationError,
     MFARequiredError,
@@ -60,9 +60,7 @@ def _get_jwt_secret() -> str:
 
 async def get_current_user(
     request: Request,
-    credentials: Annotated[
-        HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)
-    ] = None,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)] = None,
 ) -> TokenPayload:
     """FastAPI dependency: extract and validate the current user's JWT.
 

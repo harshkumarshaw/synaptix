@@ -1,25 +1,26 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Annotated, Optional, Any
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
+
+from app.models.user import User
+from app.models.workflow import WorkflowDefinition, WorkflowInstance, WorkflowTransition
+from app.schemas.workflow import WorkflowDefinitionCreate, WorkflowInstanceCreate
 from fastapi import Depends
-from sqlalchemy import select, and_, func, update
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import func, select, update
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from packages.shared.db.session import get_db
 from packages.shared.errors import (
+    DuplicateRecordError,
+    InvalidStateTransitionError,
+    PermissionDeniedError,
     ResourceNotFoundError,
     ValidationError,
-    DuplicateRecordError,
-    PermissionDeniedError,
-    InvalidStateTransitionError,
 )
 from packages.shared.logging import get_logger
-from app.models.workflow import WorkflowDefinition, WorkflowInstance, WorkflowTransition
-from app.models.user import User
-from app.schemas.workflow import WorkflowDefinitionCreate, WorkflowInstanceCreate
 
 logger = get_logger(__name__)
 
@@ -29,18 +30,23 @@ class WorkflowService:
         self.db = db
 
     async def get_definitions(self, tenant_id: uuid.UUID) -> list[WorkflowDefinition]:
-        stmt = select(WorkflowDefinition).where(
-            WorkflowDefinition.tenant_id == tenant_id,
-            WorkflowDefinition.deleted_at.is_(None)
-        ).order_by(WorkflowDefinition.code, WorkflowDefinition.version)
+        stmt = (
+            select(WorkflowDefinition)
+            .where(
+                WorkflowDefinition.tenant_id == tenant_id, WorkflowDefinition.deleted_at.is_(None)
+            )
+            .order_by(WorkflowDefinition.code, WorkflowDefinition.version)
+        )
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
 
-    async def get_definition(self, tenant_id: uuid.UUID, definition_id: uuid.UUID) -> WorkflowDefinition:
+    async def get_definition(
+        self, tenant_id: uuid.UUID, definition_id: uuid.UUID
+    ) -> WorkflowDefinition:
         stmt = select(WorkflowDefinition).where(
             WorkflowDefinition.tenant_id == tenant_id,
             WorkflowDefinition.id == definition_id,
-            WorkflowDefinition.deleted_at.is_(None)
+            WorkflowDefinition.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         definition = res.scalar_one_or_none()
@@ -48,12 +54,14 @@ class WorkflowService:
             raise ResourceNotFoundError(f"WorkflowDefinition {definition_id} not found")
         return definition
 
-    async def get_current_definition_by_code(self, tenant_id: uuid.UUID, code: str) -> WorkflowDefinition:
+    async def get_current_definition_by_code(
+        self, tenant_id: uuid.UUID, code: str
+    ) -> WorkflowDefinition:
         stmt = select(WorkflowDefinition).where(
             WorkflowDefinition.tenant_id == tenant_id,
             WorkflowDefinition.code == code,
-            WorkflowDefinition.is_current == True,
-            WorkflowDefinition.deleted_at.is_(None)
+            WorkflowDefinition.is_current,
+            WorkflowDefinition.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         definition = res.scalar_one_or_none()
@@ -66,8 +74,7 @@ class WorkflowService:
     ) -> WorkflowDefinition:
         # Determine the next version
         stmt = select(func.max(WorkflowDefinition.version)).where(
-            WorkflowDefinition.tenant_id == tenant_id,
-            WorkflowDefinition.code == schema.code
+            WorkflowDefinition.tenant_id == tenant_id, WorkflowDefinition.code == schema.code
         )
         res = await self.db.execute(stmt)
         max_ver = res.scalar() or 0
@@ -79,7 +86,7 @@ class WorkflowService:
             .where(
                 WorkflowDefinition.tenant_id == tenant_id,
                 WorkflowDefinition.code == schema.code,
-                WorkflowDefinition.is_current == True
+                WorkflowDefinition.is_current,
             )
             .values(is_current=False)
         )
@@ -118,7 +125,7 @@ class WorkflowService:
             WorkflowInstance.entity_type == schema.entity_type,
             WorkflowInstance.entity_id == schema.entity_id,
             WorkflowInstance.status.notin_(("approved", "rejected", "cancelled")),
-            WorkflowInstance.deleted_at.is_(None)
+            WorkflowInstance.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         existing = res.scalar_one_or_none()
@@ -144,7 +151,7 @@ class WorkflowService:
             current_step=initial_step_name,
             status="pending",
             current_assignee_role=required_role,
-            due_at=datetime.now(timezone.utc) + timedelta(days=2),  # Default 48h SLA
+            due_at=datetime.now(UTC) + timedelta(days=2),  # Default 48h SLA
             context=schema.context,
             history=[],
         )
@@ -162,7 +169,7 @@ class WorkflowService:
         stmt = select(WorkflowInstance).where(
             WorkflowInstance.tenant_id == tenant_id,
             WorkflowInstance.id == instance_id,
-            WorkflowInstance.deleted_at.is_(None)
+            WorkflowInstance.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         instance = res.scalar_one_or_none()
@@ -175,7 +182,7 @@ class WorkflowService:
         tenant_id: uuid.UUID,
         instance_id: uuid.UUID,
         to_step: str,
-        comment: Optional[str],
+        comment: str | None,
         actor_user_id: uuid.UUID,
         actor_roles: list[str],
     ) -> WorkflowInstance:
@@ -185,7 +192,7 @@ class WorkflowService:
             .where(
                 WorkflowInstance.tenant_id == tenant_id,
                 WorkflowInstance.id == instance_id,
-                WorkflowInstance.deleted_at.is_(None)
+                WorkflowInstance.deleted_at.is_(None),
             )
             .with_for_update()
         )
@@ -200,19 +207,25 @@ class WorkflowService:
         current_step_name = instance.current_step
 
         if current_step_name not in steps:
-            raise ValidationError(f"Current step '{current_step_name}' not defined in workflow definition")
+            raise ValidationError(
+                f"Current step '{current_step_name}' not defined in workflow definition"
+            )
 
         current_step_def = steps[current_step_name]
         allowed_next = current_step_def.get("next_steps", [])
 
         if to_step not in allowed_next:
-            raise InvalidStateTransitionError(f"Transition from '{current_step_name}' to '{to_step}' is invalid")
+            raise InvalidStateTransitionError(
+                f"Transition from '{current_step_name}' to '{to_step}' is invalid"
+            )
 
         # Verify role permission
         # The actor must possess the role required for the step they are acting on
         required_role = current_step_def.get("required_role")
         if required_role and required_role not in actor_roles and "super_admin" not in actor_roles:
-            raise PermissionDeniedError(f"Actor lacks required role '{required_role}' for this transition")
+            raise PermissionDeniedError(
+                f"Actor lacks required role '{required_role}' for this transition"
+            )
 
         # If next step is terminal
         if to_step in ("approved", "rejected", "cancelled"):
@@ -229,14 +242,13 @@ class WorkflowService:
             instance.current_step = to_step
             instance.status = "pending"
             instance.current_assignee_role = next_step_def.get("required_role")
-            instance.due_at = datetime.now(timezone.utc) + timedelta(days=2)  # Reset SLA
+            instance.due_at = datetime.now(UTC) + timedelta(days=2)  # Reset SLA
 
             # Soft-deleted assignee check (AUDIT-O1)
             # If current assignee is set but soft deleted, clear it to fall back to role assignment
             if instance.current_assignee_id:
                 assignee_stmt = select(User).where(
-                    User.tenant_id == tenant_id,
-                    User.id == instance.current_assignee_id
+                    User.tenant_id == tenant_id, User.id == instance.current_assignee_id
                 )
                 a_res = await self.db.execute(assignee_stmt)
                 assignee = a_res.scalar_one_or_none()
@@ -261,6 +273,7 @@ class WorkflowService:
 
         # Write to global audit log
         from app.services.audit_logger import write_audit_log
+
         await write_audit_log(
             self.db,
             tenant_id=tenant_id,

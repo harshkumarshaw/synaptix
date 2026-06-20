@@ -27,7 +27,6 @@ os.environ.setdefault(
     "test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars",
 )
 
-from packages.shared.db.base import Base
 
 # ============================================================================
 # Constants
@@ -71,18 +70,21 @@ def test_user_id() -> uuid.UUID:
 def app_settings() -> Any:
     """Return Settings singleton for testing."""
     from app.config import get_settings
+
     return get_settings()
 
 
 @pytest_asyncio.fixture
 async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]:
     """Provide a database session scoped by tenant context."""
-    import packages.shared.db.session as db_session_mod
     from sqlalchemy import text
-    
+
+    import packages.shared.db.session as db_session_mod
+
     database_url = os.environ["SNX_DATABASE_URL"]
     if db_session_mod._engine is None:
         from sqlalchemy.pool import NullPool
+
         db_session_mod._engine = create_async_engine(
             database_url,
             poolclass=NullPool,
@@ -94,7 +96,7 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
             autoflush=False,
             autocommit=False,
         )
-    
+
     async with db_session_mod._async_session_factory() as session:
         # Truncate tables to ensure a clean state for every test
         await session.execute(text("ALTER TABLE audit_log DISABLE TRIGGER trg_audit_log_no_update"))
@@ -120,6 +122,6 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
 async def cleanup_database_engine() -> AsyncGenerator[None, None]:
     yield
     import packages.shared.db.session as db_session_mod
+
     if db_session_mod._engine is not None:
         await db_session_mod._engine.dispose()
-

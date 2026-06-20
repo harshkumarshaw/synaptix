@@ -21,7 +21,7 @@ MFA-required roles: admin, principal, dean, controller_of_examinations
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Literal
 
 from jose import JWTError, jwt
@@ -105,7 +105,7 @@ def create_access_token(
     Returns:
         Signed JWT string.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": str(user_id),
         "tenant_id": str(tenant_id),
@@ -150,7 +150,7 @@ def create_refresh_token(
     Returns:
         Signed JWT refresh token string.
     """
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     payload = {
         "sub": str(user_id),
         "tenant_id": str(tenant_id),

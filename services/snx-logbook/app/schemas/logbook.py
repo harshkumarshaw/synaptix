@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import datetime
 import uuid
-from typing import Optional
+
 from pydantic import BaseModel, Field, field_validator
 
 
@@ -14,8 +14,8 @@ class FoundationCourseRecordResponse(BaseModel):
     completed_hours: float
     required_hours: float
     is_completed: bool
-    signoff_received_at: Optional[datetime.datetime]
-    signed_off_by: Optional[uuid.UUID]
+    signoff_received_at: datetime.datetime | None
+    signed_off_by: uuid.UUID | None
     created_at: datetime.datetime
     updated_at: datetime.datetime
 
@@ -31,7 +31,14 @@ class FoundationCourseHoursLog(BaseModel):
     @field_validator("module_name")
     @classmethod
     def validate_module(cls, v: str) -> str:
-        valid = ('orientation', 'skills_acquisition', 'professional_development', 'language_computer', 'sports_yoga', 'hospital_visits')
+        valid = (
+            "orientation",
+            "skills_acquisition",
+            "professional_development",
+            "language_computer",
+            "sports_yoga",
+            "hospital_visits",
+        )
         if v not in valid:
             raise ValueError(f"module_name must be one of {valid}")
         return v
@@ -44,7 +51,14 @@ class FoundationCourseSignoffPayload(BaseModel):
     @field_validator("module_name")
     @classmethod
     def validate_module(cls, v: str) -> str:
-        valid = ('orientation', 'skills_acquisition', 'professional_development', 'language_computer', 'sports_yoga', 'hospital_visits')
+        valid = (
+            "orientation",
+            "skills_acquisition",
+            "professional_development",
+            "language_computer",
+            "sports_yoga",
+            "hospital_visits",
+        )
         if v not in valid:
             raise ValueError(f"module_name must be one of {valid}")
         return v
@@ -59,7 +73,7 @@ class AetcomReflectionSubmit(BaseModel):
     @field_validator("professional_phase")
     @classmethod
     def validate_phase(cls, v: str) -> str:
-        valid = ('Phase I', 'Phase II', 'Phase III Part I', 'Phase III Part II')
+        valid = ("Phase I", "Phase II", "Phase III Part I", "Phase III Part II")
         if v not in valid:
             raise ValueError(f"professional_phase must be one of {valid}")
         return v
@@ -74,7 +88,7 @@ class AetcomSignoffPayload(BaseModel):
     @field_validator("professional_phase")
     @classmethod
     def validate_phase(cls, v: str) -> str:
-        valid = ('Phase I', 'Phase II', 'Phase III Part I', 'Phase III Part II')
+        valid = ("Phase I", "Phase II", "Phase III Part I", "Phase III Part II")
         if v not in valid:
             raise ValueError(f"professional_phase must be one of {valid}")
         return v
@@ -88,9 +102,9 @@ class AetcomRecordResponse(BaseModel):
     competency_code: str
     professional_phase: str
     status: str
-    reflection_text: Optional[str]
-    signed_off_by: Optional[uuid.UUID]
-    signed_off_at: Optional[datetime.datetime]
+    reflection_text: str | None
+    signed_off_by: uuid.UUID | None
+    signed_off_at: datetime.datetime | None
     created_at: datetime.datetime
     updated_at: datetime.datetime
 

@@ -1,16 +1,17 @@
 from __future__ import annotations
 
-import uuid
+import contextlib
 import json
-from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, Request, File, Form, UploadFile, status, Response
+import uuid
+from typing import Annotated
+
+from app.schemas.digital_asset import DigitalAssetResponse
+from app.services.asset_service import AssetService
+from fastapi import APIRouter, Depends, File, Form, Request, Response, UploadFile, status
 
 from packages.shared.auth.dependencies import get_current_user
 from packages.shared.auth.jwt import TokenPayload
 from packages.shared.auth.tenant_context import require_tenant_context
-
-from app.schemas.digital_asset import DigitalAssetResponse
-from app.services.asset_service import AssetService
 
 router = APIRouter(prefix="/workflow/assets", tags=["digital-assets"])
 
@@ -25,19 +26,17 @@ router = APIRouter(prefix="/workflow/assets", tags=["digital-assets"])
 async def upload_asset(
     request: Request,
     file: UploadFile = File(...),
-    meta_attributes: Optional[str] = Form(None),
+    meta_attributes: str | None = Form(None),
     current_user: Annotated[TokenPayload, Depends(get_current_user)] = None,
     service: Annotated[AssetService, Depends(AssetService)] = None,
 ) -> DigitalAssetResponse:
     tenant_id = request.state.tenant_id
     content = await file.read()
-    
+
     parsed_meta = {}
     if meta_attributes:
-        try:
+        with contextlib.suppress(json.JSONDecodeError):
             parsed_meta = json.loads(meta_attributes)
-        except json.JSONDecodeError:
-            pass
 
     asset = await service.upload_asset(
         tenant_id=tenant_id,
@@ -68,7 +67,7 @@ async def download_asset(
         asset_id=id,
         downloader_user_id=current_user.user_uuid,
     )
-    
+
     headers = {
         "Content-Disposition": f'attachment; filename="{file_name}"',
     }

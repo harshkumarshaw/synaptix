@@ -11,35 +11,19 @@ Handles the actual authentication logic:
 from __future__ import annotations
 
 import random
-import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
-from fastapi import Depends
-import pyotp
 import bcrypt
+import pyotp
+from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from packages.shared.auth.jwt import (
-    TokenPayload,
-    create_access_token,
-    create_refresh_token,
-    decode_token,
-    MFA_REQUIRED_ROLES,
-)
-from packages.shared.db.session import get_db
-from packages.shared.errors import (
-    AuthenticationError,
-    MFACodeInvalidError,
-    TokenInvalidError,
-)
-from packages.shared.logging import get_logger
-
-from app.config import get_settings, Settings
+from app.config import Settings, get_settings
+from app.models.role import Role
 from app.models.tenant import Tenant
 from app.models.user import User
-from app.models.role import Role
 from app.models.user_role import UserRole
 from app.schemas.auth import (
     LoginRequest,
@@ -51,6 +35,20 @@ from app.schemas.auth import (
     RefreshResponse,
     UserProfileResponse,
 )
+from packages.shared.auth.jwt import (
+    MFA_REQUIRED_ROLES,
+    TokenPayload,
+    create_access_token,
+    create_refresh_token,
+    decode_token,
+)
+from packages.shared.db.session import get_db
+from packages.shared.errors import (
+    AuthenticationError,
+    MFACodeInvalidError,
+    TokenInvalidError,
+)
+from packages.shared.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -144,7 +142,7 @@ class AuthService:
         )
 
         # Update last login timestamp
-        user.last_login_at = datetime.now(timezone.utc)
+        user.last_login_at = datetime.now(UTC)
         await self.db.commit()
 
         logger.info(
@@ -191,11 +189,11 @@ class AuthService:
             raise AuthenticationError("User account is inactive")
 
         # Generate a 6-digit OTP code
-        otp = f"{random.randint(100000, 999999)}"
+        otp = f"{random.randint(100000, 999999)}"  # noqa: S311
 
         # Store OTP and expiration in the DB (5 minutes validity)
         user.otp_code = otp
-        user.otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=5)
+        user.otp_expires_at = datetime.now(UTC) + timedelta(minutes=5)
         await self.db.commit()
 
         logger.info(
@@ -231,8 +229,8 @@ class AuthService:
             raise AuthenticationError("OTP verification not initiated")
 
         # Check expiration
-        now = datetime.now(timezone.utc)
-        if user.otp_expires_at.replace(tzinfo=timezone.utc) < now:
+        now = datetime.now(UTC)
+        if user.otp_expires_at.replace(tzinfo=UTC) < now:
             raise AuthenticationError("OTP has expired")
 
         # Check code
@@ -334,9 +332,7 @@ class AuthService:
             expires_in_seconds=self.settings.jwt_access_token_expire_minutes * 60,
         )
 
-    async def verify_mfa(
-        self, body: MFAVerifyRequest, current_user: TokenPayload
-    ) -> LoginResponse:
+    async def verify_mfa(self, body: MFAVerifyRequest, current_user: TokenPayload) -> LoginResponse:
         """Verify TOTP code and issue MFA-verified tokens.
 
         Args:
@@ -449,9 +445,7 @@ class AuthService:
             mfa_enabled=user.mfa_enabled,
         )
 
-    async def logout(
-        self, body: RefreshRequest, current_user: TokenPayload
-    ) -> None:
+    async def logout(self, body: RefreshRequest, current_user: TokenPayload) -> None:
         """Invalidate the user's refresh token (stub).
 
         Args:
@@ -463,4 +457,3 @@ class AuthService:
             "Logout requested",
             extra={"user_id": current_user.sub, "tenant_id": current_user.tenant_id},
         )
-

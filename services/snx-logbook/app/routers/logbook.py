@@ -1,21 +1,22 @@
 from __future__ import annotations
 
 import uuid
-from typing import Annotated, Optional
-from fastapi import APIRouter, Depends, status, HTTPException
+from typing import Annotated
+
+from app.schemas.logbook import (
+    AetcomRecordResponse,
+    AetcomReflectionSubmit,
+    AetcomSignoffPayload,
+    FoundationCourseHoursLog,
+    FoundationCourseRecordResponse,
+    FoundationCourseSignoffPayload,
+)
+from app.services.logbook_service import LogbookService
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from packages.shared.auth.dependencies import get_current_user
 from packages.shared.auth.jwt import TokenPayload
-from packages.shared.errors import ResourceNotFoundError, ValidationError, DuplicateRecordError
-from app.schemas.logbook import (
-    FoundationCourseRecordResponse,
-    FoundationCourseHoursLog,
-    FoundationCourseSignoffPayload,
-    AetcomReflectionSubmit,
-    AetcomSignoffPayload,
-    AetcomRecordResponse,
-)
-from app.services.logbook_service import LogbookService
+from packages.shared.errors import DuplicateRecordError, ValidationError
 
 router = APIRouter(prefix="/logbook", tags=["logbook"])
 
@@ -23,6 +24,7 @@ router = APIRouter(prefix="/logbook", tags=["logbook"])
 # ============================================================================
 # Foundation Course Endpoints
 # ============================================================================
+
 
 @router.post(
     "/foundation/hours",
@@ -37,9 +39,7 @@ async def log_foundation_hours(
 ) -> FoundationCourseRecordResponse:
     try:
         record = await service.log_foundation_hours(
-            tenant_id=current_user.tenant_uuid,
-            log_in=log_in,
-            actor_id=current_user.user_uuid
+            tenant_id=current_user.tenant_uuid, log_in=log_in, actor_id=current_user.user_uuid
         )
         return record
     except ValidationError as e:
@@ -61,7 +61,7 @@ async def signoff_foundation_module(
         record = await service.signoff_foundation_module(
             tenant_id=current_user.tenant_uuid,
             payload=payload,
-            signed_off_by=current_user.user_uuid
+            signed_off_by=current_user.user_uuid,
         )
         return record
     except ValidationError as e:
@@ -80,8 +80,7 @@ async def get_student_foundation_progress(
     service: Annotated[LogbookService, Depends(LogbookService)],
 ) -> list[FoundationCourseRecordResponse]:
     records = await service.get_student_foundation_progress(
-        tenant_id=current_user.tenant_uuid,
-        student_id=student_id
+        tenant_id=current_user.tenant_uuid, student_id=student_id
     )
     return records
 
@@ -89,6 +88,7 @@ async def get_student_foundation_progress(
 # ============================================================================
 # AETCOM Endpoints
 # ============================================================================
+
 
 @router.post(
     "/aetcom/reflection",
@@ -106,7 +106,7 @@ async def submit_reflection(
             tenant_id=current_user.tenant_uuid,
             student_id=current_user.user_uuid,  # Assuming student logged in is the actor
             submit_in=submit_in,
-            actor_id=current_user.user_uuid
+            actor_id=current_user.user_uuid,
         )
         return record
     except DuplicateRecordError as e:
@@ -130,7 +130,7 @@ async def signoff_aetcom_competency(
         record = await service.signoff_aetcom_competency(
             tenant_id=current_user.tenant_uuid,
             payload=payload,
-            signed_off_by=current_user.user_uuid
+            signed_off_by=current_user.user_uuid,
         )
         return record
     except ValidationError as e:
@@ -145,13 +145,11 @@ async def signoff_aetcom_competency(
 )
 async def get_student_aetcom_records(
     student_id: uuid.UUID,
-    phase: Optional[str] = None,
     current_user: Annotated[TokenPayload, Depends(get_current_user)],
     service: Annotated[LogbookService, Depends(LogbookService)],
+    phase: str | None = None,
 ) -> list[AetcomRecordResponse]:
     records = await service.get_student_aetcom_records(
-        tenant_id=current_user.tenant_uuid,
-        student_id=student_id,
-        phase=phase
+        tenant_id=current_user.tenant_uuid, student_id=student_id, phase=phase
     )
     return records

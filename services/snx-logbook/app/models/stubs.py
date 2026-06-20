@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from packages.shared.db.base import TenantScopedBase, GlobalBase
+from packages.shared.db.base import GlobalBase, TenantScopedBase
 
 
 class Tenant(GlobalBase):

@@ -1,8 +1,13 @@
 from __future__ import annotations
 
-import uuid
 import hashlib
+import uuid
+from datetime import UTC
 from typing import Annotated, Any
+
+from app.models.digital_asset import DigitalAsset
+from app.services.audit_logger import write_audit_log
+from app.services.storage import LocalStorageProvider, StorageProvider
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,9 +16,6 @@ from sqlalchemy.orm import joinedload
 from packages.shared.db.session import get_db
 from packages.shared.errors import ResourceNotFoundError
 from packages.shared.logging import get_logger
-from app.models.digital_asset import DigitalAsset
-from app.services.storage import StorageProvider, LocalStorageProvider
-from app.services.audit_logger import write_audit_log
 
 logger = get_logger(__name__)
 
@@ -56,7 +58,7 @@ class AssetService:
         )
         self.db.add(asset)
         await self.db.flush()
-        
+
         # Log to global audit log
         await write_audit_log(
             self.db,
@@ -71,7 +73,7 @@ class AssetService:
                 "sha256": sha256,
             },
         )
-        
+
         await self.db.commit()
         await self.db.refresh(asset)
         return asset
@@ -96,7 +98,7 @@ class AssetService:
         self, tenant_id: uuid.UUID, asset_id: uuid.UUID, downloader_user_id: uuid.UUID
     ) -> tuple[bytes, str, str]:
         asset = await self.get_asset(tenant_id, asset_id)
-        
+
         # Read from storage provider
         content = await self.storage.read(asset.storage_path)
 
@@ -114,18 +116,24 @@ class AssetService:
 
         return content, asset.file_name, asset.file_type
 
-    async def delete_asset(self, tenant_id: uuid.UUID, asset_id: uuid.UUID, actor_user_id: uuid.UUID) -> None:
+    async def delete_asset(
+        self, tenant_id: uuid.UUID, asset_id: uuid.UUID, actor_user_id: uuid.UUID
+    ) -> None:
         asset = await self.get_asset(tenant_id, asset_id)
-        
+
         # Soft delete
-        from datetime import datetime, timezone
-        asset.deleted_at = datetime.now(timezone.utc)
-        
+        from datetime import datetime
+
+        asset.deleted_at = datetime.now(UTC)
+
         # Delete physical file from storage provider
         try:
             await self.storage.delete(asset.storage_path)
         except Exception as e:
-            logger.error("Failed to delete asset from physical storage", extra={"path": asset.storage_path, "error": str(e)})
+            logger.error(
+                "Failed to delete asset from physical storage",
+                extra={"path": asset.storage_path, "error": str(e)},
+            )
 
         # Log to audit log
         await write_audit_log(
@@ -136,5 +144,5 @@ class AssetService:
             resource_type="digital_asset",
             resource_id=asset.id,
         )
-        
+
         await self.db.commit()

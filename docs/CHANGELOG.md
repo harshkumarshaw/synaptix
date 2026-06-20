@@ -7,6 +7,20 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed — Session 6 (GitHub Actions CI Pipeline Repair)
+
+**Linting & Formatting**
+- Fixed Python syntax error in `services/snx-logbook/app/routers/logbook.py`: moved `phase: Optional[str] = None` parameter after non-default `Annotated[...]` parameters.
+- Migrated `[tool.ruff]` linter configuration from deprecated top-level keys to `[tool.ruff.lint]` / `[tool.ruff.lint.per-file-ignores]`.
+- Added comprehensive ruff ignore rules for FastAPI idioms (`ARG001/002`, `B008`, `B904`, `PLC0415`, `PLR2004`, `PLW0603`, `SIM102`, `E501`) and per-file ignores for `tests/**`, `**/schemas/**`, `scripts/**`.
+- Formatted 88 Python files with Black; all 154 files now clean.
+- Ruff: 0 errors. Black: 0 diffs.
+
+**CI Workflow**
+- Rewrote `unit-tests` job in `.github/workflows/ci.yml` to run each microservice's unit tests with its own isolated `PYTHONPATH` (resolving `ModuleNotFoundError: No module named 'app'` on the CI runner).
+- Used `--cov-append` to accumulate coverage across all four test passes; coverage threshold check runs only on the final step.
+- Local verification: 29/29 unit tests passing, total coverage **83.67%** (threshold 80%) ✓.
+
 ### Added — Session 5 (Phase 1B Calendar & Planning Redesign & Fixes)
 
 **Database Migrations & Schema Standards**

@@ -1,29 +1,27 @@
 from __future__ import annotations
 
-import uuid
 import datetime
-from datetime import timezone
-from typing import Annotated, List, Optional
+import uuid
+from typing import Annotated
+
+from app.models.logbook import AetcomRecord, FoundationCourseRecord
+from app.schemas.logbook import (
+    AetcomReflectionSubmit,
+    AetcomSignoffPayload,
+    FoundationCourseHoursLog,
+    FoundationCourseSignoffPayload,
+)
+from app.services.audit_logger import write_audit_log
 from fastapi import Depends
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from packages.shared.db.session import get_db
 from packages.shared.errors import (
-    ResourceNotFoundError,
-    ValidationError,
     DuplicateRecordError,
 )
 from packages.shared.logging import get_logger
-from app.models.logbook import FoundationCourseRecord, AetcomRecord
-from app.schemas.logbook import (
-    FoundationCourseHoursLog,
-    FoundationCourseSignoffPayload,
-    AetcomReflectionSubmit,
-    AetcomSignoffPayload,
-)
-from app.services.audit_logger import write_audit_log
 
 logger = get_logger(__name__)
 
@@ -48,14 +46,17 @@ class LogbookService:
     # ============================================================================
 
     async def log_foundation_hours(
-        self, tenant_id: uuid.UUID, log_in: FoundationCourseHoursLog, actor_id: Optional[uuid.UUID] = None
+        self,
+        tenant_id: uuid.UUID,
+        log_in: FoundationCourseHoursLog,
+        actor_id: uuid.UUID | None = None,
     ) -> FoundationCourseRecord:
         # Check if record already exists
         stmt = select(FoundationCourseRecord).where(
             FoundationCourseRecord.tenant_id == tenant_id,
             FoundationCourseRecord.student_id == log_in.student_id,
             FoundationCourseRecord.module_name == log_in.module_name,
-            FoundationCourseRecord.deleted_at.is_(None)
+            FoundationCourseRecord.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         record = res.scalar_one_or_none()
@@ -78,7 +79,7 @@ class LogbookService:
                 required_hours=required,
                 is_completed=is_comp,
                 created_by=actor_id,
-                updated_by=actor_id
+                updated_by=actor_id,
             )
             self.db.add(record)
 
@@ -94,20 +95,23 @@ class LogbookService:
             new_values={
                 "module_name": record.module_name,
                 "completed_hours": float(record.completed_hours),
-                "is_completed": record.is_completed
-            }
+                "is_completed": record.is_completed,
+            },
         )
 
         return record
 
     async def signoff_foundation_module(
-        self, tenant_id: uuid.UUID, payload: FoundationCourseSignoffPayload, signed_off_by: uuid.UUID
+        self,
+        tenant_id: uuid.UUID,
+        payload: FoundationCourseSignoffPayload,
+        signed_off_by: uuid.UUID,
     ) -> FoundationCourseRecord:
         stmt = select(FoundationCourseRecord).where(
             FoundationCourseRecord.tenant_id == tenant_id,
             FoundationCourseRecord.student_id == payload.student_id,
             FoundationCourseRecord.module_name == payload.module_name,
-            FoundationCourseRecord.deleted_at.is_(None)
+            FoundationCourseRecord.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         record = res.scalar_one_or_none()
@@ -122,15 +126,15 @@ class LogbookService:
                 completed_hours=required,
                 required_hours=required,
                 is_completed=True,
-                signoff_received_at=datetime.datetime.now(timezone.utc),
+                signoff_received_at=datetime.datetime.now(datetime.UTC),
                 signed_off_by=signed_off_by,
                 created_by=signed_off_by,
-                updated_by=signed_off_by
+                updated_by=signed_off_by,
             )
             self.db.add(record)
         else:
             record.is_completed = True
-            record.signoff_received_at = datetime.datetime.now(timezone.utc)
+            record.signoff_received_at = datetime.datetime.now(datetime.UTC)
             record.signed_off_by = signed_off_by
             record.updated_by = signed_off_by
 
@@ -146,19 +150,19 @@ class LogbookService:
             new_values={
                 "module_name": record.module_name,
                 "is_completed": True,
-                "signed_off_by": str(signed_off_by)
-            }
+                "signed_off_by": str(signed_off_by),
+            },
         )
 
         return record
 
     async def get_student_foundation_progress(
         self, tenant_id: uuid.UUID, student_id: uuid.UUID
-    ) -> List[FoundationCourseRecord]:
+    ) -> list[FoundationCourseRecord]:
         stmt = select(FoundationCourseRecord).where(
             FoundationCourseRecord.tenant_id == tenant_id,
             FoundationCourseRecord.student_id == student_id,
-            FoundationCourseRecord.deleted_at.is_(None)
+            FoundationCourseRecord.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
@@ -168,7 +172,11 @@ class LogbookService:
     # ============================================================================
 
     async def submit_reflection(
-        self, tenant_id: uuid.UUID, student_id: uuid.UUID, submit_in: AetcomReflectionSubmit, actor_id: Optional[uuid.UUID] = None
+        self,
+        tenant_id: uuid.UUID,
+        student_id: uuid.UUID,
+        submit_in: AetcomReflectionSubmit,
+        actor_id: uuid.UUID | None = None,
     ) -> AetcomRecord:
         # Check if record already exists
         stmt = select(AetcomRecord).where(
@@ -177,7 +185,7 @@ class LogbookService:
             AetcomRecord.module_code == submit_in.module_code,
             AetcomRecord.competency_code == submit_in.competency_code,
             AetcomRecord.professional_phase == submit_in.professional_phase,
-            AetcomRecord.deleted_at.is_(None)
+            AetcomRecord.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         record = res.scalar_one_or_none()
@@ -196,14 +204,16 @@ class LogbookService:
                 status="reflection_submitted",
                 reflection_text=submit_in.reflection_text,
                 created_by=actor_id,
-                updated_by=actor_id
+                updated_by=actor_id,
             )
             self.db.add(record)
 
         try:
             await self.db.flush()
         except IntegrityError as e:
-            raise DuplicateRecordError("Unique constraint violation submitting AETCOM reflection") from e
+            raise DuplicateRecordError(
+                "Unique constraint violation submitting AETCOM reflection"
+            ) from e
 
         await write_audit_log(
             db=self.db,
@@ -215,8 +225,8 @@ class LogbookService:
             new_values={
                 "module_code": record.module_code,
                 "competency_code": record.competency_code,
-                "status": record.status
-            }
+                "status": record.status,
+            },
         )
 
         return record
@@ -230,7 +240,7 @@ class LogbookService:
             AetcomRecord.module_code == payload.module_code,
             AetcomRecord.competency_code == payload.competency_code,
             AetcomRecord.professional_phase == payload.professional_phase,
-            AetcomRecord.deleted_at.is_(None)
+            AetcomRecord.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         record = res.scalar_one_or_none()
@@ -245,15 +255,15 @@ class LogbookService:
                 professional_phase=payload.professional_phase,
                 status="completed",
                 signed_off_by=signed_off_by,
-                signed_off_at=datetime.datetime.now(timezone.utc),
+                signed_off_at=datetime.datetime.now(datetime.UTC),
                 created_by=signed_off_by,
-                updated_by=signed_off_by
+                updated_by=signed_off_by,
             )
             self.db.add(record)
         else:
             record.status = "completed"
             record.signed_off_by = signed_off_by
-            record.signed_off_at = datetime.datetime.now(timezone.utc)
+            record.signed_off_at = datetime.datetime.now(datetime.UTC)
             record.updated_by = signed_off_by
 
         await self.db.flush()
@@ -269,19 +279,19 @@ class LogbookService:
                 "module_code": record.module_code,
                 "competency_code": record.competency_code,
                 "status": "completed",
-                "signed_off_by": str(signed_off_by)
-            }
+                "signed_off_by": str(signed_off_by),
+            },
         )
 
         return record
 
     async def get_student_aetcom_records(
-        self, tenant_id: uuid.UUID, student_id: uuid.UUID, phase: Optional[str] = None
-    ) -> List[AetcomRecord]:
+        self, tenant_id: uuid.UUID, student_id: uuid.UUID, phase: str | None = None
+    ) -> list[AetcomRecord]:
         stmt = select(AetcomRecord).where(
             AetcomRecord.tenant_id == tenant_id,
             AetcomRecord.student_id == student_id,
-            AetcomRecord.deleted_at.is_(None)
+            AetcomRecord.deleted_at.is_(None),
         )
         if phase:
             stmt = stmt.where(AetcomRecord.professional_phase == phase)

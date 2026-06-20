@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from datetime import date
-from typing import Optional
 
 from sqlalchemy.orm import Mapped, mapped_column
+
 from packages.shared.db.base import TenantScopedBase
 
 

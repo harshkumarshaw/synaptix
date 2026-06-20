@@ -1,11 +1,11 @@
-import pytest
 import datetime
 import uuid
-from app.services.session_tracking_service import SessionTrackingService
+
+import pytest
 from app.models.calendar import Event, EventCourse
 from app.models.lesson_plan import LessonPlan
-from app.models.session import Session
-from app.schemas.session import SessionCreate, SessionFacultyBase
+from app.schemas.session import SessionCreate
+from app.services.session_tracking_service import SessionTrackingService
 from sqlalchemy import text
 
 
@@ -14,37 +14,49 @@ async def test_session_conducting_and_coverage(db_session, tenant_id):
     # Setup dummy database entries
     dept_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO departments (id, tenant_id, name, code) VALUES (:id, :t_id, 'Anatomy Dept', 'ANAT_SESS')"),
-        {"id": dept_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO departments (id, tenant_id, name, code) VALUES (:id, :t_id, 'Anatomy Dept', 'ANAT_SESS')"
+        ),
+        {"id": dept_id, "t_id": tenant_id},
     )
     prog_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO programs (id, tenant_id, name, code, type, duration_years) VALUES (:id, :t_id, 'MBBS', 'MBBS-CBME-SESS', 'professional_phase', 5)"),
-        {"id": prog_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO programs (id, tenant_id, name, code, type, duration_years) VALUES (:id, :t_id, 'MBBS', 'MBBS-CBME-SESS', 'professional_phase', 5)"
+        ),
+        {"id": prog_id, "t_id": tenant_id},
     )
-    
+
     curr_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO curricula (id, tenant_id, program_id, name, version_code) VALUES (:id, :t_id, :p_id, 'CBME 2023', 'CBME-2023-SESS')"),
-        {"id": curr_id, "t_id": tenant_id, "p_id": prog_id}
+        text(
+            "INSERT INTO curricula (id, tenant_id, program_id, name, version_code) VALUES (:id, :t_id, :p_id, 'CBME 2023', 'CBME-2023-SESS')"
+        ),
+        {"id": curr_id, "t_id": tenant_id, "p_id": prog_id},
     )
-    
+
     course_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO courses (id, tenant_id, curriculum_id, department_id, name, code, default_attendance_category) VALUES (:id, :t_id, :curr_id, :d_id, 'Anatomy', 'ANAT-SESS-101', 'practical')"),
-        {"id": course_id, "t_id": tenant_id, "curr_id": curr_id, "d_id": dept_id}
+        text(
+            "INSERT INTO courses (id, tenant_id, curriculum_id, department_id, name, code, default_attendance_category) VALUES (:id, :t_id, :curr_id, :d_id, 'Anatomy', 'ANAT-SESS-101', 'practical')"
+        ),
+        {"id": course_id, "t_id": tenant_id, "curr_id": curr_id, "d_id": dept_id},
     )
     # Academic Year
     ay_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO academic_years (id, tenant_id, name, start_date, end_date, is_current) VALUES (:id, :t_id, '2026-2027', '2026-08-01', '2027-07-31', true)"),
-        {"id": ay_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO academic_years (id, tenant_id, name, start_date, end_date, is_current) VALUES (:id, :t_id, '2026-2027', '2026-08-01', '2027-07-31', true)"
+        ),
+        {"id": ay_id, "t_id": tenant_id},
     )
     # Batch
     batch_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO batches (id, tenant_id, academic_year_id, program_id, name, code) VALUES (:id, :t_id, :ay_id, :prog_id, 'MBBS 2026', 'MBBS2026_S')"),
-        {"id": batch_id, "t_id": tenant_id, "ay_id": ay_id, "prog_id": prog_id}
+        text(
+            "INSERT INTO batches (id, tenant_id, academic_year_id, program_id, name, code) VALUES (:id, :t_id, :ay_id, :prog_id, 'MBBS 2026', 'MBBS2026_S')"
+        ),
+        {"id": batch_id, "t_id": tenant_id, "ay_id": ay_id, "prog_id": prog_id},
     )
     await db_session.commit()
 
@@ -62,15 +74,10 @@ async def test_session_conducting_and_coverage(db_session, tenant_id):
         date=datetime.date(2026, 9, 10),
         start_time=datetime.time(9, 0),
         end_time=datetime.time(10, 0),
-        status="scheduled"
+        status="scheduled",
     )
     db_session.add(event)
-    ec = EventCourse(
-        tenant_id=tenant_id,
-        event_id=event_id,
-        course_id=course_id,
-        is_primary=True
-    )
+    ec = EventCourse(tenant_id=tenant_id, event_id=event_id, course_id=course_id, is_primary=True)
     db_session.add(ec)
 
     # Create Lesson Plans (1 draft, 2 approved/current)
@@ -88,7 +95,7 @@ async def test_session_conducting_and_coverage(db_session, tenant_id):
         competency_code="AN-C1",
         nmc_competency_level="K",
         is_core=True,
-        status="approved"
+        status="approved",
     )
     db_session.add(lp1)
 
@@ -106,7 +113,7 @@ async def test_session_conducting_and_coverage(db_session, tenant_id):
         competency_code="AN-C2",
         nmc_competency_level="KH",
         is_core=True,
-        status="approved"
+        status="approved",
     )
     db_session.add(lp2)
     await db_session.commit()
@@ -115,14 +122,17 @@ async def test_session_conducting_and_coverage(db_session, tenant_id):
 
     # 1. Test conducting unplanned session validation (should fail because lesson_plan_id is null and session_reason is empty)
     import pydantic
-    with pytest.raises(pydantic.ValidationError, match="session_reason is required if lesson_plan_id is null"):
+
+    with pytest.raises(
+        pydantic.ValidationError, match="session_reason is required if lesson_plan_id is null"
+    ):
         SessionCreate(
             event_id=event_id,
             lesson_plan_id=None,
             session_reason="",
             conducted_at=datetime.datetime.now(),
             actual_hours=1.0,
-            conducted_faculty=[]
+            conducted_faculty=[],
         )
 
     # 2. Conduct a planned session successfully
@@ -132,7 +142,7 @@ async def test_session_conducting_and_coverage(db_session, tenant_id):
         session_reason=None,
         conducted_at=datetime.datetime.now(),
         actual_hours=1.0,
-        conducted_faculty=[]
+        conducted_faculty=[],
     )
     session_obj = await session_service.conduct_session(tenant_id, sess_in_ok)
     assert session_obj.id is not None
