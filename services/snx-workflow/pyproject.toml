@@ -1,0 +1,11 @@
+[project]
+name = "snx-workflow"
+version = "0.1.0"
+description = "Synaptix Workflow Engine, MDM & Digital Asset Repository Service"
+requires-python = "==3.12.*"
+
+dependencies = [
+    "synaptix-shared",
+    "uvicorn[standard]>=0.30",
+    "python-dotenv>=1.0",
+]

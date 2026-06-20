@@ -3,6 +3,8 @@ Unit Tests — JWT Utilities.
 
 Tests for packages/shared/auth/jwt.py.
 These tests do NOT require a database connection.
+
+Manifest IDs: AUTH-003, AUTH-004
 """
 
 from __future__ import annotations

@@ -6,31 +6,35 @@ End-of-session notes for the next agent session.
 
 ## Current Status
 
-**Last session:** 2026-06-20 — Session 2 (Orchestrator acting as Backend + Database + Testing + Documentation agents)
-**Phase:** Phase 1A — Foundation (in progress)
-**In progress:** Phase 1A foundation scaffold and service logic verification DONE. Next: Dockerfiles & CI/CD workflow setup.
+**Last session:** 2026-06-20 — Session 4 (Backend Agent 02)
+**Phase:** Phase 1A — Foundation (Scaffolding Phase Complete)
+**In progress:** Phase 1A service foundations and database schemas are fully in place and verified. All 30 tests (21 auth + 2 academic/institution + 7 workflow/MDM/asset) pass.
 
 ## Tasks Pending
 
 ### [TO: 09-devops] DevOps Agent
-- [ ] Create `services/snx-auth/Dockerfile` (multi-stage, production-ready, clean python environment)
+- [ ] Create `services/snx-auth/Dockerfile`
+- [ ] Create `services/snx-academic/Dockerfile`
+- [ ] Create `services/snx-institution/Dockerfile`
+- [ ] Create `services/snx-workflow/Dockerfile` (Ensure bind-mount capability to `/app/storage/assets`)
 - [ ] Create `.github/workflows/ci.yml` — GitHub Actions pipeline
-  - ruff check, black check, mypy
-  - pytest tests/unit tests/compliance
-  - Block merge if NMC compliance tests fail
+  - Verify formatting and linting (black, ruff, mypy)
+  - Execute test suites independently using isolated PYTHONPATH parameters for each service:
+    - Auth: `PYTHONPATH=.:services/snx-auth pytest tests/integration/test_auth_service.py tests/unit/test_jwt_utils.py`
+    - Academic: `PYTHONPATH=.:services/snx-academic pytest tests/integration/test_academic_service.py`
+    - Institution: `PYTHONPATH=.:services/snx-institution pytest tests/integration/test_institution_service.py`
+    - Workflow: `PYTHONPATH=.:services/snx-workflow pytest tests/unit/workflow/ tests/integration/workflow/ tests/security/workflow/ tests/unit/mdm/ tests/unit/assets/`
+  - Block merge if any compliance or regression tests fail
 - [ ] Set up pre-commit hook: copy `scripts/pre-commit-hook.ps1` content to `.git/hooks/pre-commit`
-- [ ] Create `services/snx-auth/docker-compose.override.yml` for local dev (if needed)
 
 ### [TO: Human — Harsh]
-- [ ] Install Flutter: https://docs.flutter.dev/get-started/install/windows (Deferred to Phase 2)
+- [ ] Install Flutter (Deferred to Phase 2)
 
 ## Blockers
 
-- None (Docker and Github repositories are fully configured and running).
+- None
 
 ## Important Reminders
 
-- NMC compliance tests HARD-FAIL the build (currently all stubbed/skipped — OK)
-- Tenant isolation: 3-layer enforcement (Middleware + @require_tenant_context + RLS)
-- ALL env vars from `.env` — never hardcode secrets
-- Two-threshold attendance: 75% theory, 80% practical — SEPARATE checks
+- **Test Database Isolation:** The database isolation is handled by table truncation in `db_session` conftest fixture (disabling the `trg_audit_log_no_update` trigger on the append-only table prior to truncation).
+- **Run pytest Individually:** Do not run pytest globally due to `app` namespace conflicts; run tests for each service with its corresponding `PYTHONPATH`.

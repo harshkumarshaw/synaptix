@@ -78,11 +78,27 @@ def app_settings() -> Any:
 async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]:
     """Provide a database session scoped by tenant context."""
     import packages.shared.db.session as db_session_mod
+    from sqlalchemy import text
     
     database_url = os.environ["SNX_DATABASE_URL"]
     db_session_mod.configure_database(database_url)
     
     async with db_session_mod._async_session_factory() as session:
+        # Truncate tables to ensure a clean state for every test
+        await session.execute(text("ALTER TABLE audit_log DISABLE TRIGGER trg_audit_log_no_update"))
+        await session.execute(
+            text(
+                "TRUNCATE TABLE "
+                "timetable_entries, timetable_slots, students, faculty, user_roles, "
+                "workflow_transitions, workflow_instances, digital_assets, users, "
+                "sections, batches, courses, departments, curricula, programs, "
+                "academic_years, workflow_definitions, master_data_entities, audit_log "
+                "CASCADE"
+            )
+        )
+        await session.execute(text("ALTER TABLE audit_log ENABLE TRIGGER trg_audit_log_no_update"))
+        await session.commit()
+
         await db_session_mod.set_tenant_context(session, tenant_id)
         yield session
         await session.rollback()

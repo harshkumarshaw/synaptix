@@ -117,5 +117,92 @@ Add missing deleted_at column to roles and user_roles tables to support soft del
 **Verification:**
 - Verify tests pass when accessing role-based SQLAlchemy operations.
 
+---
+
+### Migration: 20260620_0005_academic_and_institutional_tables
+**Created:** 2026-06-20
+**Agent:** Database Agent (05)
+**Revision ID:** 20260620_0005
+**Depends on:** 20260620_0004
+
+**Purpose:**
+Scaffold remaining Phase 1A foundation tables for academic structure, student lifecycles, and timetable slots/entries. Enforce RLS and auto-update triggers.
+
+**Changes:**
+- Created tables: `departments`, `faculty`, `courses`, `batches`, `sections`, `students`, `timetable_slots`, `timetable_entries`.
+- Enabled RLS on all 8 tables.
+- Created `tenant_isolation` policy per table to verify tenant isolation.
+- Created `trg_{table}_update` before update trigger to automatically update `updated_at` timestamps.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Successfully run `alembic upgrade head` and confirmed transaction applied.
+
+---
+
+### Migration: 20260620_0006_master_data_tables
+**Created:** 2026-06-20
+**Agent:** Database Agent (05)
+**Revision ID:** 20260620_0006
+**Depends on:** 20260620_0005
+
+**Purpose:**
+Create F-02 Master Data Management tables, specifically the `master_data_entities` table, with support for curriculum-scoping and tenant isolation.
+
+**Changes:**
+- Created table: `master_data_entities` (tenant-scoped, with curriculum_id composite FK)
+- Created composite unique index on `(tenant_id, category, code)` where deleted_at is null.
+- Enabled RLS on the table.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run database migrations and verify MDM service unit tests.
+
+---
+
+### Migration: 20260620_0007_workflow_engine_tables
+**Created:** 2026-06-20
+**Agent:** Database Agent (05)
+**Revision ID:** 20260620_0007
+**Depends on:** 20260620_0006
+
+**Purpose:**
+Scaffold F-03 Workflow Engine schema: definitions, instances, and transitions. Establish database triggers to append transitions automatically to the workflow instances history JSONB cache.
+
+**Changes:**
+- Added unique constraint on `(tenant_id, id)` on `users` table to support composite foreign keys.
+- Created table: `workflow_definitions` (immutable versioning, with partial unique index for active versions).
+- Created table: `workflow_instances` (with composite FKs for definitions, current assignee, and check constraints for entity types).
+- Created table: `workflow_transitions`.
+- Created trigger `trg_workflow_transitions_insert` and trigger function `fn_workflow_transitions_insert_history()` on `workflow_transitions`.
+- Enabled RLS on all tables.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Verify workflow engine lifecycle unit and integration tests.
+
+---
+
+### Migration: 20260620_0008_digital_assets_tables
+**Created:** 2026-06-20
+**Agent:** Database Agent (05)
+**Revision ID:** 20260620_0008
+**Depends on:** 20260620_0007
+
+**Purpose:**
+Scaffold F-07 Digital Asset Repository database tables to support metadata, checksums, and tenant-scoped tracking of assets.
+
+**Changes:**
+- Created table: `digital_assets` (with BIGINT for file size and composite FK referencing users).
+- Enabled RLS and triggers.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Verify asset upload and download unit tests.
+
 
 

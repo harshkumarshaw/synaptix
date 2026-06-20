@@ -98,6 +98,86 @@ services:
     profiles:
       - tools
 
+  snx-auth:
+    build:
+      context: .
+      dockerfile: services/snx-auth/Dockerfile
+    container_name: snx-auth
+    ports:
+      - "8001:8001"
+    environment:
+      - SNX_ENV=dev
+      - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
+      - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - synaptix-net
+    profiles:
+      - services
+
+  snx-academic:
+    build:
+      context: .
+      dockerfile: services/snx-academic/Dockerfile
+    container_name: snx-academic
+    ports:
+      - "8002:8002"
+    environment:
+      - SNX_ENV=dev
+      - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
+      - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - synaptix-net
+    profiles:
+      - services
+
+  snx-institution:
+    build:
+      context: .
+      dockerfile: services/snx-institution/Dockerfile
+    container_name: snx-institution
+    ports:
+      - "8007:8007"
+    environment:
+      - SNX_ENV=dev
+      - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
+      - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - synaptix-net
+    profiles:
+      - services
+
+  snx-workflow:
+    build:
+      context: .
+      dockerfile: services/snx-workflow/Dockerfile
+    container_name: snx-workflow
+    ports:
+      - "8010:8010"
+    environment:
+      - SNX_ENV=dev
+      - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
+      - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
+      - SNX_STORAGE_DIR=/app/storage/assets
+    volumes:
+      - ./storage/assets:/app/storage/assets
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - synaptix-net
+    profiles:
+      - services
+
+
 volumes:
   postgres_data:
     name: synaptix_postgres_data

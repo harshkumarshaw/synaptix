@@ -1,3 +1,7 @@
+"""
+Integration Tests — Authentication flows.
+Test IDs: AUTH-001, AUTH-002, AUTH-005, AUTH-006, AUTH-007, AUTH-008, AUTH-009, AUTH-010, AUTH-011, AUTH-012, AUTH-013, AUTH-014, AUTH-015, AUTH-016, AUTH-017, AUTH-018, AUTH-019, AUTH-020, AUTH-E001, AUTH-E002, AUTH-E003, AUTH-E004, AUTH-E005
+"""
 import uuid
 from datetime import datetime, timezone, timedelta
 import pytest

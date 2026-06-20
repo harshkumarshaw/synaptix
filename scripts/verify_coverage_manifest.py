@@ -62,6 +62,15 @@ def main() -> int:
     print("=== Coverage Manifest Verification ===")
     
     required = get_required_test_ids()
+    
+    # Filter by command-line arguments if specified (e.g. verify_coverage_manifest.py workflow_engine)
+    if len(sys.argv) > 1:
+        target_modules = sys.argv[1:]
+        required = {k: v for k, v in required.items() if k in target_modules}
+        if not required:
+            print(f"ERROR: None of the specified modules {target_modules} found in manifest.")
+            return 1
+
     found = find_test_ids_in_codebase()
     
     total_required = sum(len(ids) for ids in required.values())

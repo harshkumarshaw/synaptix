@@ -21,6 +21,27 @@ Format: `[YYYY-MM-DD HH:MM:SS] [agent-id] command`
 [2026-06-20 13:58:00] [06-testing] pytest tests/integration/test_auth_service.py -v
 ```
 
+## 2026-06-20 — Session 3
+
+```
+[2026-06-20 14:38:00] [05-database] alembic upgrade head
+[2026-06-20 14:42:00] [05-database] alembic --config alembic.ini upgrade head
+[2026-06-20 14:48:00] [06-testing] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-academic" ; .\.venv\Scripts\pytest.exe tests/integration/test_academic_service.py
+[2026-06-20 14:56:00] [06-testing] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-institution" ; .\.venv\Scripts\pytest.exe tests/integration/test_institution_service.py
+```
+
+## 2026-06-20 — Session 4
+
+```
+[2026-06-20 15:45:00] [02-backend] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-workflow" ; .\.venv\Scripts\pytest.exe tests/unit/workflow/test_definition_versioning.py
+[2026-06-20 15:47:00] [02-backend] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-workflow" ; .\.venv\Scripts\pytest.exe tests/unit/workflow/test_transitions.py
+[2026-06-20 15:59:00] [02-backend] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-workflow" ; .\.venv\Scripts\pytest.exe tests/unit/assets/test_asset_service.py
+[2026-06-20 16:00:59] [02-backend] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-workflow" ; .\.venv\Scripts\pytest.exe tests/integration/workflow/test_full_lifecycle.py
+[2026-06-20 16:02:12] [02-backend] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-workflow" ; .\.venv\Scripts\pytest.exe tests/security/workflow/test_tenant_isolation.py
+[2026-06-20 16:04:48] [02-backend] & .\.venv\Scripts\python.exe scripts/seed_m1_data.py
+[2026-06-20 16:06:00] [02-backend] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-workflow" ; .\.venv\Scripts\pytest.exe tests/unit/workflow/test_definition_versioning.py tests/unit/workflow/test_transitions.py tests/integration/workflow/test_full_lifecycle.py tests/security/workflow/test_tenant_isolation.py tests/unit/mdm/test_master_data_service.py tests/unit/assets/test_asset_service.py -W ignore -p no:unraisableexception
+```
+
 ## 2026-06-18
 
 ```

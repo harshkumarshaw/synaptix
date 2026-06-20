@@ -88,6 +88,47 @@ Every architectural decision documented as an ADR.
 - (+) Backward compatibility for 2023 batch
 - (-) Reports must always filter by curriculum_id
 
+## ADR-009: Composite Foreign Keys for Tenant-Consistency
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Standard Row Level Security (RLS) restricts row visibility per tenant but doesn't prevent referential integrity leakage (e.g. inserting an entity referencing a foreign key of a different tenant).
+**Decision:** Enforce composite foreign keys containing `tenant_id` on all cross-table references in the `snx-workflow` service (and make it standard for future services). Add a unique constraint on `(tenant_id, id)` to referenced tables (`users`, `workflow_definitions`, `workflow_instances`).
+**Consequences:**
+- (+) Guarantees referential integrity tenant-consistency at the schema level.
+- (-) Slightly more verbose index and constraint declarations.
+
+## ADR-010: Immutable Workflow Definitions with Current Versioning Flag
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Modifying steps in workflow definitions directly can break active in-flight instances.
+**Decision:** Make all workflow definitions immutable. Modifications result in a new record with a bumped `version` integer. Designation of the active version is handled via an `is_current` BOOLEAN flag, restricted by a partial unique index on `(tenant_id, code)` where `is_current = TRUE` and `deleted_at IS NULL`.
+**Consequences:**
+- (+) Complete safety for in-flight instances.
+- (+) Clean audit trail.
+- (-) Version propagation must be handled during instantiation.
+
+## ADR-011: Database Trigger for Workflow Transitions History Cache
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Denormalized audit history JSONB caches can easily drift from the normalized `workflow_transitions` table if managed strictly in application code.
+**Decision:** Enforce cache consistency via a PostgreSQL database trigger `trg_workflow_transitions_insert` which, upon insert into `workflow_transitions`, appends the transition details directly to the corresponding `workflow_instances.history` JSONB array.
+**Consequences:**
+- (+) Schema-level guarantee of history consistency.
+- (-) Moves logic to database triggers, making local unit testing slightly more dependent on DB behaviour.
+
+## ADR-012: Static Context Snapshot for Auditable Workflow Approvals
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Source entities can change during the lifespan of an approval workflow, causing discrepancies between what the requester submitted and what the approver reviews.
+**Decision:** Freeze the entity's data as a static `context` JSONB snapshot at workflow instance creation. The approval UI must display this frozen snapshot to ensure legal and audit compliance. Live changes can be shown only as a comparative diff.
+**Consequences:**
+- (+) Defensible audit trail.
+- (-) Redundant data storage in `workflow_instances.context`.
+
 ## Template for New ADRs
 
 ```markdown
@@ -102,3 +143,4 @@ Every architectural decision documented as an ADR.
 - (-) Negative consequence
 - Mitigation strategies
 ```
+

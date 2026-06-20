@@ -560,7 +560,52 @@ Each edge case has:
 
 ---
 
+## Category 11: Workflow, MDM & Digital Asset Edge Cases
+
+### EC-110: Definition Deactivated Mid-Workflow [HIGH]
+**Audit Ref:** v5-NEW
+**Scenario:** A workflow definition v1 is deactivated or a new version v2 is published while a v1 instance is in-flight.
+**Expected:**
+- In-flight instance continues using v1 definition reference until completion.
+- New instances are created using v2 (since is_current = true on v2 and false on v1).
+**Test:** `tests/unit/workflow/test_definition_versioning.py`
+
+### EC-111: Concurrent Transition Submissions [HIGH]
+**Audit Ref:** v5-NEW
+**Scenario:** Two approvers submit transition approvals for the same workflow instance concurrently.
+**Expected:**
+- DB row lock prevents double-transition.
+- One transition succeeds, the other fails with InvalidStateTransitionError.
+**Test:** `tests/integration/workflow/test_full_lifecycle.py`
+
+### EC-112: Soft-Deleted Current Assignee [HIGH]
+**Audit Ref:** v5-NEW
+**Scenario:** The user assigned to a pending workflow step is soft-deleted (resigned/transferred, audit ref AUDIT-O1).
+**Expected:**
+- Workflow service detects the assignee's soft-deleted status.
+- Reassigns to HOD or triggers role-based open assignment.
+**Test:** `tests/integration/workflow/test_full_lifecycle.py`
+
+### EC-113: Cross-Tenant Definition/User Reference [CRITICAL SECURITY]
+**Audit Ref:** v5-NEW
+**Scenario:** Attacker attempts to create a workflow_instance in Tenant A referencing a workflow_definition or assignee in Tenant B.
+**Expected:**
+- Composite FK on (tenant_id, definition_id) or (tenant_id, current_assignee_id) rejects write at DB layer.
+- Transaction is aborted with foreign key violation.
+**Test:** `tests/security/workflow/test_tenant_isolation.py`
+
+### EC-114: Duplicate Asset Upload [MEDIUM]
+**Audit Ref:** v5-NEW
+**Scenario:** A user uploads a file matching an existing file's SHA256 checksum in the tenant.
+**Expected:**
+- Creates a new digital_assets record but references existing path or creates new metadata node.
+- Upload computes SHA256 for validation.
+**Test:** `tests/unit/assets/test_asset_service.py`
+
+---
+
 ## Adding New Edge Cases
+
 
 When an agent discovers a new edge case during development:
 

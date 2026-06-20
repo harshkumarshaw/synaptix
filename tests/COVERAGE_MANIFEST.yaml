@@ -129,6 +129,55 @@ master_data_management:
       description: "Master data is tenant-scoped (cross-tenant invisible)"
       type: security
 
+workflow_engine:
+  module_id: F-03
+  test_file_prefix: "tests/unit/workflow/"
+  
+  critical_tests:
+    - id: "WFL-001"
+      description: "Create workflow definition with step JSON validation"
+      type: unit
+    - id: "WFL-002"
+      description: "Immutability of workflow definitions on update (creates new version)"
+      type: unit
+    - id: "WFL-003"
+      description: "Only one version of workflow definition is current"
+      type: unit
+    - id: "WFL-004"
+      description: "Create workflow instance with static context snapshot"
+      type: unit
+    - id: "WFL-005"
+      description: "Workflow instance transition appends to transitions table and history JSONB trigger"
+      type: unit
+    - id: "WFL-006"
+      description: "Workflow instance respects composite FK tenant isolation"
+      type: security
+    - id: "WFL-007"
+      description: "Prevent duplicate active instances for a single entity"
+      type: unit
+    - id: "WFL-008"
+      description: "Soft-deleted assignee handler delegates or escalates"
+      type: unit
+
+digital_assets:
+  module_id: F-07
+  test_file_prefix: "tests/unit/assets/"
+  
+  critical_tests:
+    - id: "AST-001"
+      description: "Upload digital asset computes sha256 checksum and saves metadata"
+      type: unit
+    - id: "AST-002"
+      description: "Asset storage operates through abstract StorageProvider interface"
+      type: unit
+    - id: "AST-003"
+      description: "Write log to asset_download_log on file access"
+      type: integration
+    - id: "AST-004"
+      description: "Asset upload supports files larger than 2.1GB (BIGINT)"
+      type: integration
+
+
 # ============================================================================
 # LAYER 2: ACADEMIC — Attendance Engine (most critical module)
 # ============================================================================

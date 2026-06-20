@@ -1,0 +1,125 @@
+from __future__ import annotations
+
+import uuid
+from typing import Annotated, Optional
+from fastapi import Depends
+from sqlalchemy import select, and_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
+
+from packages.shared.db.session import get_db
+from packages.shared.errors import ResourceNotFoundError, DuplicateRecordError
+from packages.shared.logging import get_logger
+from app.models.master_data import MasterDataEntity
+from app.schemas.master_data import MasterDataEntityCreate, MasterDataEntityUpdate
+
+logger = get_logger(__name__)
+
+
+class MasterDataService:
+    def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]) -> None:
+        self.db = db
+
+    async def get_entities(
+        self,
+        tenant_id: uuid.UUID,
+        category: str,
+        curriculum_id: Optional[uuid.UUID] = None,
+    ) -> list[MasterDataEntity]:
+        stmt = select(MasterDataEntity).where(
+            MasterDataEntity.tenant_id == tenant_id,
+            MasterDataEntity.category == category,
+            MasterDataEntity.deleted_at.is_(None)
+        )
+        if curriculum_id is not None:
+            stmt = stmt.where(MasterDataEntity.curriculum_id == curriculum_id)
+        else:
+            stmt = stmt.where(MasterDataEntity.curriculum_id.is_(None))
+            
+        stmt = stmt.order_by(MasterDataEntity.sort_order, MasterDataEntity.code)
+        res = await self.db.execute(stmt)
+        return list(res.scalars().all())
+
+    async def get_entity(
+        self, tenant_id: uuid.UUID, entity_id: uuid.UUID
+    ) -> MasterDataEntity:
+        stmt = select(MasterDataEntity).where(
+            MasterDataEntity.tenant_id == tenant_id,
+            MasterDataEntity.id == entity_id,
+            MasterDataEntity.deleted_at.is_(None)
+        )
+        res = await self.db.execute(stmt)
+        entity = res.scalar_one_or_none()
+        if not entity:
+            raise ResourceNotFoundError(f"MasterDataEntity {entity_id} not found")
+        return entity
+
+    async def create_entity(
+        self, tenant_id: uuid.UUID, schema: MasterDataEntityCreate
+    ) -> MasterDataEntity:
+        # Check if active code exists under category
+        stmt = select(MasterDataEntity).where(
+            MasterDataEntity.tenant_id == tenant_id,
+            MasterDataEntity.category == schema.category,
+            MasterDataEntity.code == schema.code,
+            MasterDataEntity.deleted_at.is_(None)
+        )
+        res = await self.db.execute(stmt)
+        existing = res.scalar_one_or_none()
+        if existing:
+            raise DuplicateRecordError(
+                f"Master data entity with code '{schema.code}' already exists under category '{schema.category}'"
+            )
+
+        entity = MasterDataEntity(
+            tenant_id=tenant_id,
+            curriculum_id=schema.curriculum_id,
+            category=schema.category,
+            code=schema.code,
+            name=schema.name,
+            extra_attributes=schema.extra_attributes,
+            sort_order=schema.sort_order,
+            is_active=schema.is_active,
+        )
+        self.db.add(entity)
+        try:
+            await self.db.commit()
+            await self.db.refresh(entity)
+        except IntegrityError as e:
+            await self.db.rollback()
+            raise DuplicateRecordError("Integrity constraint violation on creation") from e
+
+        return entity
+
+    async def update_entity(
+        self, tenant_id: uuid.UUID, entity_id: uuid.UUID, schema: MasterDataEntityUpdate
+    ) -> MasterDataEntity:
+        entity = await self.get_entity(tenant_id, entity_id)
+
+        if schema.name is not None:
+            entity.name = schema.name
+        if schema.curriculum_id is not None:
+            entity.curriculum_id = schema.curriculum_id
+        if schema.extra_attributes is not None:
+            entity.extra_attributes = schema.extra_attributes
+        if schema.sort_order is not None:
+            entity.sort_order = schema.sort_order
+        if schema.is_active is not None:
+            entity.is_active = schema.is_active
+
+        try:
+            await self.db.commit()
+            await self.db.refresh(entity)
+        except IntegrityError as e:
+            await self.db.rollback()
+            raise DuplicateRecordError("Integrity constraint violation on update") from e
+
+        return entity
+
+    async def delete_entity(self, tenant_id: uuid.UUID, entity_id: uuid.UUID) -> None:
+        entity = await self.get_entity(tenant_id, entity_id)
+        
+        # Soft delete
+        from datetime import datetime, timezone
+        entity.deleted_at = datetime.now(timezone.utc)
+        await self.db.commit()
