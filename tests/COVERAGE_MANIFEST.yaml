@@ -1,0 +1,750 @@
+# Synaptix Test Coverage Manifest
+# This is the SOURCE OF TRUTH for required test cases.
+# Every module MUST have ALL listed test cases implemented.
+# The pre-commit hook reads this file and FAILS THE BUILD if any test is missing.
+#
+# Agents: do NOT modify this file. If you believe a test is wrong, escalate via
+# docs/HANDOFF_NOTES.md with [COVERAGE_MANIFEST PROPOSAL] prefix.
+
+version: "1.0"
+last_updated: "2026-06-18"
+enforcement_mode: "hard_fail"  # build fails if any test missing or failing
+
+# ============================================================================
+# LAYER 1: FOUNDATION
+# ============================================================================
+
+identity_access_management:
+  module_id: F-01
+  test_file_prefix: "tests/unit/auth/"
+  
+  critical_tests:
+    - id: "AUTH-001"
+      description: "User with valid credentials can log in"
+      type: unit
+    - id: "AUTH-002"
+      description: "User with invalid password cannot log in"
+      type: unit
+    - id: "AUTH-003"
+      description: "JWT token contains user_id, tenant_id, roles, exp"
+      type: unit
+    - id: "AUTH-004"
+      description: "Expired JWT is rejected"
+      type: unit
+    - id: "AUTH-005"
+      description: "MFA is enforced for admin role"
+      type: integration
+    - id: "AUTH-006"
+      description: "MFA is enforced for principal role"
+      type: integration
+    - id: "AUTH-007"
+      description: "MFA is enforced for dean role"
+      type: integration
+    - id: "AUTH-008"
+      description: "MFA is enforced for controller_of_examinations role"
+      type: integration
+    - id: "AUTH-009"
+      description: "MFA is NOT enforced for student role"
+      type: integration
+    - id: "AUTH-010"
+      description: "MFA is NOT enforced for faculty role"
+      type: integration
+    - id: "AUTH-011"
+      description: "Refresh token rotation works correctly"
+      type: integration
+    - id: "AUTH-012"
+      description: "Concurrent sessions for same user are allowed"
+      type: integration
+    - id: "AUTH-013"
+      description: "Account locks after 5 failed login attempts"
+      type: integration
+    - id: "AUTH-014"
+      description: "Account unlocks after configured cooldown"
+      type: integration
+    - id: "AUTH-015"
+      description: "Password reset via email OTP works"
+      type: integration
+    - id: "AUTH-016"
+      description: "OTP login for students without institutional email works"
+      type: integration
+    - id: "AUTH-017"
+      description: "Cross-tenant token usage is rejected"
+      type: security
+    - id: "AUTH-018"
+      description: "Audit log entry created on every login attempt"
+      type: integration
+    - id: "AUTH-019"
+      description: "Audit log entry created on every permission grant/revoke"
+      type: integration
+    - id: "AUTH-020"
+      description: "Session invalidation on password change"
+      type: integration
+
+  edge_cases:
+    - id: "AUTH-E001"
+      description: "User exists in two tenants (cross-tenant faculty) — separate sessions per tenant"
+      type: integration
+      audit_ref: "FEASIBILITY-3.5"
+    - id: "AUTH-E002"
+      description: "User with deactivated tenant cannot log in"
+      type: integration
+    - id: "AUTH-E003"
+      description: "User logged in while their account is deactivated mid-session"
+      type: integration
+    - id: "AUTH-E004"
+      description: "JWT secret rotation — old tokens invalidated, new ones work"
+      type: security
+    - id: "AUTH-E005"
+      description: "Inspector account auto-deactivates after expiry"
+      type: integration
+      audit_ref: "AUDIT-O2"
+
+master_data_management:
+  module_id: F-02
+  test_file_prefix: "tests/unit/mdm/"
+  
+  critical_tests:
+    - id: "MDM-001"
+      description: "Create master data entity (department)"
+      type: unit
+    - id: "MDM-002"
+      description: "Update master data entity preserves history"
+      type: unit
+    - id: "MDM-003"
+      description: "Soft delete master data entity"
+      type: unit
+    - id: "MDM-004"
+      description: "Cannot delete entity if referenced by other records"
+      type: integration
+    - id: "MDM-005"
+      description: "Tenant onboarding seeds medical college template correctly"
+      type: integration
+    - id: "MDM-006"
+      description: "Tenant onboarding seeds nursing college template correctly"
+      type: integration
+    - id: "MDM-007"
+      description: "Bulk import via CSV validates and reports errors"
+      type: integration
+    - id: "MDM-008"
+      description: "Master data is tenant-scoped (cross-tenant invisible)"
+      type: security
+
+# ============================================================================
+# LAYER 2: ACADEMIC — Attendance Engine (most critical module)
+# ============================================================================
+
+attendance_engine:
+  module_id: A-11
+  test_file_prefix: "tests/unit/attendance/"
+  enforcement: "HARD_FAIL"  # NMC compliance — cannot defer
+  
+  nmc_compliance_tests:
+    - id: "ATT-NMC-001"
+      description: "Student with EXACTLY 75.00% theory attendance is ELIGIBLE for theory exam"
+      type: compliance
+      nmc_ref: "GMER 2019 §11.1"
+    - id: "ATT-NMC-002"
+      description: "Student with 74.99% theory attendance is BLOCKED for theory exam"
+      type: compliance
+      nmc_ref: "GMER 2019 §11.1"
+    - id: "ATT-NMC-003"
+      description: "Student with EXACTLY 80.00% practical attendance is ELIGIBLE for practical exam"
+      type: compliance
+      nmc_ref: "GMER 2019 §11.1"
+    - id: "ATT-NMC-004"
+      description: "Student with 79.99% practical attendance is BLOCKED for practical exam"
+      type: compliance
+      nmc_ref: "GMER 2019 §11.1"
+    - id: "ATT-NMC-005"
+      description: "Student with 76% theory AND 79% practical: theory eligible, practical blocked"
+      type: compliance
+      nmc_ref: "GMER 2019 §11.1"
+    - id: "ATT-NMC-006"
+      description: "Student with 74% theory AND 81% practical: theory blocked, practical eligible"
+      type: compliance
+      nmc_ref: "GMER 2019 §11.1"
+    - id: "ATT-NMC-007"
+      description: "Clinical posting attendance counted toward 80% practical pool, not 75% theory"
+      type: compliance
+    - id: "ATT-NMC-008"
+      description: "DOAP session attendance counted toward 80% practical pool"
+      type: compliance
+    - id: "ATT-NMC-009"
+      description: "ECE session attendance counted toward 80% practical pool"
+      type: compliance
+    - id: "ATT-NMC-010"
+      description: "Theory lecture attendance counted toward 75% theory pool"
+      type: compliance
+    - id: "ATT-NMC-011"
+      description: "Elective Block 1 attendance threshold is 75% (separate pool)"
+      type: compliance
+      nmc_ref: "GMER 2019 §9.3"
+    - id: "ATT-NMC-012"
+      description: "Elective Block 2 attendance threshold is 75% (separate pool)"
+      type: compliance
+      nmc_ref: "GMER 2019 §9.3"
+    - id: "ATT-NMC-013"
+      description: "AETCOM attendance tracked separately from theory and practical"
+      type: compliance
+      nmc_ref: "AETCOM Module 2018"
+    - id: "ATT-NMC-014"
+      description: "Foundation Course attendance tracked separately"
+      type: compliance
+      nmc_ref: "Foundation Course Module 2019"
+    - id: "ATT-NMC-015"
+      description: "Multi-phase subject (Community Medicine) aggregates attendance across phases"
+      type: compliance
+    - id: "ATT-NMC-016"
+      description: "Principal can grant attendance exemption with audit-logged reason"
+      type: compliance
+    - id: "ATT-NMC-017"
+      description: "Exemption is audit-logged with reason, approver, and timestamp"
+      type: compliance
+    - id: "ATT-NMC-018"
+      description: "Attendance denominator counts ONLY conducted sessions, NEVER planned"
+      type: compliance
+      audit_ref: "AUDIT-D3"
+    - id: "ATT-NMC-019"
+      description: "Cancelled session does not count toward attendance denominator"
+      type: compliance
+    - id: "ATT-NMC-020"
+      description: "Late arrival (configurable threshold) counts as half-attendance if configured"
+      type: compliance
+  
+  critical_tests:
+    - id: "ATT-001"
+      description: "Mark attendance via manual roll call"
+      type: unit
+    - id: "ATT-002"
+      description: "Mark attendance via QR code scan"
+      type: unit
+    - id: "ATT-003"
+      description: "Mark attendance via RFID"
+      type: unit
+    - id: "ATT-004"
+      description: "Mark attendance via face recognition"
+      type: unit
+    - id: "ATT-005"
+      description: "Mark attendance via GPS (with geofence validation)"
+      type: unit
+    - id: "ATT-006"
+      description: "Mark attendance via biometric"
+      type: unit
+    - id: "ATT-007"
+      description: "Attendance status: present, absent, late, excused, medical, official_duty"
+      type: unit
+    - id: "ATT-008"
+      description: "Attendance percentage calculated correctly"
+      type: unit
+    - id: "ATT-009"
+      description: "At-risk student list correctly identifies students below threshold"
+      type: integration
+    - id: "ATT-010"
+      description: "Attendance trajectory prediction works (improving/declining/stable)"
+      type: integration
+
+  edge_cases:
+    - id: "ATT-E001"
+      description: "Two faculty mark same student differently for same event — last write wins by timestamp"
+      type: edge_case
+      audit_ref: "AUDIT-E8"
+    - id: "ATT-E002"
+      description: "Offline attendance with timestamp 2 hours after session end — flagged for faculty review, not auto-rejected"
+      type: edge_case
+    - id: "ATT-E003"
+      description: "Duplicate attendance entry (same student, same event) is rejected"
+      type: edge_case
+    - id: "ATT-E004"
+      description: "Attendance marked for cancelled event — flagged for admin review"
+      type: edge_case
+      audit_ref: "AUDIT-F2"
+    - id: "ATT-E005"
+      description: "Bulk attendance change (>20 students marked absent at once) triggers confirmation"
+      type: edge_case
+      audit_ref: "AUDIT-3.10"
+    - id: "ATT-E006"
+      description: "Attendance correction window: faculty can correct within 24h, after that needs HOD approval"
+      type: edge_case
+      audit_ref: "AUDIT-3.10"
+    - id: "ATT-E007"
+      description: "Student with disability accommodation: uses adjusted threshold per Dean approval"
+      type: edge_case
+      audit_ref: "AUDIT-E6"
+    - id: "ATT-E008"
+      description: "Emergency override (pandemic): temporary threshold reduction applies"
+      type: edge_case
+      audit_ref: "AUDIT-E7"
+    - id: "ATT-E009"
+      description: "Integration session attendance category inherits primary subject's category"
+      type: edge_case
+      audit_ref: "AUDIT-C4"
+    - id: "ATT-E010"
+      description: "Lateral entry student: prior phase attendance not included in current pct calculation"
+      type: edge_case
+      audit_ref: "AUDIT-E1"
+    - id: "ATT-E011"
+      description: "Detained student: attendance resets for repeated phase, prior phase retained as history"
+      type: edge_case
+      audit_ref: "AUDIT-E2"
+    - id: "ATT-E012"
+      description: "Section change mid-year: attendance from both sections aggregated"
+      type: edge_case
+      audit_ref: "AUDIT-O4"
+    - id: "ATT-E013"
+      description: "Multiple faculty per event: any faculty in faculty_ids can mark attendance"
+      type: edge_case
+      audit_ref: "AUDIT-E8"
+    - id: "ATT-E014"
+      description: "Faculty resignation: future sessions reassigned, past sessions retain original faculty_id"
+      type: edge_case
+      audit_ref: "AUDIT-O1"
+    - id: "ATT-E015"
+      description: "Phase transition: provisional status until prior exam results published"
+      type: edge_case
+      audit_ref: "AUDIT-3.7"
+    - id: "ATT-E016"
+      description: "Concurrent attendance writes from two devices: unique constraint prevents duplicates"
+      type: edge_case
+    - id: "ATT-E017"
+      description: "QR code reused: server rejects scans outside time window"
+      type: security
+    - id: "ATT-E018"
+      description: "QR code HMAC tampering: server rejects invalid signatures"
+      type: security
+    - id: "ATT-E019"
+      description: "GPS attendance outside geofence: marked but flagged for review"
+      type: edge_case
+    - id: "ATT-E020"
+      description: "Same student scans QR from two different devices: second scan rejected"
+      type: edge_case
+      audit_ref: "AUDIT-6.2"
+
+  offline_sync_tests:
+    - id: "ATT-SYNC-001"
+      description: "Offline attendance entry persists in SQLite"
+      type: mobile_unit
+    - id: "ATT-SYNC-002"
+      description: "Sync on connectivity restoration syncs oldest first"
+      type: mobile_integration
+    - id: "ATT-SYNC-003"
+      description: "Per-entry transactional sync (interruption doesn't lose later entries)"
+      type: mobile_integration
+      audit_ref: "AUDIT-F1"
+    - id: "ATT-SYNC-004"
+      description: "Failed sync entry retried 3x with exponential backoff"
+      type: mobile_integration
+    - id: "ATT-SYNC-005"
+      description: "Sync conflict (same student, same event, different status): later timestamp wins"
+      type: mobile_integration
+    - id: "ATT-SYNC-006"
+      description: "Sync report visible to user (X synced, Y pending, Z failed)"
+      type: mobile_unit
+    - id: "ATT-SYNC-007"
+      description: "Power outage during sync: resumes from last unacknowledged record"
+      type: mobile_integration
+      audit_ref: "AUDIT-6.1"
+
+# ============================================================================
+# LAYER 2: ACADEMIC — Examination Management
+# ============================================================================
+
+examination_management:
+  module_id: A-13
+  test_file_prefix: "tests/unit/exam/"
+  enforcement: "HARD_FAIL"
+  
+  nmc_compliance_tests:
+    - id: "EXM-NMC-001"
+      description: "Hall ticket eligibility requires theory ≥75% AND practical ≥80% for ALL subjects"
+      type: compliance
+    - id: "EXM-NMC-002"
+      description: "Hall ticket eligibility requires logbook submitted AND assessed"
+      type: compliance
+      nmc_ref: "GMER §11.1.1.b.7"
+    - id: "EXM-NMC-003"
+      description: "Hall ticket eligibility requires minimum IA tests completed per subject"
+      type: compliance
+    - id: "EXM-NMC-004"
+      description: "Hall ticket eligibility requires AETCOM IA completed per phase"
+      type: compliance
+    - id: "EXM-NMC-005"
+      description: "Hall ticket eligibility requires certifiable competencies signed off"
+      type: compliance
+    - id: "EXM-NMC-006"
+      description: "Hall ticket eligibility requires fee clearance"
+      type: compliance
+    - id: "EXM-NMC-007"
+      description: "Logbook contributes up to 20% of IA marks"
+      type: compliance
+      nmc_ref: "GMER §11.1.1.b.7"
+    - id: "EXM-NMC-008"
+      description: "OSPE used for pre-clinical and para-clinical subjects"
+      type: compliance
+    - id: "EXM-NMC-009"
+      description: "OSCE used for clinical subjects"
+      type: compliance
+    - id: "EXM-NMC-010"
+      description: "End-of-posting clinical assessment mandatory after every posting"
+      type: compliance
+    - id: "EXM-NMC-011"
+      description: "NExT eligibility additionally requires elective Block 1 and Block 2 logbooks"
+      type: compliance
+      nmc_ref: "GMER §9.3"
+    - id: "EXM-NMC-012"
+      description: "DOPS assessment type supported for clinical postings"
+      type: compliance
+    - id: "EXM-NMC-013"
+      description: "mini-CEX assessment type supported for clinical postings"
+      type: compliance
+    - id: "EXM-NMC-014"
+      description: "AETCOM IA has both written and OSCE/viva components"
+      type: compliance
+
+  critical_tests:
+    - id: "EXM-001"
+      description: "Create exam schedule"
+      type: unit
+    - id: "EXM-002"
+      description: "Generate hall tickets for eligible students"
+      type: integration
+    - id: "EXM-003"
+      description: "Hall ticket NOT generated for ineligible student"
+      type: integration
+    - id: "EXM-004"
+      description: "Principal exemption flow: ineligible student gets hall ticket with audit log"
+      type: integration
+    - id: "EXM-005"
+      description: "Mark entry by faculty, moderation by HOD"
+      type: integration
+    - id: "EXM-006"
+      description: "Result publication with student notification"
+      type: integration
+    - id: "EXM-007"
+      description: "Supplementary exam eligibility correctly determined"
+      type: integration
+    - id: "EXM-008"
+      description: "OSPE station-level marks correctly aggregated"
+      type: unit
+    - id: "EXM-009"
+      description: "OSCE station-level marks correctly aggregated"
+      type: unit
+    - id: "EXM-010"
+      description: "Grace marks policy correctly applied"
+      type: unit
+
+  edge_cases:
+    - id: "EXM-E001"
+      description: "Student with partial pass (theory pass, practical fail): can sit supplementary practical only"
+      type: edge_case
+      audit_ref: "AUDIT-E3"
+    - id: "EXM-E002"
+      description: "Supplementary exam doesn't re-check current attendance (uses original attempt's)"
+      type: edge_case
+      audit_ref: "AUDIT-E3"
+    - id: "EXM-E003"
+      description: "Hall ticket race condition: distributed lock prevents duplicate generation"
+      type: edge_case
+      audit_ref: "AUDIT-F3"
+    - id: "EXM-E004"
+      description: "NExT eligibility recalculated after attendance correction"
+      type: edge_case
+    - id: "EXM-E005"
+      description: "Exam invalidated due to malpractice: results marked invalidated, re-exam linked"
+      type: edge_case
+      audit_ref: "AUDIT-O5"
+    - id: "EXM-E006"
+      description: "Different assessment types use different scoring scales (integer, decimal, qualitative)"
+      type: edge_case
+      audit_ref: "AUDIT-3.6"
+    - id: "EXM-E007"
+      description: "DOPS uses integer rating 1-9, OSCE uses half-points, theory uses integers 0-100"
+      type: edge_case
+    - id: "EXM-E008"
+      description: "Eligibility batch generation: idempotent, repeated runs produce same result"
+      type: edge_case
+      audit_ref: "AUDIT-P2"
+
+# ============================================================================
+# LAYER 2: ACADEMIC — Digital Logbook & Portfolio
+# ============================================================================
+
+digital_logbook:
+  module_id: A-10
+  test_file_prefix: "tests/unit/logbook/"
+  enforcement: "HARD_FAIL"
+  
+  nmc_compliance_tests:
+    - id: "LOG-NMC-001"
+      description: "Logbook covers ALL subjects of current phase (not just clinical)"
+      type: compliance
+    - id: "LOG-NMC-002"
+      description: "Logbook covers Foundation Course section"
+      type: compliance
+    - id: "LOG-NMC-003"
+      description: "Logbook covers AETCOM sections per phase"
+      type: compliance
+    - id: "LOG-NMC-004"
+      description: "Logbook covers ECE sections (Phase I)"
+      type: compliance
+    - id: "LOG-NMC-005"
+      description: "Logbook covers Elective Block 1 and Block 2 (Phase III Part I)"
+      type: compliance
+    - id: "LOG-NMC-006"
+      description: "Logbook entry contains competency_code, level (K/KH/SH/P), is_core"
+      type: compliance
+    - id: "LOG-NMC-007"
+      description: "Faculty sign-off required (faculty_initials, faculty_date)"
+      type: compliance
+    - id: "LOG-NMC-008"
+      description: "Student sign-off required (student_initials)"
+      type: compliance
+    - id: "LOG-NMC-009"
+      description: "Attempt type tracked: F (first), R (repeat), Re (remedial)"
+      type: compliance
+    - id: "LOG-NMC-010"
+      description: "Rating tracked: B (below), M (meets), E (exceeds) OR numerical"
+      type: compliance
+    - id: "LOG-NMC-011"
+      description: "Faculty decision tracked: C (complete), R (repeat), Re (remedial)"
+      type: compliance
+    - id: "LOG-NMC-012"
+      description: "Logbook submission is prerequisite for summative exam"
+      type: compliance
+    - id: "LOG-NMC-013"
+      description: "Logbook assessment contributes up to 20% of IA marks"
+      type: compliance
+    - id: "LOG-NMC-014"
+      description: "Logbook IA contribution is zero if logbook incomplete"
+      type: compliance
+      audit_ref: "AUDIT-F5"
+
+  edge_cases:
+    - id: "LOG-E001"
+      description: "Backdated entry within 7 days: accepted without flag"
+      type: edge_case
+      audit_ref: "AUDIT-D2"
+    - id: "LOG-E002"
+      description: "Backdated entry 8-30 days: accepted but flagged for faculty review"
+      type: edge_case
+      audit_ref: "AUDIT-D2"
+    - id: "LOG-E003"
+      description: "Backdated entry >30 days: requires HOD approval"
+      type: edge_case
+      audit_ref: "AUDIT-D2"
+    - id: "LOG-E004"
+      description: "Future-dated entry rejected"
+      type: edge_case
+    - id: "LOG-E005"
+      description: "Field-level offline merge: student fields and faculty fields merged separately"
+      type: edge_case
+      audit_ref: "AUDIT-D4"
+    - id: "LOG-E006"
+      description: "Faculty resignation: pending sign-offs delegated to HOD"
+      type: edge_case
+      audit_ref: "AUDIT-E5"
+    - id: "LOG-E007"
+      description: "Large backlog sync (100+ entries from rural posting): per-entry transactional"
+      type: edge_case
+      audit_ref: "AUDIT-F1"
+    - id: "LOG-E008"
+      description: "Detained student: prior attempt logbook retained as read-only history"
+      type: edge_case
+      audit_ref: "AUDIT-E2"
+
+# ============================================================================
+# LAYER 3: MEDICAL EDUCATION — CRMI
+# ============================================================================
+
+internship_crmi:
+  module_id: M-03
+  test_file_prefix: "tests/unit/crmi/"
+  enforcement: "HARD_FAIL"
+  
+  nmc_compliance_tests:
+    - id: "CRMI-NMC-001"
+      description: "All 7 mandatory rotations enforced"
+      type: compliance
+    - id: "CRMI-NMC-002"
+      description: "General Medicine rotation: 2 months (with 15 days Psychiatry OR TB&Resp)"
+      type: compliance
+    - id: "CRMI-NMC-003"
+      description: "General Surgery rotation: 2 months (with 15 days Orthopaedics)"
+      type: compliance
+    - id: "CRMI-NMC-004"
+      description: "OBG rotation: 2 months"
+      type: compliance
+    - id: "CRMI-NMC-005"
+      description: "Paediatrics rotation: 1 month"
+      type: compliance
+    - id: "CRMI-NMC-006"
+      description: "Community Medicine rotation: 2 months (including rural)"
+      type: compliance
+    - id: "CRMI-NMC-007"
+      description: "Emergency/Casualty rotation: 1 month"
+      type: compliance
+    - id: "CRMI-NMC-008"
+      description: "Elective rotation: 15 days from approved list"
+      type: compliance
+    - id: "CRMI-NMC-009"
+      description: "75% attendance enforced PER ROTATION (not aggregate)"
+      type: compliance
+    - id: "CRMI-NMC-010"
+      description: "Maximum 15 days leave across ENTIRE CRMI period"
+      type: compliance
+    - id: "CRMI-NMC-011"
+      description: "Intern at 15 days leave cannot apply for further leave"
+      type: compliance
+    - id: "CRMI-NMC-012"
+      description: "Intern at 12 days leave receives early warning"
+      type: compliance
+    - id: "CRMI-NMC-013"
+      description: "Rotation extension for attendance shortfall: extends to reach 75%"
+      type: compliance
+      audit_ref: "AUDIT-E4"
+    - id: "CRMI-NMC-014"
+      description: "Subsequent rotations shift after extension"
+      type: compliance
+    - id: "CRMI-NMC-015"
+      description: "Leave cap does NOT reset after extension"
+      type: compliance
+    - id: "CRMI-NMC-016"
+      description: "CRMI Completion Certificate requires ALL rotations satisfactorily complete"
+      type: compliance
+    - id: "CRMI-NMC-017"
+      description: "End-of-rotation assessment mandatory per rotation"
+      type: compliance
+    - id: "CRMI-NMC-018"
+      description: "Intern logbook separate from MBBS student logbook"
+      type: compliance
+    - id: "CRMI-NMC-019"
+      description: "Only ONE active CRMI enrollment per student"
+      type: compliance
+      audit_ref: "AUDIT-O6"
+    - id: "CRMI-NMC-020"
+      description: "Transfer-in CRMI requires NOC from previous hospital"
+      type: compliance
+
+# ============================================================================
+# CROSS-CUTTING: NMC CBME Curriculum Versioning
+# ============================================================================
+
+curriculum_versioning:
+  module_id: A-02
+  test_file_prefix: "tests/unit/curriculum/"
+  
+  critical_tests:
+    - id: "CUR-001"
+      description: "JMN 2023 admission batch uses NMC CBME 2019"
+      type: integration
+    - id: "CUR-002"
+      description: "JMN 2024 admission batch uses NMC CBME 2023"
+      type: integration
+    - id: "CUR-003"
+      description: "Both curricula coexist; no conflict in competency codes"
+      type: integration
+    - id: "CUR-004"
+      description: "Competency code uniqueness is scoped per curriculum, not global"
+      type: integration
+      audit_ref: "AUDIT-D1"
+    - id: "CUR-005"
+      description: "Curriculum migration: bridge courses correctly applied"
+      type: integration
+    - id: "CUR-006"
+      description: "Credit map preserves equivalence between curricula"
+      type: integration
+    - id: "CUR-007"
+      description: "Migration impact analysis shows affected students/courses"
+      type: integration
+
+# ============================================================================
+# CROSS-CUTTING: Multi-Tenancy
+# ============================================================================
+
+multi_tenancy:
+  module_id: F-00
+  test_file_prefix: "tests/security/tenancy/"
+  enforcement: "HARD_FAIL"  # Data leakage is the worst possible bug
+  
+  critical_tests:
+    - id: "TNT-001"
+      description: "API request with no tenant context is rejected"
+      type: security
+    - id: "TNT-002"
+      description: "User from tenant A cannot read tenant B data"
+      type: security
+    - id: "TNT-003"
+      description: "User from tenant A cannot write to tenant B"
+      type: security
+    - id: "TNT-004"
+      description: "RLS policy enforces isolation at DB level even if middleware fails"
+      type: security
+    - id: "TNT-005"
+      description: "JWT with tampered tenant_id is rejected"
+      type: security
+    - id: "TNT-006"
+      description: "Aggregate analytics at super-admin level can see across tenants"
+      type: integration
+    - id: "TNT-007"
+      description: "Cross-tenant faculty (same person in two tenants): separate sessions"
+      type: integration
+      audit_ref: "AUDIT-3.5"
+
+# ============================================================================
+# CROSS-CUTTING: Audit Log
+# ============================================================================
+
+audit_log:
+  module_id: F-00
+  test_file_prefix: "tests/unit/audit/"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "AUD-001"
+      description: "Every data modification creates an audit_log entry"
+      type: integration
+    - id: "AUD-002"
+      description: "audit_log table cannot be UPDATEd (trigger blocks)"
+      type: security
+    - id: "AUD-003"
+      description: "audit_log table cannot be DELETEd (trigger blocks)"
+      type: security
+    - id: "AUD-004"
+      description: "Audit entry contains: who, what, when, IP, device"
+      type: unit
+    - id: "AUD-005"
+      description: "Old and new values stored as JSONB"
+      type: unit
+    - id: "AUD-006"
+      description: "Sensitive fields (passwords, OTPs) NOT logged"
+      type: security
+    - id: "AUD-007"
+      description: "Exemption grants logged with reason and approver"
+      type: integration
+
+# ============================================================================
+# COVERAGE GOALS
+# ============================================================================
+
+coverage_targets:
+  line_coverage:
+    overall: 80
+    services: 85
+    packages_shared: 95
+    critical_modules:
+      - attendance_engine: 95
+      - examination_management: 95
+      - digital_logbook: 95
+      - internship_crmi: 95
+      - identity_access_management: 95
+  
+  branch_coverage:
+    overall: 75
+    critical_modules: 90
+  
+  mutation_score:
+    critical_paths_only:
+      attendance_calculation: 80
+      next_eligibility: 80
+      logbook_ia_contribution: 80
+      hall_ticket_eligibility: 80
+      crmi_completion: 80

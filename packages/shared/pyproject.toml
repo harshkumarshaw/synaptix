@@ -1,0 +1,18 @@
+[project]
+name = "synaptix-shared"
+version = "0.1.0"
+description = "Synaptix shared libraries — auth, db, errors, logging"
+requires-python = "==3.12.*"
+
+dependencies = [
+    "fastapi>=0.111",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.29",
+    "pydantic[email]>=2.7",
+    "pydantic-settings>=2.2",
+    "python-jose[cryptography]>=3.3",
+    "passlib[bcrypt]>=1.7",
+    "structlog>=24.1",
+    "python-multipart>=0.0.9",
+    "pyotp>=2.9",          # TOTP for MFA
+]

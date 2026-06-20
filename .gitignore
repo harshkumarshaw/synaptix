@@ -1,0 +1,66 @@
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+.next/
+.nuxt/
+out/
+*.tsbuildinfo
+
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+frontend-mobile/build/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Agent memory (these ARE committed — agent memory is part of repo)
+# .agent-memory/  ← DO NOT IGNORE
+
+# Logs
+*.log
+logs/
+
+# Storage (local dev only)
+storage/
+uploads/
+
+# Cloud credentials (NEVER commit)
+service-account*.json
+gcp-key.json
+*-credentials.json
+
+# Secrets
+secrets/
+*.pem
+*.key
+*.crt
+*.p12

@@ -1,0 +1,109 @@
+# Synaptix — Local Development Environment
+# Cost: ₹0/month — runs entirely on your machine
+#
+# Start: docker compose up -d
+# Stop:  docker compose down
+# Reset: docker compose down -v && docker compose up -d
+
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: snx-postgres
+    environment:
+      POSTGRES_DB: synaptix_dev
+      POSTGRES_USER: snx
+      POSTGRES_PASSWORD: snx_dev_pass
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U snx -d synaptix_dev"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - synaptix-net
+
+  # PostgreSQL for tests (separate, ephemeral)
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: snx-postgres-test
+    environment:
+      POSTGRES_DB: synaptix_test
+      POSTGRES_USER: snx_test
+      POSTGRES_PASSWORD: snx_test_pass
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U snx_test -d synaptix_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - synaptix-net
+    profiles:
+      - testing
+
+  # Redis (optional, only when Tier 2 features are being developed)
+  redis:
+    image: redis:7-alpine
+    container_name: snx-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+    restart: unless-stopped
+    networks:
+      - synaptix-net
+    profiles:
+      - tier2
+
+  # Adminer for DB inspection
+  adminer:
+    image: adminer:latest
+    container_name: snx-adminer
+    ports:
+      - "8080:8080"
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - synaptix-net
+    profiles:
+      - tools
+
+  # Mailhog for email testing
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: snx-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    networks:
+      - synaptix-net
+    profiles:
+      - tools
+
+volumes:
+  postgres_data:
+    name: synaptix_postgres_data
+  redis_data:
+    name: synaptix_redis_data
+
+networks:
+  synaptix-net:
+    name: synaptix-net

@@ -1,0 +1,306 @@
+# Synaptix — Antigravity Configuration
+# This file is read by Antigravity agents before every session.
+# It defines project-wide preferences and constraints.
+
+project:
+  name: Synaptix
+  code: SNX
+  owner: Nirmala Foundation
+  description: Multi-tenant Academic Operations & Intelligence Platform
+  primary_institution: JMN Medical College & Hospital
+  version: 5.0
+  status: pre-phase-1a
+
+# CRITICAL: Every agent MUST read these files at session start
+mandatory_reading_at_session_start:
+  - AGENTS.md
+  - AOIP_MASTER_SPEC_v5.md
+  - .agent-memory/working/CURRENT_FOCUS.md
+  - docs/HANDOFF_NOTES.md
+
+# Per-agent additional reading
+per_agent_reading:
+  - agents/{agent_id}-{agent_name}-agent.md
+  - .agent-memory/learning/{agent_id}.md
+  - .agent-memory/incident/{agent_id}.md
+
+# Technology stack — agents MUST use these, no alternatives without approval
+stack:
+  backend:
+    language: python
+    version: "3.12"
+    framework: fastapi
+    orm: sqlalchemy
+    orm_version: "2.0"
+    validation: pydantic
+    validation_version: "2"
+    async: true
+    task_queue: celery
+    test_framework: pytest
+
+  frontend_web:
+    framework: nextjs
+    version: "14"
+    language: typescript
+    strict_mode: true
+    ui_library: react
+    ui_version: "18"
+    styling: tailwindcss
+    state: zustand
+    data_fetching: tanstack-query
+    forms: react-hook-form
+    validation: zod
+    test_framework: vitest
+
+  frontend_mobile:
+    framework: flutter
+    version: "3"
+    state: riverpod
+    db: sqlite
+    db_orm: drift
+    test_framework: flutter_test
+
+  database:
+    primary: postgresql
+    version: "16"
+    row_level_security: true
+    migrations: alembic
+
+  cache:
+    tier_1: in_process_lru_cache
+    tier_2_plus: redis
+    redis_version: "7"
+
+  deployment:
+    tier_1: cloud_run
+    tier_3: gke_autopilot
+    iac: terraform
+
+  ai:
+    primary_model: claude-sonnet-4-6
+    fallback_model: gemini-3-5-flash
+
+  ci_cd:
+    platform: github_actions
+
+# Naming conventions (agents MUST follow)
+naming:
+  services: snx-{service-name}  # e.g., snx-auth-service
+  env_vars: SNX_{UPPER_SNAKE_CASE}  # e.g., SNX_DATABASE_URL
+  database_tables: snake_case_plural  # e.g., students, attendance_records
+  database_columns: snake_case
+  foreign_keys: "{singular_referenced_table}_id"
+  python_files: snake_case.py
+  python_classes: PascalCase
+  python_functions: snake_case
+  typescript_components: PascalCase
+  typescript_hooks: useCamelCase
+  api_routes: kebab-case  # e.g., /api/v1/student-records
+  branches: feature/{ticket-id}-{kebab-case-description}
+
+# Code style enforcement
+code_style:
+  python:
+    formatter: black
+    linter: ruff
+    type_checker: mypy
+    strict_typing: true
+    max_line_length: 100
+
+  typescript:
+    formatter: prettier
+    linter: eslint
+    strict: true
+
+  sql:
+    style_guide: postgres-style-guide
+    uppercase_keywords: true
+    snake_case_identifiers: true
+
+# Rules that AGENTS MUST follow (failures here block commits)
+hard_rules:
+  - "Multi-tenant isolation is enforced by middleware; never bypass tenant_id filtering"
+  - "Two-threshold attendance rule for MBBS: 75% theory + 80% practical, separately"
+  - "No hardcoded secrets — use environment variables or Google Secret Manager"
+  - "NMC compliance tests hard-fail the build"
+  - "Every API endpoint requires authentication except /health, /ready, /auth/*"
+  - "MFA required for admin, principal, dean, controller_of_examinations roles"
+  - "Audit log is append-only — no UPDATE, no DELETE"
+  - "Test coverage manifest must be 100% satisfied before commit"
+  - "Documentation must be updated before commit"
+  - "Agents stay within their specialisation boundaries"
+
+# What agents must NOT do
+forbidden_actions:
+  - "Modify packages/shared/ without explicit approval"
+  - "Modify AGENTS.md or .antigravity-rules"
+  - "Bypass tenant isolation"
+  - "Disable or modify NMC compliance tests"
+  - "Commit secrets, API keys, or passwords"
+  - "Use raw SQL string concatenation (SQL injection risk)"
+  - "Use print() statements (use structured logger)"
+  - "Skip the session start protocol"
+  - "Skip the session end protocol"
+  - "Make architectural decisions without escalating"
+  - "Modify files outside agent's specialisation"
+  - "Use 'any' type in TypeScript without justification"
+  - "Use bare 'except:' in Python"
+
+# Auto-update requirements (agents must update these files)
+documentation_to_update_per_session:
+  always:
+    - docs/CHANGELOG.md
+    - docs/DEVELOPMENT_LOG.md
+    - docs/COMMAND_HISTORY.md
+    - docs/sessions/{date}-session-{n}.md
+    - .agent-memory/working/CURRENT_FOCUS.md
+    - .agent-memory/learning/{agent_id}.md
+    - docs/HANDOFF_NOTES.md
+  
+  conditional:
+    if_bug_fixed: docs/BUG_LOG.md
+    if_decision_made: docs/DECISIONS.md
+    if_dependency_added: docs/DEPENDENCY_LOG.md
+    if_migration_created: docs/MIGRATION_LOG.md
+    if_incident_occurred: docs/INCIDENT_LOG.md
+    if_performance_issue: docs/PERFORMANCE_LOG.md
+    if_agent_learned_from_correction: docs/AGENT_LEARNINGS.md
+    if_uat_conducted: docs/UAT_LOG.md
+    if_cost_implication: docs/COST_LOG.md
+    if_nmc_regulation_implemented: docs/NMC_COMPLIANCE_LOG.md
+    if_known_issue_added: docs/KNOWN_ISSUES.md
+
+# Multi-tenant configuration
+multi_tenancy:
+  strategy: shared_database_shared_schema_with_tenant_id
+  enforcement_layers:
+    - api_gateway: extracts tenant_id from JWT and injects into context
+    - middleware: applies tenant_id filter to all queries
+    - row_level_security: PostgreSQL RLS as second enforcement layer
+  
+  tenant_types:
+    - medical_college  # JMN
+    - nursing_college  # IINR, CCNR, ICHFN
+    - pharmacy_college  # IIPSR
+    - allied_health  # IIHMAHS
+    - university  # Future Nirmala Vishwa Vidyapeeth
+    - school  # Future schools
+
+# NMC Curriculum support
+nmc_curricula:
+  active_versions:
+    - code: NMC_CBME_2019
+      effective_for: 2023 admission batch
+      phase_durations:
+        phase_I: 12 months
+        phase_II: 12 months
+        phase_III_part_I: 12 months
+        phase_III_part_II: 12 months
+      examination: traditional_university_exam
+    
+    - code: NMC_CBME_2023
+      effective_for: 2024 admission batch onwards
+      phase_durations:
+        phase_I: 12 months
+        phase_II: 12 months
+        phase_III_part_I: 12 months
+        phase_III_part_II: 12 months
+      examination: next_step_1_and_2
+
+# Agent specialisation boundaries
+agent_boundaries:
+  architect:
+    can_modify: [docs/, conventions/, AOIP_MASTER_SPEC_v5.md (with approval)]
+    can_read: ["**"]
+  
+  backend:
+    can_modify: [services/, packages/shared/ (with approval)]
+    can_read: ["**"]
+    cannot_modify: [frontend-web/, frontend-mobile/]
+  
+  frontend:
+    can_modify: [frontend-web/]
+    can_read: ["**"]
+    cannot_modify: [services/, frontend-mobile/, packages/shared/ (without approval)]
+  
+  mobile:
+    can_modify: [frontend-mobile/]
+    can_read: ["**"]
+    cannot_modify: [services/, frontend-web/, packages/shared/ (without approval)]
+  
+  database:
+    can_modify: [services/*/migrations/, packages/shared/db/]
+    can_read: ["**"]
+  
+  testing:
+    can_modify: [tests/, services/**/tests/, frontend-*/tests/]
+    can_read: ["**"]
+  
+  security:
+    can_modify: [docs/INCIDENT_LOG.md, docs/KNOWN_ISSUES.md]
+    can_read: ["**"]
+    can_annotate: ["**"]  # adds // SECURITY: comments
+  
+  code_reviewer:
+    can_modify: [docs/BUG_LOG.md, docs/KNOWN_ISSUES.md]
+    can_read: ["**"]
+    can_annotate: ["**"]
+  
+  devops:
+    can_modify: [infrastructure/, .github/, docker-compose.yml, Dockerfile*]
+    can_read: ["**"]
+  
+  documentation:
+    can_modify: [docs/, README.md]
+    can_read: ["**"]
+  
+  nmc_compliance:
+    can_modify: [tests/compliance/, tests/NMC_COMPLIANCE_TESTS.md, docs/NMC_COMPLIANCE_LOG.md]
+    can_read: ["**"]
+
+# Model preference per task type
+model_routing:
+  architecture_design: claude-opus-4-6
+  complex_business_logic: claude-sonnet-4-6
+  routine_code_generation: gemini-3-5-flash
+  test_generation: claude-sonnet-4-6
+  documentation: gemini-3-5-flash
+  security_review: claude-opus-4-6
+  nmc_compliance: claude-opus-4-6  # highest stakes, use most capable model
+
+# Pre-commit checks (block commit if any fail)
+pre_commit_checks:
+  - lint_python
+  - lint_typescript
+  - format_check
+  - type_check
+  - run_unit_tests
+  - verify_coverage_manifest
+  - run_nmc_compliance_tests
+  - check_for_hardcoded_secrets
+  - verify_documentation_updated
+  - verify_tenant_isolation
+  - verify_audit_log_writes
+
+# Pre-push checks (additional, block push if any fail)
+pre_push_checks:
+  - run_integration_tests
+  - run_security_tests
+  - verify_no_breaking_changes_without_migration
+
+# Local development
+local_dev:
+  database: docker-compose postgres
+  database_url_template: postgresql+asyncpg://snx:snx_dev_pass@localhost:5432/synaptix_dev
+  no_cloud_required: true
+  hot_reload: true
+  cost_inr_per_month: 0
+
+# Cost tracking
+cost_thresholds:
+  alert_at_pct: 80
+  budget_inr_monthly:
+    cloud_infrastructure: 43000
+    ai_api: 25000
+    sms_whatsapp: 15000
+    total: 83000

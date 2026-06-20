@@ -1,0 +1,149 @@
+name: Synaptix CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  PYTHON_VERSION: "3.12"
+  UV_VERSION: "0.11.23"
+
+jobs:
+  # ── Job 1: Lint & Type Check ─────────────────────────────────────────────
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: ${{ env.UV_VERSION }}
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Create virtual environment
+        run: uv venv --python ${{ env.PYTHON_VERSION }}
+
+      - name: Install dev dependencies
+        run: |
+          uv pip install ruff black mypy \
+            fastapi sqlalchemy pydantic "pydantic[email]" pydantic-settings \
+            "python-jose[cryptography]" structlog passlib pyotp asyncpg
+
+      - name: Run ruff (linter)
+        run: uv run ruff check .
+
+      - name: Run black (formatter check)
+        run: uv run black --check .
+
+      - name: Run mypy (type checker)
+        run: uv run mypy packages/shared --ignore-missing-imports
+        continue-on-error: true  # Phase 1A: non-blocking until full type coverage
+
+  # ── Job 2: Unit Tests ────────────────────────────────────────────────────
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: ${{ env.UV_VERSION }}
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Create virtual environment
+        run: uv venv --python ${{ env.PYTHON_VERSION }}
+
+      - name: Install test dependencies
+        run: |
+          uv pip install pytest pytest-asyncio pytest-cov httpx freezegun \
+            "python-jose[cryptography]" pydantic "pydantic[email]" structlog \
+            passlib pyotp fastapi sqlalchemy asyncpg
+
+      - name: Run unit tests
+        run: |
+          PYTHONPATH=$GITHUB_WORKSPACE uv run pytest tests/unit -v --tb=short --cov=packages --cov-report=xml
+        env:
+          SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
+          SNX_ENV: "test"
+
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          file: ./coverage.xml
+          fail_ci_if_error: false
+
+  # ── Job 3: NMC Compliance Tests (HARD FAIL) ──────────────────────────────
+  nmc-compliance:
+    name: "NMC Compliance Tests (HARD FAIL)"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: ${{ env.UV_VERSION }}
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Create virtual environment
+        run: uv venv --python ${{ env.PYTHON_VERSION }}
+
+      - name: Install test dependencies
+        run: |
+          uv pip install pytest pytest-asyncio \
+            "python-jose[cryptography]" pydantic structlog passlib pyotp \
+            fastapi sqlalchemy asyncpg
+
+      - name: Run NMC compliance tests
+        # THIS JOB HARD-FAILS THE BUILD
+        # One failing compliance test = PR cannot merge
+        run: |
+          PYTHONPATH=$GITHUB_WORKSPACE uv run pytest tests/compliance -v --tb=long -x
+        env:
+          SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
+          SNX_ENV: "test"
+
+  # ── Job 4: Secret Scan ───────────────────────────────────────────────────
+  secret-scan:
+    name: Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: ${{ env.UV_VERSION }}
+
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Create virtual environment
+        run: uv venv --python ${{ env.PYTHON_VERSION }}
+
+      - name: Run secret scan
+        run: uv run python scripts/check_secrets.py
+
+  # ── Job 5: Docker Build Check ────────────────────────────────────────────
+  docker-build:
+    name: Docker Build (snx-auth)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build snx-auth Docker image
+        run: |
+          docker build -t snx-auth:ci -f services/snx-auth/Dockerfile .
