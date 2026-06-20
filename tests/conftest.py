@@ -13,7 +13,6 @@ from collections.abc import AsyncGenerator
 from typing import Any
 
 import pytest
-import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
 
@@ -45,7 +44,7 @@ JWT_SECRET = os.environ["SNX_JWT_SECRET"]
 
 @pytest.fixture(scope="session")
 def anyio_backend() -> str:
-    """Use asyncio for all async tests."""
+    """Use asyncio for all async tests (anyio backend)."""
     return "asyncio"
 
 
@@ -75,16 +74,20 @@ def app_settings() -> Any:
     return get_settings()
 
 
-@pytest_asyncio.fixture
+@pytest.fixture
 async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]:
     """Provide a database session scoped by tenant context.
 
-    Creates a fresh NullPool engine per test to avoid 'Future attached to a
-    different loop' errors on Linux CI where pytest-asyncio gives each test
-    function its own event loop (Python 3.12 / anyio default behaviour).
+    Uses anyio-compatible plain @pytest.fixture (not @pytest_asyncio.fixture)
+    so that both this fixture and the @pytest.mark.anyio test functions share
+    the SAME event loop managed by the anyio pytest plugin. This avoids the
+    infamous 'Future attached to a different loop' error that occurs when
+    @pytest_asyncio.fixture and @pytest.mark.anyio run under separate loop
+    managers on Linux.
 
-    NullPool closes connections immediately after each test so there is no
-    cross-test state or loop contamination.
+    Creates a fresh NullPool engine per test to avoid asyncpg connection
+    reuse across different event loops. NullPool closes connections
+    immediately after each use — no pool state leaks between tests.
     """
     from sqlalchemy import text
 
@@ -92,8 +95,7 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
 
     database_url = os.environ["SNX_DATABASE_URL"]
 
-    # Always create a fresh engine bound to the *current* event loop.
-    # NullPool ensures no connection is held between tests.
+    # Always fresh engine bound to the current event loop (anyio manages it).
     engine = create_async_engine(database_url, poolclass=NullPool)
     session_factory = async_sessionmaker(
         bind=engine,
@@ -103,7 +105,7 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
         autocommit=False,
     )
 
-    # Expose on the module so service code can find it via get_session()
+    # Expose on the shared module so service-level code finds it.
     db_session_mod._engine = engine
     db_session_mod._async_session_factory = session_factory
 
@@ -127,8 +129,7 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
         yield session
         await session.rollback()
 
-    # Dispose engine after each test — releases the underlying asyncpg connection
-    # so no cross-test loop references leak.
+    # Dispose engine — closes all asyncpg connections for this test's loop.
     await engine.dispose()
     db_session_mod._engine = None
     db_session_mod._async_session_factory = None
