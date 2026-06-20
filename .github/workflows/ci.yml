@@ -49,6 +49,27 @@ jobs:
   unit-tests:
     name: Unit Tests
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: snx_test
+          POSTGRES_PASSWORD: snx_test_pass
+          POSTGRES_DB: synaptix_test
+        ports:
+          - 5436:5432
+        options: >-
+          --health-cmd="pg_isready -U snx_test -d synaptix_test"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      SNX_DATABASE_URL: "postgresql+asyncpg://snx_test:snx_test_pass@localhost:5436/synaptix_test"
+      SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
+      SNX_ENV: "test"
+
     steps:
       - uses: actions/checkout@v4
 
@@ -65,9 +86,14 @@ jobs:
 
       - name: Install test dependencies
         run: |
-          uv pip install pytest pytest-asyncio pytest-cov httpx freezegun \
-            "python-jose[cryptography]" pydantic "pydantic[email]" structlog \
-            passlib pyotp fastapi sqlalchemy asyncpg
+          uv pip install pytest pytest-asyncio pytest-cov httpx freezegun alembic \
+            "python-jose[cryptography]" pydantic "pydantic[email]" pydantic-settings \
+            structlog passlib pyotp fastapi sqlalchemy "sqlalchemy[asyncio]" asyncpg
+
+      - name: Wait for Postgres and run migrations
+        run: |
+          PYTHONPATH=$GITHUB_WORKSPACE:$GITHUB_WORKSPACE/services/snx-academic:$GITHUB_WORKSPACE/services/snx-workflow:$GITHUB_WORKSPACE/services/snx-logbook \
+          uv run alembic upgrade head
 
       # Each service has its own 'app' namespace so tests must run with an
       # isolated PYTHONPATH per service.  Coverage is accumulated with
@@ -79,9 +105,6 @@ jobs:
           uv run pytest tests/unit/test_jwt_utils.py \
             -v --tb=short \
             --cov=packages --cov=services --cov-append --cov-fail-under=0 --cov-report=
-        env:
-          SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
-          SNX_ENV: "test"
 
       - name: Run snx-academic unit tests
         run: |
@@ -89,9 +112,6 @@ jobs:
           uv run pytest tests/unit/academic/ \
             -v --tb=short \
             --cov=packages --cov=services --cov-append --cov-fail-under=0 --cov-report=
-        env:
-          SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
-          SNX_ENV: "test"
 
       - name: Run snx-workflow / mdm / assets unit tests
         run: |
@@ -99,9 +119,6 @@ jobs:
           uv run pytest tests/unit/workflow/ tests/unit/mdm/ tests/unit/assets/ \
             -v --tb=short \
             --cov=packages --cov=services --cov-append --cov-fail-under=0 --cov-report=
-        env:
-          SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
-          SNX_ENV: "test"
 
       - name: Run snx-logbook unit tests (final — enforces 80% coverage)
         run: |
@@ -109,9 +126,6 @@ jobs:
           uv run pytest tests/unit/logbook/ \
             -v --tb=short \
             --cov=packages --cov=services --cov-append --cov-report=xml
-        env:
-          SNX_JWT_SECRET: "ci_test_secret_that_is_long_enough_for_hs256_at_least_32_chars"
-          SNX_ENV: "test"
 
       - name: Upload coverage report
         uses: codecov/codecov-action@v4
