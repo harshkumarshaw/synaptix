@@ -15,6 +15,7 @@ from typing import Any
 import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 # Set test environment variables BEFORE any imports
 os.environ.setdefault("SNX_ENV", "test")
@@ -76,28 +77,37 @@ def app_settings() -> Any:
 
 @pytest_asyncio.fixture
 async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]:
-    """Provide a database session scoped by tenant context."""
+    """Provide a database session scoped by tenant context.
+
+    Creates a fresh NullPool engine per test to avoid 'Future attached to a
+    different loop' errors on Linux CI where pytest-asyncio gives each test
+    function its own event loop (Python 3.12 / anyio default behaviour).
+
+    NullPool closes connections immediately after each test so there is no
+    cross-test state or loop contamination.
+    """
     from sqlalchemy import text
 
     import packages.shared.db.session as db_session_mod
 
     database_url = os.environ["SNX_DATABASE_URL"]
-    if db_session_mod._engine is None:
-        from sqlalchemy.pool import NullPool
 
-        db_session_mod._engine = create_async_engine(
-            database_url,
-            poolclass=NullPool,
-        )
-        db_session_mod._async_session_factory = async_sessionmaker(
-            bind=db_session_mod._engine,
-            class_=AsyncSession,
-            expire_on_commit=False,
-            autoflush=False,
-            autocommit=False,
-        )
+    # Always create a fresh engine bound to the *current* event loop.
+    # NullPool ensures no connection is held between tests.
+    engine = create_async_engine(database_url, poolclass=NullPool)
+    session_factory = async_sessionmaker(
+        bind=engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autoflush=False,
+        autocommit=False,
+    )
 
-    async with db_session_mod._async_session_factory() as session:
+    # Expose on the module so service code can find it via get_session()
+    db_session_mod._engine = engine
+    db_session_mod._async_session_factory = session_factory
+
+    async with session_factory() as session:
         # Truncate tables to ensure a clean state for every test
         await session.execute(text("ALTER TABLE audit_log DISABLE TRIGGER trg_audit_log_no_update"))
         await session.execute(
@@ -117,11 +127,8 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
         yield session
         await session.rollback()
 
-
-@pytest_asyncio.fixture(scope="session", autouse=True)
-async def cleanup_database_engine() -> AsyncGenerator[None, None]:
-    yield
-    import packages.shared.db.session as db_session_mod
-
-    if db_session_mod._engine is not None:
-        await db_session_mod._engine.dispose()
+    # Dispose engine after each test — releases the underlying asyncpg connection
+    # so no cross-test loop references leak.
+    await engine.dispose()
+    db_session_mod._engine = None
+    db_session_mod._async_session_factory = None
