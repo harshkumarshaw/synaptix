@@ -14,3 +14,4 @@ class Course(TenantScopedBase):
     code: Mapped[str] = mapped_column(nullable=False)
     department_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("departments.id", ondelete="RESTRICT"), nullable=False)
     is_active: Mapped[bool] = mapped_column(default=True, server_default="true")
+    default_attendance_category: Mapped[str] = mapped_column(nullable=False, server_default="theory")

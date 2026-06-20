@@ -7,6 +7,23 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — Session 5 (Phase 1B Calendar & Planning Redesign & Fixes)
+
+**Database Migrations & Schema Standards**
+- Corrected database migration `20260620_0009_phase1b_academic_tables` by adding standard `id` (primary key), `created_at`, `updated_at`, and `deleted_at` columns to `event_courses`, `event_faculty`, and `session_faculty` join tables to conform to `AGENTS.md` SQL conventions.
+
+**Services & Models**
+- Removed `primary_key=True` from foreign key references in `EventFaculty`, `EventCourse`, and `SessionFaculty` models to correctly inherit the single primary key `id` from `TenantScopedBase`.
+- Updated code validation pattern in `LessonPlanCreate` schema to allow dots/periods (e.g., `"AN-1.1"`) so that standard CBME competency codes are accepted.
+- Updated `submit_for_approval` in `LessonPlanService` to use `"lesson_plan_approval"` as the workflow entity type to satisfy the `chk_workflow_instances_entity_type` database check constraint.
+- Added `Tenant` model stub to `snx-logbook` models package to allow resolution of the global `tenants` table foreign key inside `TenantScopedBase`.
+
+**Test Tooling & Infrastructure**
+- Updated `tests/conftest.py` `db_session` fixture to configure the SQLAlchemy async engine with `NullPool` for testing. This resolves socket GC `ResourceWarning` and unclosed event loop `RuntimeError` leaks when running multiple test suites on Windows/Proactor loop.
+- Added session-scoped `cleanup_database_engine` autouse fixture to `tests/conftest.py` ensuring connection pool/engine resources are disposed of cleanly.
+- Updated `tests/unit/academic/test_integration_sessions.py` to expect `pydantic.ValidationError` directly on schema construction rather than at the service boundary.
+- Verified all unit, integration, security, and NMC compliance stub test suites run successfully (all 39 tests passing).
+
 ### Added — Session 4 (Workflow Engine, MDM, Assets Scaffolding & Fixes)
 
 **Services & Modules**

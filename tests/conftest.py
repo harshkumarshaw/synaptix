@@ -81,7 +81,19 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
     from sqlalchemy import text
     
     database_url = os.environ["SNX_DATABASE_URL"]
-    db_session_mod.configure_database(database_url)
+    if db_session_mod._engine is None:
+        from sqlalchemy.pool import NullPool
+        db_session_mod._engine = create_async_engine(
+            database_url,
+            poolclass=NullPool,
+        )
+        db_session_mod._async_session_factory = async_sessionmaker(
+            bind=db_session_mod._engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autoflush=False,
+            autocommit=False,
+        )
     
     async with db_session_mod._async_session_factory() as session:
         # Truncate tables to ensure a clean state for every test
@@ -102,4 +114,12 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
         await db_session_mod.set_tenant_context(session, tenant_id)
         yield session
         await session.rollback()
+
+
+@pytest_asyncio.fixture(scope="session", autouse=True)
+async def cleanup_database_engine() -> AsyncGenerator[None, None]:
+    yield
+    import packages.shared.db.session as db_session_mod
+    if db_session_mod._engine is not None:
+        await db_session_mod._engine.dispose()
 

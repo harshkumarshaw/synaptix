@@ -514,6 +514,114 @@ examination_management:
       audit_ref: "AUDIT-P2"
 
 # ============================================================================
+# LAYER 2: ACADEMIC — Calendar & Planning Modules (Phase 1B)
+# ============================================================================
+
+academic_calendar:
+  module_id: A-04
+  test_file_prefix: "tests/integration/test_calendar_engine.py"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "CAL-001"
+      description: "Create schedule calendar events with validations (category, phase, type)"
+      type: unit
+    - id: "CAL-E001"
+      description: "Rescheduling maintaining parent link"
+      type: edge_case
+      audit_ref: "EC-110"
+    - id: "CAL-E002"
+      description: "Cancellation recording reason and actor"
+      type: edge_case
+      audit_ref: "EC-111"
+    - id: "CAL-E003"
+      description: "Bulk generation idempotency"
+      type: edge_case
+      audit_ref: "EC-112"
+    - id: "CAL-E004"
+      description: "Holiday calendar conflict detection"
+      type: edge_case
+      audit_ref: "EC-113"
+    - id: "CAL-E005"
+      description: "Faculty leave conflict detection at scheduling time"
+      type: edge_case
+      audit_ref: "EC-114"
+    - id: "CAL-E006"
+      description: "Room/lab double-booking prevention"
+      type: edge_case
+      audit_ref: "EC-115"
+    - id: "CAL-E007"
+      description: "Phase transition boundary events validation"
+      type: edge_case
+      audit_ref: "EC-116"
+    - id: "CAL-E008"
+      description: "Integration sessions map secondary courses via event_courses join table"
+      type: edge_case
+      audit_ref: "AUDIT-C4"
+
+lesson_plans:
+  module_id: A-05
+  test_file_prefix: "tests/integration/test_lesson_plan_service.py"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "LPN-001"
+      description: "Create lesson plan with curriculum scoping and composite FK"
+      type: unit
+    - id: "LPN-002"
+      description: "Lesson plan version updates incrementing version and toggling current flag"
+      type: unit
+    - id: "LPN-003"
+      description: "Submit lesson plan for approval initiating workflow instance and denormalizing status"
+      type: integration
+    - id: "LPN-E001"
+      description: "Lesson plan revision retains conducted sessions reference to older version"
+      type: edge_case
+      audit_ref: "EC-118"
+    - id: "LPN-E002"
+      description: "Log conducted session against unapproved lesson plan yields compliance warning"
+      type: edge_case
+      audit_ref: "EC-119"
+
+session_tracking:
+  module_id: A-06
+  test_file_prefix: "tests/integration/test_session_tracking.py"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "SES-001"
+      description: "Log conducted session with actual hours and multiple faculty join table"
+      type: unit
+    - id: "SES-002"
+      description: "Nullable lesson plan with session reason is accepted"
+      type: unit
+    - id: "SES-003"
+      description: "Syllabus coverage calculation for competencies, hours, and topics"
+      type: integration
+
+foundation_course_aetcom:
+  module_id: A-07
+  test_file_prefix: "tests/integration/test_logbook_service.py"
+  enforcement: "HARD_FAIL"
+  
+  nmc_compliance_tests:
+    - id: "FC-NMC-001"
+      description: "Foundation Course scheduled as 1-month block at Phase I start"
+      type: compliance
+    - id: "ECE-NMC-001"
+      description: "ECE event type allowed only in Phase I"
+      type: compliance
+    - id: "ECE-NMC-002"
+      description: "Clinical postings event type NOT allowed in Phase I"
+      type: compliance
+    - id: "AET-NMC-001"
+      description: "AETCOM session event type supported"
+      type: compliance
+    - id: "AET-NMC-005"
+      description: "AETCOM completion required per phase before progression"
+      type: compliance
+
+# ============================================================================
 # LAYER 2: ACADEMIC — Digital Logbook & Portfolio
 # ============================================================================
 

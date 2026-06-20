@@ -177,6 +177,25 @@ services:
     profiles:
       - services
 
+  snx-logbook:
+    build:
+      context: .
+      dockerfile: services/snx-logbook/Dockerfile
+    container_name: snx-logbook
+    ports:
+      - "8006:8006"
+    environment:
+      - SNX_ENV=dev
+      - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
+      - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - synaptix-net
+    profiles:
+      - services
+
 
 volumes:
   postgres_data:

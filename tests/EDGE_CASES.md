@@ -562,7 +562,7 @@ Each edge case has:
 
 ## Category 11: Workflow, MDM & Digital Asset Edge Cases
 
-### EC-110: Definition Deactivated Mid-Workflow [HIGH]
+### EC-103: Definition Deactivated Mid-Workflow [HIGH]
 **Audit Ref:** v5-NEW
 **Scenario:** A workflow definition v1 is deactivated or a new version v2 is published while a v1 instance is in-flight.
 **Expected:**
@@ -570,7 +570,7 @@ Each edge case has:
 - New instances are created using v2 (since is_current = true on v2 and false on v1).
 **Test:** `tests/unit/workflow/test_definition_versioning.py`
 
-### EC-111: Concurrent Transition Submissions [HIGH]
+### EC-104: Concurrent Transition Submissions [HIGH]
 **Audit Ref:** v5-NEW
 **Scenario:** Two approvers submit transition approvals for the same workflow instance concurrently.
 **Expected:**
@@ -578,7 +578,7 @@ Each edge case has:
 - One transition succeeds, the other fails with InvalidStateTransitionError.
 **Test:** `tests/integration/workflow/test_full_lifecycle.py`
 
-### EC-112: Soft-Deleted Current Assignee [HIGH]
+### EC-105: Soft-Deleted Current Assignee [HIGH]
 **Audit Ref:** v5-NEW
 **Scenario:** The user assigned to a pending workflow step is soft-deleted (resigned/transferred, audit ref AUDIT-O1).
 **Expected:**
@@ -586,7 +586,7 @@ Each edge case has:
 - Reassigns to HOD or triggers role-based open assignment.
 **Test:** `tests/integration/workflow/test_full_lifecycle.py`
 
-### EC-113: Cross-Tenant Definition/User Reference [CRITICAL SECURITY]
+### EC-106: Cross-Tenant Definition/User Reference [CRITICAL SECURITY]
 **Audit Ref:** v5-NEW
 **Scenario:** Attacker attempts to create a workflow_instance in Tenant A referencing a workflow_definition or assignee in Tenant B.
 **Expected:**
@@ -594,13 +594,80 @@ Each edge case has:
 - Transaction is aborted with foreign key violation.
 **Test:** `tests/security/workflow/test_tenant_isolation.py`
 
-### EC-114: Duplicate Asset Upload [MEDIUM]
+### EC-107: Duplicate Asset Upload [MEDIUM]
 **Audit Ref:** v5-NEW
 **Scenario:** A user uploads a file matching an existing file's SHA256 checksum in the tenant.
 **Expected:**
 - Creates a new digital_assets record but references existing path or creates new metadata node.
 - Upload computes SHA256 for validation.
 **Test:** `tests/unit/assets/test_asset_service.py`
+
+---
+
+## Category 12: Calendar & Planning Edge Cases
+
+### EC-110: Rescheduled Event Parent Reference [MEDIUM]
+**Scenario:** An event is rescheduled. A new event is created, and it must maintain a reference to the original event.
+**Expected:**
+- Original event status updated to 'rescheduled'.
+- New event has `parent_event_id` pointing to the original event's ID.
+**Test:** `tests/integration/test_calendar_engine.py`
+
+### EC-111: Cancelled Event Audit Details [MEDIUM]
+**Scenario:** An event is cancelled. It must record the reason and actor.
+**Expected:**
+- Status set to 'cancelled'.
+- `cancellation_reason` and `cancelled_by` are recorded and non-null.
+**Test:** `tests/integration/test_calendar_engine.py`
+
+### EC-112: Bulk Schedule Generation Idempotency [HIGH]
+**Scenario:** Admin triggers bulk schedule generation multiple times.
+**Expected:**
+- Idempotency keys or validation checks prevent duplicate calendar events from being created.
+**Test:** `tests/integration/test_calendar_engine.py`
+
+### EC-113: Holiday Calendar Conflict Detection [HIGH]
+**Scenario:** Event is scheduled on a declared institutional holiday.
+**Expected:**
+- Validation rejects scheduling or returns a warning depending on configuration.
+**Test:** `tests/integration/test_calendar_engine.py`
+
+### EC-114: Faculty Leave Conflict Detection [HIGH]
+**Scenario:** Event is scheduled with a faculty member who is on approved leave.
+**Expected:**
+- Check against leave requests database; rejects event creation or warns scheduler.
+**Test:** `tests/integration/test_calendar_engine.py`
+
+### EC-115: Room/Lab Double-Booking Prevention [CRITICAL]
+**Scenario:** Attempt to book the same room/lab for overlapping time periods.
+**Expected:**
+- Reject booking at the database or service validation layer.
+**Test:** `tests/integration/test_calendar_engine.py`
+
+### EC-116: Phase Transition Boundary Events [MEDIUM]
+**Scenario:** Scheduling events on boundary days (e.g., last day of Phase I overlapping first day of Phase II).
+**Expected:**
+- Events are strictly bound by the batch's professional phase start/end dates.
+**Test:** `tests/integration/test_calendar_engine.py`
+
+### EC-117: Institutional Weekend/Half-day Handling [LOW]
+**Scenario:** Events scheduled on Sunday or Saturday afternoon when the institution runs half-days.
+**Expected:**
+- System alerts scheduler or automatically categorizes attendance accordingly.
+**Test:** `tests/integration/test_calendar_engine.py`
+
+### EC-118: Lesson Plan Revision with Existing Sessions [HIGH]
+**Scenario:** Faculty creates a new version of a lesson plan while sessions have already been conducted and logged against the previous version.
+**Expected:**
+- Previous sessions maintain reference to the older immutable lesson plan version record.
+- New sessions link to the new current approved version.
+**Test:** `tests/integration/test_lesson_plan_service.py`
+
+### EC-119: Unapproved Lesson Plan Session Log [HIGH]
+**Scenario:** Session is conducted against a lesson plan that is in 'draft' or 'pending_approval' status.
+**Expected:**
+- Allowed (to prevent blocking actual classes), but logs a compliance warning or audit log warning.
+**Test:** `tests/integration/test_lesson_plan_service.py`
 
 ---
 
@@ -618,5 +685,5 @@ When an agent discovers a new edge case during development:
 
 ---
 
-*Total edge cases catalogued: 102 (and growing)*
+*Total edge cases catalogued: 112 (and growing)*
 *All cases have or require corresponding tests in `tests/`*

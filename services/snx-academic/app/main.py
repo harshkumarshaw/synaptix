@@ -23,9 +23,10 @@ from packages.shared.errors import (
 from packages.shared.logging import configure_logging, get_logger
 
 from app.config import get_settings
-from app.routers import academic
+from app.routers import academic, calendar, lesson_plan, session, curriculum_migration
 
 logger = get_logger(__name__)
+
 
 
 @asynccontextmanager
@@ -107,6 +108,10 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(academic.router, prefix="/api/v1")
+    app.include_router(calendar.router, prefix="/api/v1")
+    app.include_router(lesson_plan.router, prefix="/api/v1")
+    app.include_router(session.router, prefix="/api/v1")
+    app.include_router(curriculum_migration.router, prefix="/api/v1")
 
     @app.get("/health", tags=["infrastructure"])
     async def health() -> dict[str, str]:

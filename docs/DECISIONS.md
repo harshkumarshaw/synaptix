@@ -129,6 +129,84 @@ Every architectural decision documented as an ADR.
 - (+) Defensible audit trail.
 - (-) Redundant data storage in `workflow_instances.context`.
 
+## ADR-013: Attendance Category Schema Design
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** NMC CBME mandates separate thresholds for theory (75%) and practical/clinical/DOAP/ECE (80%) attendance. The system cannot determine which pool an event belongs to without explicit tagging on the schedule record.
+**Decision:** Add `attendance_category` to the `events` table with a CHECK constraint: `CHECK (attendance_category IN ('theory', 'practical', 'clinical', 'doap', 'ece', 'aetcom', 'foundation_course', 'elective'))`.
+**Consequences:**
+- (+) Guarantees that attendance calculations partition events into the correct regulatory pools.
+- (+) Simple query filtering during attendance aggregation.
+- (-) Every event schedule record must be categorised at creation.
+
+## ADR-014: Faculty Assignment Pattern for Events
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Scheduling must assign faculty to events, supporting multiple faculty per session (e.g. for clinical postings/integration sessions), and handling reassignments when faculty resign or transfer.
+**Decision:** Use a join table `event_faculty` (containing columns `tenant_id`, `event_id`, `faculty_id`) rather than a single `faculty_id` column or array. This table uses composite FKs referencing `events` and `faculty`.
+**Consequences:**
+- (+) Clean many-to-many relationship supporting multiple instructors per event.
+- (+) Supports clean audit trail and reassignments when faculty resign/transfer (reassigning active rows).
+- (-) Requires an extra query/join to retrieve assigned faculty for calendar events.
+
+## ADR-015: Lesson Plan ↔ Workflow Engine Integration
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Lesson plans must be submitted to HODs for approval. Maintaining a separate state machine or simple status string on `lesson_plans` leads to drift from the global workflow engine.
+**Decision:** Integrate the Lesson Plan approval flow directly with `snx-workflow`. Create a `workflow_instance_id` column on `lesson_plans`, and denormalise `lesson_plans.status` as a read-through cache of the linked `workflow_instances.status`.
+**Consequences:**
+- (+) Reuses the robust, version-tracked workflow engine, ensuring complete audit trails and HOD sign-offs.
+- (+) Prevents state machine duplication.
+- (-) Introduces cross-service referencing between `snx-academic` and `snx-workflow`.
+
+## ADR-016: Lesson Plan Versioning
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Faculty revise lesson plans mid-semester. Editing a lesson plan directly destroys the history of what was previously approved and taught.
+**Decision:** Apply the immutable versioning pattern matching `workflow_definitions` to `lesson_plans`. Each modification inserts a new row with an incremented `version` integer, maintaining a `is_current` BOOLEAN flag restricted by a partial unique index on `(tenant_id, course_id, code) WHERE is_current = TRUE AND deleted_at IS NULL`.
+**Consequences:**
+- (+) Preserves a perfect audit trail of all lesson plan revisions and approvals.
+- (-) Requires soft-deleting previous current records and fetching version numbers.
+
+## ADR-017: Horizontal Integration Sessions Strategy
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Horizontal integration sessions combine multiple subjects (e.g. Anatomy + Physiology joint lecture). A single `course_id` foreign key on the `events` table cannot represent secondary subjects.
+**Decision:** Keep `course_id` on the `events` table to represent the *primary* course (defining the primary subject and attendance category), and introduce an `event_courses` join table (containing `tenant_id`, `event_id`, `course_id`) to map all secondary integration courses.
+**Consequences:**
+- (+) Clean database normalization supporting horizontal integration.
+- (+) Primary subject remains clear for NMC reporting.
+- (-) Joins are required to fetch secondary subjects.
+
+## ADR-018: Syllabus Coverage Triple-Metric Design
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Syllabus coverage needs to represent both regulatory compliance and course execution metrics.
+**Decision:** Implement a triple-metric design for syllabus coverage:
+1. **Primary Metric (NMC-Reportable):** Competency coverage = `count(distinct competencies addressed in conducted sessions) / total core competencies in curriculum`.
+2. **Topic Coverage:** `count(distinct conducted lesson_plans) / total lesson plans`.
+3. **Hours Coverage:** `sum(sessions.actual_hours) / sum(lesson_plans.estimated_hours)`.
+**Consequences:**
+- (+) Highly accurate tracking of core competency attainment.
+- (+) Redundant checks on actual instruction hours vs planned hours.
+- (-) Slightly more complex database aggregation queries.
+
+## ADR-019: Curriculum Migration Scoped as Audit Log in Phase 1B
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Curriculum version migration (e.g., student moving from CBME 2019 to CBME 2023) is highly complex, involving credit mapping and bridge courses, and requires a full engine.
+**Decision:** Scope Phase 1B to deliver ONLY the audit log piece (`curriculum_migration_audits`). Record `student_id`, `from_curriculum_id`, `to_curriculum_id`, `approved_by`, and a `migration_details` JSONB column. Defer the automatic execution migration engine to Phase 2.
+**Consequences:**
+- (+) Simplifies Phase 1B scope, focusing on schema safety and compliance audits.
+- (-) Migration re-mappings must be input manually via the metadata log in JSONB for this phase.
+
 ## Template for New ADRs
 
 ```markdown

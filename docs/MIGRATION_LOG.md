@@ -204,5 +204,51 @@ Scaffold F-07 Digital Asset Repository database tables to support metadata, chec
 **Verification:**
 - Verify asset upload and download unit tests.
 
+---
+
+### Migration: 20260620_0009_phase1b_academic_tables
+**Created:** 2026-06-20
+**Agent:** Orchestrator Agent (00)
+**Revision ID:** 20260620_0009
+**Depends on:** 20260620_0008
+
+**Purpose:**
+Scaffold and implement Phase 1B Academic Calendar, Lesson Plans, Session Tracking, and Curriculum Migrations. Enforce RLS, auto-update triggers, check constraints, composite foreign keys, and indexes.
+
+**Changes:**
+- Altered table `courses` to add `default_attendance_category` column.
+- Added unique constraint on `(tenant_id, id)` on courses, batches, academic_years, faculty, and students tables to support composite FK references.
+- Created tables: `events`, `event_courses`, `event_faculty`, `lesson_plans`, `sessions`, `session_faculty`, `curriculum_migration_audits`.
+- Enabled RLS on all 7 tables.
+- Added auto-update updated_at triggers on all tables.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run academic service tests (`pytest.exe tests/unit/academic/...`) and verify they pass.
+
+---
+
+### Migration: 20260620_0010_phase1b_logbook_tables
+**Created:** 2026-06-20
+**Agent:** Orchestrator Agent (00)
+**Revision ID:** 20260620_0010
+**Depends on:** 20260620_0009
+
+**Purpose:**
+Scaffold and implement Foundation Course and AETCOM logbook records tracking.
+
+**Changes:**
+- Created tables: `foundation_course_records`, `aetcom_records`.
+- Enabled RLS on both tables.
+- Added check constraints for foundation course module names, aetcom record statuses, and professional phases.
+- Added unique constraint `uq_aetcom_records_unique` on `(tenant_id, student_id, module_code, competency_code, professional_phase)` where `deleted_at` is null.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run logbook service tests (`pytest.exe tests/unit/logbook/...`) and verify they pass.
+
+
 
 

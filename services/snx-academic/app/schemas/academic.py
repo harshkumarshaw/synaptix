@@ -28,6 +28,7 @@ class CourseResponse(BaseModel):
     code: str
     department_id: uuid.UUID
     is_active: bool
+    default_attendance_category: str
 
     class Config:
         from_attributes = True

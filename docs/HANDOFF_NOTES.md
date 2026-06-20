@@ -6,24 +6,26 @@ End-of-session notes for the next agent session.
 
 ## Current Status
 
-**Last session:** 2026-06-20 — Session 4 (Backend Agent 02)
-**Phase:** Phase 1A — Foundation (Scaffolding Phase Complete)
-**In progress:** Phase 1A service foundations and database schemas are fully in place and verified. All 30 tests (21 auth + 2 academic/institution + 7 workflow/MDM/asset) pass.
+**Last session:** 2026-06-20 — Session 5 (Orchestrator Agent 00)
+**Phase:** Phase 1B — Calendar & Planning (Backend Development & Testing Complete)
+**In progress:** Phase 1B service foundations and database schemas are fully in place and verified. All 39 tests (21 auth + 2 academic/institution + 7 workflow/MDM/asset + 6 academic-planning + 2 logbook-service + 1 compliance stubs) pass cleanly.
 
 ## Tasks Pending
 
 ### [TO: 09-devops] DevOps Agent
-- [ ] Create `services/snx-auth/Dockerfile`
-- [ ] Create `services/snx-academic/Dockerfile`
-- [ ] Create `services/snx-institution/Dockerfile`
-- [ ] Create `services/snx-workflow/Dockerfile` (Ensure bind-mount capability to `/app/storage/assets`)
+- [ ] Create `services/snx-auth/Dockerfile` (if not done)
+- [ ] Create `services/snx-academic/Dockerfile` (if not done)
+- [ ] Create `services/snx-institution/Dockerfile` (if not done)
+- [ ] Create `services/snx-workflow/Dockerfile` (if not done)
+- [ ] Create `services/snx-logbook/Dockerfile` (Ensure port 8006 mapping)
 - [ ] Create `.github/workflows/ci.yml` — GitHub Actions pipeline
   - Verify formatting and linting (black, ruff, mypy)
   - Execute test suites independently using isolated PYTHONPATH parameters for each service:
     - Auth: `PYTHONPATH=.:services/snx-auth pytest tests/integration/test_auth_service.py tests/unit/test_jwt_utils.py`
-    - Academic: `PYTHONPATH=.:services/snx-academic pytest tests/integration/test_academic_service.py`
+    - Academic: `PYTHONPATH=.:services/snx-academic pytest tests/unit/academic/ tests/integration/test_calendar_engine.py tests/integration/test_lesson_plan_service.py tests/security/academic/test_tenant_isolation.py`
     - Institution: `PYTHONPATH=.:services/snx-institution pytest tests/integration/test_institution_service.py`
     - Workflow: `PYTHONPATH=.:services/snx-workflow pytest tests/unit/workflow/ tests/integration/workflow/ tests/security/workflow/ tests/unit/mdm/ tests/unit/assets/`
+    - Logbook: `PYTHONPATH=.:services/snx-logbook pytest tests/unit/logbook/test_aetcom_uniqueness.py tests/integration/test_logbook_service.py`
   - Block merge if any compliance or regression tests fail
 - [ ] Set up pre-commit hook: copy `scripts/pre-commit-hook.ps1` content to `.git/hooks/pre-commit`
 
@@ -36,5 +38,5 @@ End-of-session notes for the next agent session.
 
 ## Important Reminders
 
-- **Test Database Isolation:** The database isolation is handled by table truncation in `db_session` conftest fixture (disabling the `trg_audit_log_no_update` trigger on the append-only table prior to truncation).
+- **NullPool for Tests:** To avoid event loop closing issues on Windows, `conftest.py` configures the database connection pool as `sqlalchemy.pool.NullPool` during test runs, and cleanly disposes of the engine in a session-scoped teardown.
 - **Run pytest Individually:** Do not run pytest globally due to `app` namespace conflicts; run tests for each service with its corresponding `PYTHONPATH`.
