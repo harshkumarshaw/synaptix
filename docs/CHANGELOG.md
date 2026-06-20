@@ -7,6 +7,13 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed — Session 2 (Auth Integration Test and CryptContext Fixes)
+
+- Removed invalid `pwd_context` definition in `auth_service.py` to prevent `NameError`.
+- Updated test setup in `test_auth_service.py` to use native `bcrypt` library directly.
+- Refactored `db_session` fixture in `tests/conftest.py` to yield session from factory, avoiding `get_session_with_tenant` context transaction wrapper, which prevented multiple commits inside tests.
+- Switched test role from `faculty` to `principal` to properly verify MFA-required flows in `test_auth_service.py`.
+
 ## [0.1.0] - 2026-06-20
 
 ### Added — Session 1 (Phase 1A Foundation Scaffold)

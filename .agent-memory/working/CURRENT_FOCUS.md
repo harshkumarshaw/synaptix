@@ -19,17 +19,14 @@
 ## Recently Completed
 
 - 2026-06-20 Session 1: Environment setup + packages/shared + snx-auth scaffold + first migration
+- 2026-06-20 Session 2: Fixed CryptContext NameError in auth service, refactored test db_session transaction yielding in conftest, resolved test role MFA compliance, verified all 21 tests pass.
 
 ## Up Next
 
-1. **Human:** Start Docker Desktop, run `docker compose up -d postgres`
-2. **Human:** Create GitHub repo (private) at github.com/new, push initial commit
-3. **Database Agent (05):** Run `alembic upgrade head` to apply foundation migration
-4. **Backend Agent (02):** Implement auth service login/OTP/MFA methods + User model
-5. **DevOps Agent (09):** Create Dockerfiles + GitHub Actions CI
-6. **Flutter installation:** Deferred to Phase 2
+1. **DevOps Agent (09):** Create Dockerfiles for `snx-auth` + GitHub Actions CI pipeline
+2. **DevOps Agent (09):** Set up local pre-commit hook validation
+3. **Flutter installation:** Deferred to Phase 2
 
 ## Blockers
 
-- Docker Desktop not yet started (manual action by Harsh)
-- GitHub repo not yet created (manual action by Harsh)
+- None (Docker is running, Github repo configured)

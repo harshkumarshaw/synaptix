@@ -56,6 +56,19 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def do_run_migrations(connection) -> None:
+    """Configure connection and run migrations within a transaction."""
+    context.configure(
+        connection=connection,
+        target_metadata=target_metadata,
+        compare_type=True,
+        compare_server_default=True,
+    )
+
+    with context.begin_transaction():
+        context.run_migrations()
+
+
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode (async connection)."""
     connectable = create_async_engine(
@@ -64,15 +77,7 @@ async def run_migrations_online() -> None:
     )
 
     async with connectable.connect() as connection:
-        await connection.run_sync(
-            lambda conn: context.configure(
-                connection=conn,
-                target_metadata=target_metadata,
-                compare_type=True,
-                compare_server_default=True,
-            )
-        )
-        await connection.run_sync(lambda conn: context.run_migrations())
+        await connection.run_sync(do_run_migrations)
 
     await connectable.dispose()
 

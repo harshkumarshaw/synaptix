@@ -20,7 +20,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 os.environ.setdefault("SNX_ENV", "test")
 os.environ.setdefault(
     "SNX_DATABASE_URL",
-    "postgresql+asyncpg://snx_test:snx_test_pass@localhost:5433/synaptix_test",
+    "postgresql+asyncpg://snx_test:snx_test_pass@localhost:5436/synaptix_test",
 )
 os.environ.setdefault(
     "SNX_JWT_SECRET",
@@ -65,3 +65,25 @@ def jwt_secret() -> str:
 def test_user_id() -> uuid.UUID:
     """Return a test user UUID."""
     return TEST_USER_ID
+
+
+@pytest.fixture(scope="session")
+def app_settings() -> Any:
+    """Return Settings singleton for testing."""
+    from app.config import get_settings
+    return get_settings()
+
+
+@pytest_asyncio.fixture
+async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]:
+    """Provide a database session scoped by tenant context."""
+    import packages.shared.db.session as db_session_mod
+    
+    database_url = os.environ["SNX_DATABASE_URL"]
+    db_session_mod.configure_database(database_url)
+    
+    async with db_session_mod._async_session_factory() as session:
+        await db_session_mod.set_tenant_context(session, tenant_id)
+        yield session
+        await session.rollback()
+

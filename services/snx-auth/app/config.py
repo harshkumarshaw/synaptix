@@ -33,7 +33,7 @@ class Settings(BaseSettings):
 
     # Database
     database_url: str = Field(
-        default="postgresql+asyncpg://snx:snx_dev_pass@localhost:5432/synaptix_dev",
+        default="postgresql+asyncpg://snx:snx_dev_pass@localhost:5435/synaptix_dev",
         alias="SNX_DATABASE_URL",
     )
     database_pool_size: int = Field(default=10, alias="SNX_DATABASE_POOL_SIZE")

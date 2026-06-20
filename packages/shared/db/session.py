@@ -93,7 +93,7 @@ async def set_tenant_context(session: AsyncSession, tenant_id: uuid.UUID) -> Non
         tenant_id: UUID of the current tenant.
     """
     await session.execute(
-        text("SET LOCAL snx.current_tenant_id = :tenant_id"),
+        text("SELECT set_config('snx.current_tenant_id', :tenant_id, true)"),
         {"tenant_id": str(tenant_id)},
     )
     logger.debug(
