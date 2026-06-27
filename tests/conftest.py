@@ -115,6 +115,16 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
         await session.execute(
             text(
                 "TRUNCATE TABLE "
+                # Phase 2 tables (must come before Phase 1 tables they reference)
+                "doap_session_records, logbook_assessments, logbook_entries, "
+                "student_elective_preferences, elective_allocations, electives, "
+                "attendance_accommodations, attendance_exemptions, attendance_summary, attendance, "
+                "leave_requests, internship_rotations, "
+                # Phase 1B logbook tables
+                "aetcom_records, foundation_course_records, "
+                # Phase 1B academic tables
+                "sessions, lesson_plans, event_courses, event_faculty, events, "
+                # Phase 1A academic tables
                 "timetable_entries, timetable_slots, students, faculty, user_roles, "
                 "workflow_transitions, workflow_instances, digital_assets, users, "
                 "sections, batches, courses, departments, curricula, programs, "

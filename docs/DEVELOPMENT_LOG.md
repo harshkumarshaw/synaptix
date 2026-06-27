@@ -2,6 +2,33 @@
 
 Chronological record of all development sessions.
 
+## 2026-06-27 — DevOps Checks & Integration Test Fixes (Session 7)
+**Agent:** DevOps (09)
+**Duration:** ~45 mins
+**Focus:** Fix linter, formatting, test database migrations, and integration test seeding issues.
+- Fixed 43 Ruff lint errors and reformatted 13 files using Black.
+- Applied database migrations to local test database on port 5436.
+- Added `subject_code` to `Course` model and updated raw SQL inserts in test files to match Phase 2 schema.
+- Fixed `_seed_tenant`, `_seed_event`, `_seed_student`, and `_seed_batch_and_student` helpers in `test_leave.py` and `test_attendance.py` to use correct column names and unique roll numbers.
+- Verified all 34 Academic and 5 Leave integration tests pass cleanly.
+
+## 2026-06-20 — CI/CD Pipeline & Ruff Linter Fixes (Session 6)
+**Agent:** Orchestrator (00)
+**Duration:** ~30 mins
+**Focus:** Resolve GitHub Actions CI failures, Ruff config deprecations, and test collection issues.
+- Migrated Ruff linter configuration to `[tool.ruff.lint]` block.
+- Applied Black formatting to 88 files.
+- Restructured CI unit-tests job with PostgreSQL services and PYTHONPATH isolation.
+- Fixed pytest-asyncio and NullPool configuration for stable test runs.
+
+## 2026-06-20 — Academic & Logbook Connection Fixes (Session 5)
+**Agent:** Orchestrator (00)
+**Duration:** ~64 mins
+**Focus:** Resolve connection pool leaks and schema join table inconsistencies.
+- Configured NullPool engine for tests to prevent Windows Proactor event loop leaks.
+- Resolved parameterized `SET LOCAL` queries in tenant isolation tests.
+- Normalized join table schemas for `event_courses`, `event_faculty`, and `session_faculty`.
+
 ## 2026-06-20 — Phase 1A Scaffold Completed
 **Agent:** Backend (02)
 **Duration:** ~31 mins (Session 4)

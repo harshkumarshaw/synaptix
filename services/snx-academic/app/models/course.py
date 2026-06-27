@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+
 import uuid
+from typing import Any
 
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
@@ -23,3 +25,9 @@ class Course(TenantScopedBase):
     default_attendance_category: Mapped[str] = mapped_column(
         nullable=False, server_default="theory"
     )
+    subject_code: Mapped[str] = mapped_column(nullable=False)
+
+    def __init__(self, **kwargs: Any) -> None:
+        if "subject_code" not in kwargs and "code" in kwargs:
+            kwargs["subject_code"] = kwargs["code"].split("-")[0]
+        super().__init__(**kwargs)

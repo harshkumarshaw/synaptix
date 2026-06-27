@@ -708,6 +708,99 @@ digital_logbook:
       type: edge_case
       audit_ref: "AUDIT-E2"
 
+leave_management:
+  module_id: A-12
+  test_file_prefix: "tests/unit/leave/"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "LEV-001"
+      description: "Submit leave request of type (medical, academic, casual, other)"
+      type: unit
+    - id: "LEV-002"
+      description: "Approved leave request triggers leave_service.on_approval() hook"
+      type: integration
+    - id: "LEV-003"
+      description: "Approved leave materializes attendance rows with status medical/excused"
+      type: integration
+    - id: "LEV-004"
+      description: "Leave approval workflow integration via workflow_instance_id"
+      type: integration
+    - id: "LEV-E001"
+      description: "Leave request spanning existing conducted sessions raises validation check"
+      type: edge_case
+
+electives:
+  module_id: A-08
+  test_file_prefix: "tests/unit/electives/"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "EL-NMC-001"
+      description: "Electives configured as 2-month block after Phase III Part I exam"
+      type: compliance
+    - id: "EL-NMC-004"
+      description: "Elective allocation workflow respects capacity limits with row-level lock"
+      type: integration
+    - id: "EL-NMC-006"
+      description: "Elective 75% attendance threshold enforced"
+      type: compliance
+    - id: "EL-NMC-007"
+      description: "Elective logbook entries unified with main logbook entries table"
+      type: compliance
+    - id: "EL-NMC-008"
+      description: "Elective allocation uniqueness UNIQUE (student_id, block) is enforced"
+      type: compliance
+
+doap_skills:
+  module_id: A-09
+  test_file_prefix: "tests/unit/doap/"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "DOAP-NMC-001"
+      description: "DOAP session record contains stage (D/O/A/P) and rating (B/M/E)"
+      type: compliance
+    - id: "DOAP-NMC-006"
+      description: "DOAP session record contains nmc_level (K/KH/SH/P) and is_core"
+      type: compliance
+    - id: "DOAP-E001"
+      description: "DOAP sign-off is allowed post-session date"
+      type: edge_case
+
+foundation_course_sync:
+  module_id: A-07
+  test_file_prefix: "tests/unit/sync/"
+  
+  critical_tests:
+    - id: "FCS-001"
+      description: "Foundation Course records completed hours recomputed automatically from attendance"
+      type: integration
+    - id: "FCS-002"
+      description: "Trigger blocks completed hours reduction if signoff received"
+      type: integration
+
+aetcom_sync:
+  module_id: A-07
+  test_file_prefix: "tests/unit/sync/"
+  
+  critical_tests:
+    - id: "AES-001"
+      description: "AETCOM records status recomputed automatically from attendance"
+      type: integration
+
+accommodations:
+  module_id: A-11
+  test_file_prefix: "tests/unit/accommodations/"
+  
+  critical_tests:
+    - id: "ACC-001"
+      description: "Attendance accommodation supports blanket and per-category threshold overrides"
+      type: integration
+    - id: "ACC-002"
+      description: "Attendance percentage calculated against override thresholds in reports"
+      type: integration
+
 # ============================================================================
 # LAYER 3: MEDICAL EDUCATION — CRMI
 # ============================================================================

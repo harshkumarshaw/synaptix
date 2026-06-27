@@ -12,7 +12,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.routers import academic, calendar, curriculum_migration, lesson_plan, session
+from app.routers import (
+    academic,
+    attendance,
+    calendar,
+    curriculum_migration,
+    leave,
+    lesson_plan,
+    session,
+)
 from packages.shared.auth.tenant_context import TenantContextMiddleware
 from packages.shared.errors import (
     AuthenticationError,
@@ -106,6 +114,9 @@ def create_app() -> FastAPI:
     app.include_router(lesson_plan.router, prefix="/api/v1")
     app.include_router(session.router, prefix="/api/v1")
     app.include_router(curriculum_migration.router, prefix="/api/v1")
+    # Phase 2
+    app.include_router(attendance.router, prefix="/api/v1")
+    app.include_router(leave.router, prefix="/api/v1")
 
     @app.get("/health", tags=["infrastructure"])
     async def health() -> dict[str, str]:

@@ -38,7 +38,7 @@ async def test_session_conducting_and_coverage(db_session, tenant_id):
     course_id = uuid.uuid4()
     await db_session.execute(
         text(
-            "INSERT INTO courses (id, tenant_id, curriculum_id, department_id, name, code, default_attendance_category) VALUES (:id, :t_id, :curr_id, :d_id, 'Anatomy', 'ANAT-SESS-101', 'practical')"
+            "INSERT INTO courses (id, tenant_id, curriculum_id, department_id, name, code, default_attendance_category, subject_code) VALUES (:id, :t_id, :curr_id, :d_id, 'Anatomy', 'ANAT-SESS-101', 'practical', 'ANAT')"
         ),
         {"id": course_id, "t_id": tenant_id, "curr_id": curr_id, "d_id": dept_id},
     )

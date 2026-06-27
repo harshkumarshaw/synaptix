@@ -61,6 +61,26 @@ Format: `[YYYY-MM-DD HH:MM:SS] [agent-id] command`
 [2026-06-20 17:12:00] [00-orchestrator] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-workflow"; .\.venv\Scripts\pytest.exe tests/unit/workflow/ tests/integration/workflow/ tests/security/workflow/ tests/unit/mdm/ tests/unit/assets/
 ```
 
+## 2026-06-20 — Session 6
+
+```
+[2026-06-20 18:00:00] [00-orchestrator] uv run black .
+[2026-06-20 18:05:00] [00-orchestrator] uv run ruff check --fix .
+[2026-06-20 18:15:00] [00-orchestrator] $env:PYTHONPATH=".;services/snx-auth"; uv run pytest tests/unit/test_jwt_utils.py tests/integration/test_auth_service.py
+[2026-06-20 18:18:00] [00-orchestrator] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/unit/academic/ tests/integration/test_academic_service.py tests/integration/test_calendar_engine.py tests/integration/test_lesson_plan_service.py
+```
+
+## 2026-06-27 — Session 7
+
+```
+[2026-06-27 11:30:00] [09-devops] uv run ruff check .
+[2026-06-27 11:32:00] [09-devops] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/integration/test_leave.py
+[2026-06-27 11:35:00] [09-devops] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/integration/test_attendance.py
+[2026-06-27 11:42:00] [09-devops] uv run black tests/integration/test_attendance.py tests/integration/test_leave.py; uv run ruff check --fix tests/integration/test_attendance.py tests/integration/test_leave.py
+[2026-06-27 11:43:00] [09-devops] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/unit/academic/ tests/integration/test_academic_service.py tests/integration/test_calendar_engine.py tests/integration/test_lesson_plan_service.py tests/integration/test_attendance.py tests/integration/test_leave.py tests/compliance/test_attendance_thresholds.py
+[2026-06-27 11:45:00] [09-devops] powershell.exe -ExecutionPolicy Bypass -File scripts/pre-commit-hook.ps1
+```
+
 ## 2026-06-18
 
 ```

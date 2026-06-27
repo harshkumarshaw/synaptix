@@ -4,17 +4,17 @@
 
 ## Current Phase
 
-**Phase 1B:** Calendar & Planning — In Progress (Backend Development & Testing Complete)
+**Phase 2:** Attendance & Leave (A-10 / A-12 / A-08 / A-09) — Scaffolding & Integration Tests Passing
 
 ## Active Modules
 
 - `packages/shared` — scaffold complete (logging, errors, db, auth)
 - `services/snx-auth` — scaffold complete, business logic stubbed
-- `services/snx-academic` — scaffold complete, Phase 1B Calendar & Planning features complete
+- `services/snx-academic` — scaffold complete, Phase 1B Calendar & Planning + Phase 2 Attendance and Leave service/models completed
 - `services/snx-institution` — scaffold complete
 - `services/snx-workflow` — scaffold complete
-- `services/snx-logbook` — scaffold complete, Phase 1B Foundation Course & AETCOM tracking complete
-- `services/_migrations` — all 10 migrations applied to dev/test databases
+- `services/snx-logbook` — scaffold complete, Phase 1B Foundation Course & AETCOM + Phase 2 Electives/DOAP models completed
+- `services/_migrations` — all 13 migrations applied to dev/test databases
 
 ## Active Branch
 
@@ -22,6 +22,7 @@
 
 ## Recently Completed
 
+- **2026-06-27 Session 7 (DevOps — Scaffolding & Integration Fixes Complete):** All Phase 2 migrations applied (0011-0013). Fixed linter, schema columns (added `subject_code` to `Course`), and integration test seeding issues (unique student roll numbers). All 34 Academic and 5 Leave integration tests pass cleanly.
 - **2026-06-20 Session 6 (Orchestrator — CI Fix Complete):** ALL 5 GitHub Actions jobs now GREEN (✅ commit 1c13d10, run 27871964773). Fixed:
   1. Python syntax error in snx-logbook router
   2. Ruff config migrated to `[tool.ruff.lint]`, 88 files formatted with Black
@@ -36,9 +37,8 @@
 
 ## Up Next
 
-1. **DevOps Agent (09):** Create Dockerfiles for remaining microservices (snx-academic, snx-institution, snx-workflow, snx-logbook).
-2. **Orchestrator:** Begin Phase 2 planning per AOIP_MASTER_SPEC_v5.md — Attendance Engine, Student Portal, Faculty Dashboard.
-3. **Backend Agent:** Implement Phase 2 feature modules per approved implementation plan.
+1. **Orchestrator / Backend Agent:** Continue implementing the rest of the Phase 2 services (Elective allocation, DOAP session recording) and routing endpoints.
+2. **Testing Agent:** Implement full test cases for Electives and DOAP session records.
 
 ## Blockers
 

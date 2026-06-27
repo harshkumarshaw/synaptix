@@ -6,48 +6,27 @@ End-of-session notes for the next agent session.
 
 ## Current Status
 
-**Last session:** 2026-06-20 — Session 6 (Orchestrator Agent 00)
-**Phase:** Phase 1B — Calendar & Planning (Backend Development & Testing Complete)
-**Status:** ALL 5 GitHub Actions CI jobs PASS. Both `itdept-JMN/synaptix` and `harshkumarshaw/synaptix` repos are in sync at commit `1c13d10`.
+**Last session:** 2026-06-27 — Session 7 (DevOps Agent 09)
+**Phase:** Phase 2 — Attendance & Leave
+**Status:** All unit and integration tests PASS. All 13 migrations are applied.
 
-## What Was Fixed (Session 6 — Full CI Green)
+## What Was Fixed & Scaffolded (Session 7)
 
-- **Syntax error** in `services/snx-logbook/app/routers/logbook.py`
-- **Ruff linter config** migrated from deprecated top-level to `[tool.ruff.lint]` in `pyproject.toml`
-- **Black formatting** applied to 88 files
-- **CI `unit-tests` job** rewritten:
-  - `postgres:16` service container (port 5436:5432) with health check
-  - `alembic upgrade head` migration step before tests
-  - Per-service PYTHONPATH isolation with `--cov-append`
-- **`tests/conftest.py`** `db_session` fixture:
-  - Fresh `NullPool` engine per test (prevents cross-test connection reuse)
-  - Changed `@pytest_asyncio.fixture` to plain `async @pytest.fixture` (anyio loop compatibility)
-- **`pytest-asyncio==0.23.8` pinned** in `pyproject.toml` and `ci.yml`:
-  - `pytest-asyncio 1.4.0` introduced breaking `asyncio_default_test_loop_scope=function` default
-  - On Linux SelectorEventLoop this causes `RuntimeError: Future attached to a different loop` with asyncpg
-  - Stable 0.23.8 uses shared session loop — the SQLAlchemy-recommended approach
-- Local: 29/29 tests pass, 83.67% coverage
-- CI run `27871964773`: Unit Tests OK, Lint OK, NMC Compliance OK, Secret Scan OK, Docker Build OK
+- **Linter & Formatting:** Fixed 43 Ruff errors and ran Black formatter. All files conform to standards.
+- **Academic Course Model:** Added missing `subject_code` with automatic value parser to allow correct data validation and seeding.
+- **Integration Test Seeding:**
+  - Standardized raw SQL course inserts in integration tests.
+  - Resolved `uq_students_tenant_roll_number` constraint conflicts in `test_attendance.py` and `test_leave.py` by seeding unique student roll numbers dynamically from UUIDs.
+  - Corrected `LeaveService` test instantiation to use valid user ID as actor ID.
+- **Database Migrations:** Applied migrations `0011`, `0012`, `0013` to local test database.
 
 ## Tasks Pending
 
-### [TO: 09-devops] DevOps Agent
-- [ ] Create `services/snx-academic/Dockerfile`
-- [ ] Create `services/snx-institution/Dockerfile`
-- [ ] Create `services/snx-workflow/Dockerfile`
-- [ ] Create `services/snx-logbook/Dockerfile` (port 8006)
-- [ ] Configure local pre-commit hook: copy `scripts/pre-commit-hook.ps1` to `.git/hooks/pre-commit`
-- [ ] Update GitHub Actions to use `actions/checkout@v4` on Node.js 24 (currently shows Node.js 20 deprecation warnings)
-
-### [TO: 00-orchestrator] Next Session
-- [ ] Begin Phase 2 planning per `AOIP_MASTER_SPEC_v5.md`
-  - Attendance Engine (two-threshold: 75% theory, 80% practical)
-  - Student Portal
-  - Faculty Dashboard
-- [ ] Promote any shared utilities from service-level to `packages/shared/`
-
-### [TO: Human — Harsh]
-- [ ] Install Flutter (Deferred to Phase 2)
+### [TO: 00-orchestrator / 02-backend] Next Session
+- [ ] Implement `services/snx-logbook/app/services/elective_service.py` and `services/snx-logbook/app/routers/electives.py`
+- [ ] Implement DOAP session recording service functions and routing endpoints
+- [ ] Connect routers in `services/snx-logbook/app/main.py`
+- [ ] Create tests for electives and DOAP skills.
 
 ## Blockers
 

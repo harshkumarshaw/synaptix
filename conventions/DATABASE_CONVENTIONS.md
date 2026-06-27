@@ -33,6 +33,9 @@ CREATE TABLE table_name (
     deleted_at TIMESTAMPTZ  -- soft delete; NULL = active
 );
 
+-- Mandatory: composite unique constraint to support composite foreign keys
+ALTER TABLE table_name ADD CONSTRAINT uq_table_name_tenant_id_id UNIQUE (tenant_id, id);
+
 -- Mandatory: index tenant_id
 CREATE INDEX idx_table_name_tenant ON table_name(tenant_id) WHERE deleted_at IS NULL;
 

@@ -7,6 +7,23 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — Session 7 (DevOps Validation & Phase 2 Scaffold Fixes)
+
+**DevOps & CI/CD Pipeline**
+- Upgraded GitHub Actions Workflow (`.github/workflows/ci.yml`) to enforce Node 24 (`FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true`) and upgraded `codecov/codecov-action` to `@v5`.
+- Resolved 43 Python Ruff linter errors (mostly unused imports, Yoda conditions, and assertions) and ran Black formatter over the entire codebase to maintain strict formatting quality.
+
+**Database schema & Models**
+- Added missing `subject_code` column to the `Course` SQLAlchemy model in `services/snx-academic/app/models/course.py` with an auto-population initializer to split from the course code (e.g. `"ANAT-101"` -> `"ANAT"`).
+- Applied all database migrations (migrations 0011 to 0013) to the test database on port `5436`.
+- Configured `tests/conftest.py` table truncation list to include Phase 2 tables, maintaining test isolation.
+
+**Integration Tests Fixes**
+- Fixed raw SQL course and tenant insert queries in integration tests to align with the actual database schema (replacing outdated columns like `plan` and `program_type`).
+- Corrected student and batch seeding helper functions (`_seed_student`, `_seed_batch_and_student`) in `test_leave.py` and `test_attendance.py` to generate unique roll numbers and emails, preventing unique key conflicts.
+- Updated `LeaveService` test instantiations to use correct `user_id` as the actor ID instead of `student_id` (fixing foreign key constraint violations on the `audit_log` table).
+- Verified that all 34 Academic and 5 Leave integration tests pass cleanly and run successfully.
+
 ### Fixed — Session 6 (GitHub Actions CI Pipeline Repair)
 
 **Linting & Formatting**

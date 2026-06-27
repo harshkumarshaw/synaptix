@@ -207,6 +207,115 @@ Every architectural decision documented as an ADR.
 - (+) Simplifies Phase 1B scope, focusing on schema safety and compliance audits.
 - (-) Migration re-mappings must be input manually via the metadata log in JSONB for this phase.
 
+## ADR-020: Extended Attendance Status Enum
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** To satisfy tests (such as ATT-007, ATT-NMC-020, and medical audit requirements EC-065), attendance status must support fine-grained states.
+**Decision:** Enforce the following CHECK constraint in the `attendance` table: `status IN ('present', 'absent', 'late', 'excused', 'medical', 'official_duty', 'exempt')`.
+**Consequences:**
+- (+) Satisfies all compliance test definitions (ATT-007, late arrival half-attendance ATT-NMC-020).
+- (+) Clean audit trails for medical leaves and sports duty.
+- (-) Slightly more complex enum mapping in Python models.
+
+## ADR-021: Attendance Event-Session Schema Binding
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Enforcing the NMC denominator rule (ATT-NMC-018: denominator counts only conducted sessions, never planned; and ATT-NMC-019: cancelled events must be excluded) requires the system to join attendance back to both events (for planning, batches, dates, status) and sessions (as proof of conducted execution).
+**Decision:** Add both `event_id` (NOT NULL) and `session_id` (NULL) to the `attendance` table. Require a composite foreign key on both, and add a database CHECK constraint ensuring that if `session_id` is provided, its underlying event matches the `event_id` of the attendance record.
+**Consequences:**
+- (+) Enforces complete referential integrity.
+- (+) Allows attendance to be pre-created/marked when a class is active before the session record is fully finalized.
+- (+) Denominator queries can instantly exclude cancelled events or non-conducted sessions.
+
+## ADR-022: Attendance Summary Cache Structure
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** The attendance summary must partition by category to enforce the 75% theory and 80% practical split thresholds. It must also scope by `professional_phase` to support multi-phase subject aggregation (e.g. Community Medicine cross-phase ATT-NMC-015).
+**Decision:** Key the `attendance_summary` table by `(tenant_id, student_id, course_id, professional_phase, attendance_category)`. Replace column-based theory/practical splits with generic counters (`sessions_conducted`, `sessions_present`, `sessions_excused`, `sessions_official_duty`, `sessions_medical`), and define the percentage column as a database-generated column calculated as:
+`100.0 * (sessions_present + sessions_excused + sessions_official_duty + sessions_medical) / sessions_conducted`.
+**Consequences:**
+- (+) Scales nicely as categories and phases grow.
+- (+) Fully supports multi-phase subject calculations and two-threshold checks.
+- (-) Application logic must update the correct category row on attendance inserts.
+
+## ADR-023: Logbook Internal Assessment (IA) Marks Contribution
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** NMC regulations require the logbook to contribute up to 20% of the student's IA marks (LOG-NMC-013), and to contribute 0% if the logbook is incomplete (LOG-NMC-014). This weight must be configurable per institution (LOG-NMC-017).
+**Decision:** Add a new MDM configuration entity `subject_logbook_ia_weight` with a schema containing `(tenant_id, subject_code, professional_phase, curriculum_id, weight_pct)`. Enforce `weight_pct BETWEEN 0 AND 20`. In `logbook_service.py`, calculate `ia_marks` as `weight_pct * 100 / 100` (or appropriate maximum weight scale) if `is_complete` is `TRUE`, else `0.0`.
+**Consequences:**
+- (+) Full compliance with LOG-NMC-013, LOG-NMC-014, and LOG-NMC-017.
+- (+) Keeps institutional configurations separated in master data.
+
+## ADR-024: Exemption vs Disability Accommodation Split
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Disability accommodations (ATT-E007 / EC-015) require long-running, permanent rules (date ranges, threshold overrides) and attachments (medical certs) approved by the Dean/Disability Cell. Single-session exemptions (ATT-NMC-016) are one-offs approved by the Principal.
+**Decision:** Split these concepts into two tables:
+1. `attendance_exemptions`: captures one-off session/event exemptions.
+2. `attendance_accommodations`: captures long-running disability or medical accommodations. It includes `effective_from`, `effective_until`, `theory_threshold_override`, `practical_threshold_override`, `medical_certificate_asset_id`, and `workflow_instance_id`.
+**Consequences:**
+- (+) Clean separation of concerns.
+- (+) Ensures auditing and medical document attachments are handled correctly.
+
+## ADR-025: Unified Logbook Table for Regular and Elective Records
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** Elective logbook entries (EL-NMC-007) require the same competency taxonomies and sign-off signatures as regular courses. Declaring separate tables leads to duplicate validation and UI schemas.
+**Decision:** Use a single `logbook_entries` table. Add a nullable `elective_id` column. If `elective_id` is set, the entry represents an elective logbook record and can be excluded from standard course-based syllabus metrics while still counting for elective eligibility checks.
+**Consequences:**
+- (+) Reuses validation rules, initials tracking, and sign-off services.
+- (+) Clean database design.
+
+## ADR-026: Electives Allocation Capacity and Block Uniqueness
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** A student must allocate to exactly one elective per block. Allocations must respect elective capacity limits (EL-NMC-004) without race conditions.
+**Decision:** Enforce a unique constraint `UNIQUE (tenant_id, student_id, block)` on `elective_allocations`. During application allocation execution, lock the target elective row using `SELECT ... FOR UPDATE` before assessing current allocation count against `capacity`.
+**Consequences:**
+- (+) Guarantees no race conditions during peak registration.
+- (+) Guarantees single allocation per block.
+
+## ADR-027: Leave request to attendance materialization
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** When a student is granted leave (medical, academic, casual), their calendar schedule should automatically reflect their status rather than leaving it to manual faculty roll call, ensuring the student is not incorrectly marked absent.
+**Decision:** Add a nullable `leave_request_id` column to the `attendance` table. Upon approval of a leave request, the `leave_service` invokes a hook to automatically create or update student attendance rows within the leave date range with the appropriate status (`medical` or `excused`).
+**Consequences:**
+- (+) Ensures automated, consistent leave synchronization in attendance pools.
+- (+) Keeps the student from being falsely marked absent on roll calls.
+- (-) Introduces automatic insertion logic on leave approval.
+
+## ADR-028: Offline Sync Deferred to Phase 2.5
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** The complete offline transactional sync protocol (retries, backoffs, SQLite local database state integration) is a large-scope item that risks delaying the core compliance engine delivery for the current phase.
+**Decision:** Defer the full mobile-server synchronization queue and protocol implementation to Phase 2.5. Keep all offline sync compliance tests (`ATT-SYNC-001` through `007`) marked as `xfail`. Add `original_marked_at` and `needs_review` columns to the database schema in Phase 2 so that the schema is forward-compatible.
+**Consequences:**
+- (+) Keeps current phase scope focused and deliverable.
+- (+) Retains database schema forward-compatibility.
+- (-) Mobile client sync cannot be tested end-to-end until Phase 2.5.
+
+## ADR-029: Admission Module Deferred to Phase 2.5
+
+**Date:** 2026-06-20
+**Status:** Accepted
+**Context:** The Admissions Module requires significant logic for category allocation quotas, NEET rank verification, Aadhaar consent, and WBUHS integration. Building it completely in Phase 2 would compromise attendance engine validation.
+**Decision:** Defer the complete Admissions Module to Phase 2.5. Scaffold a minimal placeholder table `admission_applications` in Phase 2 containing only programmatic references (`applied_for_program_id`) to allow basic relationship mapping, and mark admissions compliance tests as `xfail` stubs.
+**Consequences:**
+- (+) Prevents scope creep in Phase 2.
+- (+) Keeps the codebase compiling and relationship links valid.
+- (-) Application processing must be handled manually or externally until Phase 2.5.
+
 ## Template for New ADRs
 
 ```markdown

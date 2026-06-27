@@ -1,4 +1,10 @@
 from app.models.academic_year import AcademicYear
+from app.models.attendance import (
+    Attendance,
+    AttendanceAccommodation,
+    AttendanceExemption,
+    AttendanceSummary,
+)
 from app.models.batch import Batch
 from app.models.calendar import Event, EventCourse, EventFaculty
 from app.models.course import Course
@@ -6,6 +12,7 @@ from app.models.curriculum import Curriculum
 from app.models.curriculum_migration import CurriculumMigrationAudit
 from app.models.department import Department
 from app.models.faculty import Faculty
+from app.models.leave_request import InternshipRotation, LeaveRequest
 from app.models.lesson_plan import LessonPlan
 from app.models.program import Program
 from app.models.section import Section
@@ -38,4 +45,11 @@ __all__ = [
     "CurriculumMigrationAudit",
     "Student",
     "WorkflowInstance",
+    # Phase 2
+    "Attendance",
+    "AttendanceSummary",
+    "AttendanceExemption",
+    "AttendanceAccommodation",
+    "LeaveRequest",
+    "InternshipRotation",
 ]
