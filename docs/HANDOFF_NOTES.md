@@ -22,6 +22,9 @@ End-of-session notes for the next agent session.
 
 ## Tasks Pending
 
+### [ESCALATION] Invoke Backend Agent (02) for Phase 2 Implementation
+The DevOps agent (09) task of validating DevOps checks, linter issues, and database constraint seeding errors is completed. The next step is implementing the core application logic (Elective allocations and DOAP session records) inside `services/snx-logbook`, which is outside the DevOps Agent's scope. Please invoke the Backend Agent (02) or Orchestrator (00).
+
 ### [TO: 00-orchestrator / 02-backend] Next Session
 - [ ] Implement `services/snx-logbook/app/services/elective_service.py` and `services/snx-logbook/app/routers/electives.py`
 - [ ] Implement DOAP session recording service functions and routing endpoints
