@@ -22,14 +22,18 @@ End-of-session notes for the next agent session.
 
 ## Tasks Pending
 
-### [ESCALATION] Invoke Backend Agent (02) for Phase 2 Implementation
-The DevOps agent (09) task of validating DevOps checks, linter issues, and database constraint seeding errors is completed. The next step is implementing the core application logic (Elective allocations and DOAP session records) inside `services/snx-logbook`, which is outside the DevOps Agent's scope. Please invoke the Backend Agent (02) or Orchestrator (00).
+### [TO: 02-backend] Backend Agent
+- [ ] Implement Pydantic schemas in `services/snx-logbook/app/schemas/electives.py` and `logbook_phase2.py`.
+- [ ] Implement `ElectiveService` in `services/snx-logbook/app/services/elective_service.py` with student preference ranking validations (1-10) and admin-triggered capacity-locked allocation (`with_for_update`).
+- [ ] Implement API routers in `services/snx-logbook/app/routers/electives.py` and register them in `services/snx-logbook/app/main.py`.
+- [ ] Extend `LogbookService` in `services/snx-logbook/app/services/logbook_service.py` to support Phase 2 core vs non-core DOAP session validations, stage checks (D/O/A/P), and rating checks (B/M/E).
 
-### [TO: 00-orchestrator / 02-backend] Next Session
-- [ ] Implement `services/snx-logbook/app/services/elective_service.py` and `services/snx-logbook/app/routers/electives.py`
-- [ ] Implement DOAP session recording service functions and routing endpoints
-- [ ] Connect routers in `services/snx-logbook/app/main.py`
-- [ ] Create tests for electives and DOAP skills.
+### [TO: 06-testing] Testing Agent
+- [ ] Implement unit and integration tests for Electives preferences and capacity-locked allocation in `tests/unit/electives/` and `tests/integration/test_electives.py`.
+- [ ] Implement unit/integration tests for DOAP session ratings, stages, and faculty decisions in `tests/unit/doap/` and `tests/integration/test_doap.py`.
+
+### [TO: 11-nmc-compliance] NMC Compliance Agent
+- [ ] Implement compliance checks verifying that elective block configurations match NMC v2023 regulations (two blocks of 4 weeks each, 75% minimum attendance threshold enforced per block).
 
 ## Blockers
 
