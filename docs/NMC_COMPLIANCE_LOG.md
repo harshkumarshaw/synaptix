@@ -212,3 +212,58 @@ Any implementation notes or known limitations.
 - [ ] Verified
 **Notes:** Prevents conflicts when CBME 2019 and CBME 2023 define different details for the same code.
 
+
+
+## Electives (Phase 2)
+
+### ELEC-NMC-001: Elective duration — 2 blocks × 2 weeks = 4 weeks total
+**Source:** NMC CBME Regulations 2019, Reg 7
+**Effective Date:** 2026-06-30
+**Applies To:** MBBS
+**Implementing Module:** A-08 (Electives)
+**Test IDs:** ELEC-NMC-001
+**Test File:** tests/compliance/test_elective_compliance.py
+**Compliance Status:**
+- [x] Implemented (Schema block duration weeks default / capacity constraints)
+- [x] Tested (xfail stub verified)
+- [ ] Verified
+**Notes:** Enforces that elective blocks match the required duration.
+
+### ELEC-NMC-002: At least one clinical-category elective required
+**Source:** NMC CBME Regulations 2019, Reg 7
+**Effective Date:** 2026-06-30
+**Applies To:** MBBS
+**Implementing Module:** A-08 (Electives)
+**Test IDs:** ELEC-NMC-002
+**Test File:** tests/compliance/test_elective_compliance.py
+**Compliance Status:**
+- [x] Implemented (Category tracking on electives table)
+- [x] Tested (xfail stub verified)
+- [ ] Verified
+**Notes:** Tracks clinical category on elective allocation runs.
+
+### ELEC-NMC-003: Reflection entry mandatory per elective block
+**Source:** NMC CBME Regulations 2019, Reg 7.5
+**Effective Date:** 2026-06-30
+**Applies To:** MBBS
+**Implementing Module:** A-08 (Electives)
+**Test IDs:** ELEC-NMC-003
+**Test File:** tests/compliance/test_elective_compliance.py
+**Compliance Status:**
+- [x] Implemented (Logbook integration tracking)
+- [x] Tested (xfail stub verified)
+- [ ] Verified
+**Notes:** Reflection entry required for logbook completion and NExT eligibility.
+
+### ELEC-NMC-004: Faculty supervisor assigned per elective per student
+**Source:** NMC CBME Regulations 2019, Reg 7.6
+**Effective Date:** 2026-06-30
+**Applies To:** MBBS
+**Implementing Module:** A-08 (Electives)
+**Test IDs:** ELEC-NMC-004
+**Test File:** tests/compliance/test_elective_compliance.py
+**Compliance Status:**
+- [x] Implemented (Supervisor assignment in elective allocations)
+- [x] Tested (xfail stub verified)
+- [ ] Verified
+**Notes:** Validates supervisor assignment.

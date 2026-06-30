@@ -62,7 +62,7 @@ def upgrade() -> None:
             "results_summary",
             postgresql.JSONB(astext_type=sa.Text()),
             nullable=False,
-            server_default="'{}'",
+            server_default="{}",
         ),
         sa.Column(
             "created_at",
@@ -119,6 +119,24 @@ def upgrade() -> None:
         "CREATE TRIGGER trg_elective_allocation_runs_update "
         "BEFORE UPDATE ON elective_allocation_runs "
         "FOR EACH ROW EXECUTE FUNCTION fn_update_updated_at();"
+    )
+
+    # -------------------------------------------------------------------------
+    # 1b. Add id primary key to elective_allocations to make it TenantScopedBase compliant
+    # -------------------------------------------------------------------------
+    op.drop_constraint("elective_allocations_pkey", "elective_allocations", type_="primary")
+    op.add_column(
+        "elective_allocations",
+        sa.Column(
+            "id",
+            postgresql.UUID(as_uuid=True),
+            nullable=False,
+            server_default=sa.text("gen_random_uuid()"),
+        ),
+    )
+    op.create_primary_key("elective_allocations_pkey", "elective_allocations", ["id"])
+    op.create_unique_constraint(
+        "uq_elective_allocations_tenant_id", "elective_allocations", ["tenant_id", "id"]
     )
 
     # -------------------------------------------------------------------------
@@ -201,6 +219,16 @@ def downgrade() -> None:
     op.drop_index("idx_elective_allocations_run_id", table_name="elective_allocations")
     op.drop_constraint("fk_elective_allocations_run", "elective_allocations", type_="foreignkey")
     op.drop_column("elective_allocations", "allocation_run_id")
+
+    # 1b. Restore composite primary key for elective_allocations
+    op.drop_constraint("uq_elective_allocations_tenant_id", "elective_allocations", type_="unique")
+    op.drop_constraint("elective_allocations_pkey", "elective_allocations", type_="primary")
+    op.drop_column("elective_allocations", "id")
+    op.create_primary_key(
+        "elective_allocations_pkey",
+        "elective_allocations",
+        ["tenant_id", "student_id", "elective_id"],
+    )
 
     # 1. Drop elective_allocation_runs
     op.execute("DROP TRIGGER IF EXISTS trg_elective_allocation_runs_update ON elective_allocation_runs;")

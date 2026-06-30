@@ -262,13 +262,14 @@ Add the `elective_allocation_runs` table to act as an audit trail for automated 
 
 **Changes:**
 - Created table `elective_allocation_runs` with composite foreign keys, RLS enabled, and updated_at triggers.
+- Altered table `elective_allocations`: dropped composite primary key, added surrogate `id` UUID primary key with `gen_random_uuid()` default, and added a unique constraint on `(tenant_id, id)` to align with the repository framework.
 - Added column `allocation_run_id` (foreign key to `elective_allocation_runs`) and `allocation_method` (check constraint for ranks/fcfs/manual) to table `elective_allocations`.
 - Added column `submitted_at` (TIMESTAMP WITH TIME ZONE) to table `student_elective_preferences`.
 
 **Rollback Tested:** Yes
 
 **Verification:**
-- Unit tests pass, schema structure validated.
+- Unit tests pass, schema structure validated, and ADR-034 trace verified.
 
 
 

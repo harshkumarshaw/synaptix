@@ -15,6 +15,12 @@ from typing import Any
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.pool import NullPool
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.dialects.postgresql import JSONB
+
+@compiles(JSONB, "sqlite")
+def compile_jsonb_sqlite(type_, compiler, **kw):
+    return "JSON"
 
 # Set test environment variables BEFORE any imports
 os.environ.setdefault("SNX_ENV", "test")
@@ -143,3 +149,27 @@ async def db_session(tenant_id: uuid.UUID) -> AsyncGenerator[AsyncSession, None]
     await engine.dispose()
     db_session_mod._engine = None
     db_session_mod._async_session_factory = None
+
+
+@pytest.fixture
+async def test_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Real SQLite in-memory database for integration-style unit/workflow tests."""
+    from packages.shared.db.base import Base
+    
+    # Import logbook & elective models so they register with Base.metadata
+    import app.models.electives
+    import app.models.logbook
+    import app.models.logbook_phase2
+
+    engine = create_async_engine("sqlite+aiosqlite:///:memory:")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    async_session = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+    async with async_session() as session:
+        yield session
+
+    await engine.dispose()
+

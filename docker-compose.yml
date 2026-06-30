@@ -17,7 +17,7 @@ services:
       POSTGRES_PASSWORD: snx_dev_pass
       POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --locale=C"
     ports:
-      - "5435:5432"
+      - "15435:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/00-init.sql:ro
@@ -39,7 +39,7 @@ services:
       POSTGRES_USER: snx_test
       POSTGRES_PASSWORD: snx_test_pass
     ports:
-      - "5436:5432"
+      - "15436:5432"
     tmpfs:
       - /var/lib/postgresql/data
     healthcheck:

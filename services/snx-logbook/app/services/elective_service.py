@@ -155,7 +155,7 @@ class ElectiveService:
             db=self.db,
             tenant_id=tenant_id,
             actor_user_id=actor_id,
-            action="create_elective",
+            action="CREATE_ELECTIVE",
             resource_type="elective",
             resource_id=elective.id,
             new_values={
@@ -265,7 +265,7 @@ class ElectiveService:
             db=self.db,
             tenant_id=tenant_id,
             actor_user_id=actor_id,
-            action="submit_preferences",
+            action="SUBMIT_PREFERENCES",
             resource_type="student_elective_preference",
             resource_id=student_id,
             new_values={
@@ -496,7 +496,7 @@ class ElectiveService:
                 db=self.db,
                 tenant_id=tenant_id,
                 actor_user_id=actor_id,
-                action="run_allocation",
+                action="RUN_ALLOCATION",
                 resource_type="elective_allocation_run",
                 resource_id=run_id,
                 new_values={
@@ -713,7 +713,7 @@ class ElectiveService:
             db=self.db,
             tenant_id=tenant_id,
             actor_user_id=actor_id,
-            action="withdraw_allocation",
+            action="WITHDRAW_ALLOCATION",
             resource_type="elective_allocation",
             resource_id=allocation_id,
             new_values={

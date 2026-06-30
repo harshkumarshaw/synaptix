@@ -100,20 +100,32 @@ async def test_elec_001_create_elective(mock_db: AsyncMock, tenant_id: uuid.UUID
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason="ELEC-002: submit_preferences multi-call mock chain too complex for unit level; "
-           "covered by integration test ELEC-003. Deferred to 06-testing.",
-)
 @pytest.mark.asyncio
 async def test_elec_002_submit_preferences_idempotent(
-    mock_db: AsyncMock, tenant_id: uuid.UUID, student_id: uuid.UUID
+    test_db_session: AsyncSession, tenant_id: uuid.UUID, student_id: uuid.UUID
 ) -> None:
     """ELEC-002: Submit preferences: full-block replace; re-submit replaces existing set."""
     from app.services.elective_service import ElectiveService
     from app.schemas.electives import PreferencesSubmitRequest, PreferenceItem
+    from app.models.electives import Elective, StudentElectivePreference
 
     elective_ids = [uuid.uuid4() for _ in range(3)]
+    
+    # Seed electives
+    for eid in elective_ids:
+        elective = Elective(
+            id=eid,
+            tenant_id=tenant_id,
+            curriculum_id=uuid.uuid4(),
+            code=f"ELEC-{eid}",
+            title="Elective",
+            block="Block 1",
+            elective_type="clinical",
+            capacity=10,
+        )
+        test_db_session.add(elective)
+    await test_db_session.commit()
+
     payload = PreferencesSubmitRequest(
         student_id=student_id,
         block="Block 1",
@@ -124,15 +136,25 @@ async def test_elec_002_submit_preferences_idempotent(
         ],
     )
 
-    service = ElectiveService(db=mock_db)
+    service = ElectiveService(db=test_db_session)
     # First submission
-    result1 = await service.submit_preferences(tenant_id=tenant_id, payload=payload, actor_id=student_id)
+    await service.submit_preferences(tenant_id=tenant_id, payload=payload, actor_id=student_id)
     # Second submission (idempotent — should replace)
-    result2 = await service.submit_preferences(tenant_id=tenant_id, payload=payload, actor_id=student_id)
+    await service.submit_preferences(tenant_id=tenant_id, payload=payload, actor_id=student_id)
+    await test_db_session.commit()
 
-    assert len(result2) == 3
-    # Audit log written on each call
-    assert mock_db.flush.await_count >= 2
+    # Query preferences
+    from sqlalchemy import select
+    result = await test_db_session.execute(
+        select(StudentElectivePreference).where(
+            StudentElectivePreference.tenant_id == tenant_id,
+            StudentElectivePreference.student_id == student_id,
+            StudentElectivePreference.block == "Block 1",
+            StudentElectivePreference.deleted_at.is_(None),
+        )
+    )
+    prefs = result.scalars().all()
+    assert len(prefs) == 3
 
 
 # ---------------------------------------------------------------------------
@@ -140,20 +162,32 @@ async def test_elec_002_submit_preferences_idempotent(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason="ELEC-E001: submit_preferences multi-call mock too complex for unit level; "
-           "full-block replace semantics covered by integration test. Deferred to 06-testing.",
-)
 @pytest.mark.asyncio
 async def test_elec_e001_preferences_replace_on_resubmit(
-    mock_db: AsyncMock, tenant_id: uuid.UUID, student_id: uuid.UUID
+    test_db_session: AsyncSession, tenant_id: uuid.UUID, student_id: uuid.UUID
 ) -> None:
     """ELEC-E001: Student submits 5 preferences, then re-submits 3. Final state = 3 preferences only."""
     from app.services.elective_service import ElectiveService
     from app.schemas.electives import PreferencesSubmitRequest, PreferenceItem
+    from app.models.electives import Elective, StudentElectivePreference
 
     elective_ids = [uuid.uuid4() for _ in range(5)]
+    
+    # Seed electives
+    for eid in elective_ids:
+        elective = Elective(
+            id=eid,
+            tenant_id=tenant_id,
+            curriculum_id=uuid.uuid4(),
+            code=f"ELEC-{eid}",
+            title="Elective",
+            block="Block 1",
+            elective_type="clinical",
+            capacity=10,
+        )
+        test_db_session.add(elective)
+    await test_db_session.commit()
+
     first_payload = PreferencesSubmitRequest(
         student_id=student_id,
         block="Block 1",
@@ -165,11 +199,25 @@ async def test_elec_e001_preferences_replace_on_resubmit(
         preferences=[PreferenceItem(elective_id=elective_ids[i], rank_position=i + 1) for i in range(3)],
     )
 
-    service = ElectiveService(db=mock_db)
+    service = ElectiveService(db=test_db_session)
     await service.submit_preferences(tenant_id=tenant_id, payload=first_payload, actor_id=student_id)
-    result = await service.submit_preferences(tenant_id=tenant_id, payload=second_payload, actor_id=student_id)
+    await test_db_session.commit()
 
-    assert len(result) == 3
+    result = await service.submit_preferences(tenant_id=tenant_id, payload=second_payload, actor_id=student_id)
+    await test_db_session.commit()
+
+    # Query active preferences
+    from sqlalchemy import select
+    res = await test_db_session.execute(
+        select(StudentElectivePreference).where(
+            StudentElectivePreference.tenant_id == tenant_id,
+            StudentElectivePreference.student_id == student_id,
+            StudentElectivePreference.block == "Block 1",
+            StudentElectivePreference.deleted_at.is_(None),
+        )
+    )
+    active_prefs = res.scalars().all()
+    assert len(active_prefs) == 3
 
 
 # ---------------------------------------------------------------------------
@@ -347,32 +395,37 @@ async def test_elec_e006_duplicate_rank_rejected(tenant_id: uuid.UUID, student_i
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(
-    strict=False,
-    reason="ELEC-E007: E007 mock hits allocation guard before wrong-block check due to mock ordering; "
-           "needs integration test with real DB. Deferred to 06-testing.",
-)
 @pytest.mark.asyncio
 async def test_elec_e007_wrong_block_elective_rejected(
-    mock_db: AsyncMock, tenant_id: uuid.UUID, student_id: uuid.UUID
+    test_db_session: AsyncSession, tenant_id: uuid.UUID, student_id: uuid.UUID
 ) -> None:
     """ELEC-E007: Preference referencing a Block 2 elective submitted for Block 1 must be rejected."""
     from app.services.elective_service import ElectiveService, ElectiveWrongBlockError
     from app.schemas.electives import PreferencesSubmitRequest, PreferenceItem
+    from app.models.electives import Elective
 
-    # Mock: elective query returns block="Block 2" for this elective_id
-    mock_result = MagicMock()
-    mock_elective = MagicMock()
-    mock_elective.block = "Block 2"
-    mock_result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[mock_elective])))
-    mock_db.execute = AsyncMock(return_value=mock_result)
+    wrong_elective_id = uuid.uuid4()
+    
+    # Seed wrong elective (Block 2)
+    elective = Elective(
+        id=wrong_elective_id,
+        tenant_id=tenant_id,
+        curriculum_id=uuid.uuid4(),
+        code=f"ELEC-{wrong_elective_id}",
+        title="Elective",
+        block="Block 2",  # Block 2!
+        elective_type="clinical",
+        capacity=10,
+    )
+    test_db_session.add(elective)
+    await test_db_session.commit()
 
     payload = PreferencesSubmitRequest(
         student_id=student_id,
-        block="Block 1",
-        preferences=[PreferenceItem(elective_id=uuid.uuid4(), rank_position=1)],
+        block="Block 1",  # block requested is Block 1
+        preferences=[PreferenceItem(elective_id=wrong_elective_id, rank_position=1)],
     )
-    service = ElectiveService(db=mock_db)
+    service = ElectiveService(db=test_db_session)
 
     with pytest.raises(ElectiveWrongBlockError) as exc_info:
         await service.submit_preferences(tenant_id=tenant_id, payload=payload, actor_id=student_id)

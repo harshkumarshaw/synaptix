@@ -21,14 +21,14 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     Integer,
+    JSON,
     String,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from packages.shared.db.base import TenantScopedBase
+from packages.shared.db.base import Base, SoftDeleteMixin, TenantScopedBase, TimestampMixin
 
 
 class Elective(TenantScopedBase):
@@ -61,7 +61,7 @@ class Elective(TenantScopedBase):
     updated_by: Mapped[uuid.UUID | None] = mapped_column(PGUUID(as_uuid=True), nullable=True)
 
 
-class ElectiveAllocationRun(TenantScopedBase):
+class ElectiveAllocationRun(Base, TimestampMixin):
     """Audit trail for each admin-triggered elective allocation run.
 
     ADR-034: Every live run_allocation call produces exactly 1 row here.
@@ -84,6 +84,16 @@ class ElectiveAllocationRun(TenantScopedBase):
         ),
     )
 
+    id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True),
+        nullable=False,
+        index=True,
+    )
     curriculum_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
     block: Mapped[str] = mapped_column(String(10), nullable=False)
     algorithm_used: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -98,7 +108,7 @@ class ElectiveAllocationRun(TenantScopedBase):
     total_allocated: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_unallocated_pending_review: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     run_duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    results_summary: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
+    results_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 
 
 class ElectiveAllocation(TenantScopedBase):
