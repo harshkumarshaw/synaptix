@@ -1100,3 +1100,73 @@ electives:
       description: "Preferences submitted with elective_id belonging to wrong block: validation error raised"
       type: edge_case
       deferred_to: null
+
+doap_skills:
+  module_id: A-09
+  test_file_prefix: "tests/"
+  enforcement: standard
+  
+  critical_tests:
+    - id: DOAP-001
+      description: "Record D stage with C decision creates record and logbook entry"
+      type: unit
+      deferred_to: null
+    - id: DOAP-002
+      description: "Record O stage requires preceding D certified (rejection if not)"
+      type: unit
+      deferred_to: null
+    - id: DOAP-003
+      description: "Record A stage requires preceding O certified"
+      type: unit
+      deferred_to: null
+    - id: DOAP-004
+      description: "Record P stage requires preceding A certified"
+      type: unit
+      deferred_to: null
+    - id: DOAP-005
+      description: "Re-attempt after R decision (attempt_type=R, same stage)"
+      type: unit
+      deferred_to: null
+    - id: DOAP-006
+      description: "Remediation workflow auto-created on Re decision"
+      type: integration
+      deferred_to: null
+    - id: DOAP-007
+      description: "Evidence asset IDs linked correctly"
+      type: integration
+      deferred_to: null
+    - id: DOAP-008
+      description: "Auto-creation of logbook_entries on every DOAP record"
+      type: integration
+      deferred_to: null
+  
+  compliance_tests:
+    - id: DOAP-NMC-001
+      description: "Stage progression D->O->A->P enforced (no skipping)"
+      type: compliance
+      regulation_ref: "NMC CBME 2019 DOAP framework"
+      deferred_to: null
+    - id: DOAP-NMC-002
+      description: "Faculty decision required for every record (cannot be null)"
+      type: compliance
+      regulation_ref: "NMC CBME 2019 Reg 8.3"
+      deferred_to: null
+    - id: DOAP-NMC-003
+      description: "Rating B implies decision R or Re (cannot be C)"
+      type: compliance
+      regulation_ref: "NMC CBME 2019 Reg 8.4"
+      deferred_to: null
+  
+  edge_cases:
+    - id: DOAP-E001
+      description: "Backward stage record (refresher D after reaching O) - allowed"
+      type: edge_case
+      deferred_to: null
+    - id: DOAP-E002
+      description: "Faculty decision Re with no active remediation programme - handle gracefully"
+      type: edge_case
+      deferred_to: null
+    - id: DOAP-E003
+      description: "Stage skip attempt (P without prior A) - must reject with specific error"
+      type: edge_case
+      deferred_to: null

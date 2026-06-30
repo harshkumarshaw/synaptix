@@ -18,6 +18,13 @@ from app.schemas.logbook import (
     FoundationCourseSignoffPayload,
 )
 
+from app.schemas.doap import (
+    DoapSessionCreate,
+    DoapSessionResponse,
+    DoapStateResponse,
+    DoapProgressionResponse,
+)
+
 __all__ = [
     # Logbook / Foundation / AETCOM
     "FoundationCourseRecordResponse",
@@ -34,5 +41,10 @@ __all__ = [
     "AllocationRunRequest",
     "AllocationRunResponse",
     "AllocationResponse",
+    # DOAP
+    "DoapSessionCreate",
+    "DoapSessionResponse",
+    "DoapStateResponse",
+    "DoapProgressionResponse",
 ]
 

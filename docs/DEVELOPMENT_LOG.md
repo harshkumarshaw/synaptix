@@ -2,6 +2,18 @@
 
 Chronological record of all development sessions.
 
+## 2026-06-30 — Phase 2 Session 9 Cleanup & DOAP Implementation (Session 10)
+**Agent:** Backend (02)
+**Duration:** ~60 mins
+**Focus:** Resolving Session 9 database schema/model mismatches, SQLite compile rules for JSONB, uppercase audit constraints, and implementing full DOAP Skills state machine tracking (A-09).
+- Cleaned up Electives model-schema drift: dropped composite PK, added UUID primary key, dropped deleted_at in runs.
+- Added custom compiler rule in `conftest.py` for SQLite JSONB to JSON mapping during testing.
+- Created migration 0015 to add procedural evidence and notes columns to DOAP.
+- Implemented pure validations for DOAP progression (D->O->A->P) and rating-decision consistency.
+- Developed `DoapService` handling DB persistence, automatic LogbookEntry creation, and Remediation workflow triggers.
+- Developed FastAPI router for DOAP recording and retrieval.
+- Wrote and verified 17 test cases (all passing, no xfails) covering unit, integration, and compliance rules.
+
 ## 2026-06-30 — Phase 2 Electives Backend Implementation (Session 9)
 **Agent:** Backend (02)
 **Duration:** ~90 mins

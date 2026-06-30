@@ -25,7 +25,7 @@ from sqlalchemy import (
     Text,
     UniqueConstraint,
 )
-from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.dialects.postgresql import UUID as PGUUID, JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from packages.shared.db.base import TenantScopedBase
@@ -167,6 +167,8 @@ class DoapSessionRecord(TenantScopedBase):
     attempt_type: Mapped[str] = mapped_column(String(10), nullable=False)
     faculty_decision: Mapped[str] = mapped_column(String(10), nullable=False)
     faculty_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    evidence_asset_ids: Mapped[list[uuid.UUID]] = mapped_column(JSONB, nullable=False, server_default="[]")
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     signed_off_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default="NOW()"
     )

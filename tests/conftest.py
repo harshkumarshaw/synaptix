@@ -160,6 +160,7 @@ async def test_db_session() -> AsyncGenerator[AsyncSession, None]:
     import app.models.electives
     import app.models.logbook
     import app.models.logbook_phase2
+    import app.models.stubs
 
     engine = create_async_engine("sqlite+aiosqlite:///:memory:")
     async with engine.begin() as conn:

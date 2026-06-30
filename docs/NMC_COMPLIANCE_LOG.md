@@ -267,3 +267,42 @@ Any implementation notes or known limitations.
 - [x] Tested (xfail stub verified)
 - [ ] Verified
 **Notes:** Validates supervisor assignment.
+
+### DOAP-NMC-001: Stage progression D->O->A->P enforced
+**Source:** NMC CBME 2019 DOAP framework
+**Effective Date:** 2026-06-30
+**Applies To:** MBBS
+**Implementing Module:** A-09 (DOAP Skills)
+**Test IDs:** DOAP-NMC-001
+**Test File:** tests/compliance/doap/test_doap_nmc_compliance.py
+**Compliance Status:**
+- [x] Implemented (Stage transition machine)
+- [x] Tested (17 passed)
+- [x] Verified
+**Notes:** Verifies progression rules.
+
+### DOAP-NMC-002: Faculty decision required for every record
+**Source:** NMC CBME 2019 Reg 8.3
+**Effective Date:** 2026-06-30
+**Applies To:** MBBS
+**Implementing Module:** A-09 (DOAP Skills)
+**Test IDs:** DOAP-NMC-002
+**Test File:** tests/compliance/doap/test_doap_nmc_compliance.py
+**Compliance Status:**
+- [x] Implemented (Schema validator constraint)
+- [x] Tested (17 passed)
+- [x] Verified
+**Notes:** Faculty decision cannot be null.
+
+### DOAP-NMC-003: Rating B implies decision R or Re (cannot be C)
+**Source:** NMC CBME 2019 Reg 8.4
+**Effective Date:** 2026-06-30
+**Applies To:** MBBS
+**Implementing Module:** A-09 (DOAP Skills)
+**Test IDs:** DOAP-NMC-003
+**Test File:** tests/unit/doap/test_rating_decision.py
+**Compliance Status:**
+- [x] Implemented (Validator check)
+- [x] Tested (17 passed)
+- [x] Verified
+**Notes:** Prevents certification when below expectation.

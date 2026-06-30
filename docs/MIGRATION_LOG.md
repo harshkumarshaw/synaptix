@@ -271,6 +271,26 @@ Add the `elective_allocation_runs` table to act as an audit trail for automated 
 **Verification:**
 - Unit tests pass, schema structure validated, and ADR-034 trace verified.
 
+---
+
+### Migration: 20260630_bf787ada4ee4_add_doap_evidence_and_notes
+**Created:** 2026-06-30
+**Agent:** Backend Agent (02)
+**Revision ID:** bf787ada4ee4
+**Depends on:** 20260630_0014
+
+**Purpose:**
+Add `evidence_asset_ids` (JSONB) and `notes` (TEXT) columns to the `doap_session_records` table to support procedural attachments and faculty comments (ADR-035).
+
+**Changes:**
+- Altered table `doap_session_records` to add `evidence_asset_ids` column of type `JSONB` with a default of `'[]'::jsonb`.
+- Altered table `doap_session_records` to add `notes` column of type `TEXT` (nullable).
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run DOAP unit and integration tests (`pytest tests/unit/doap/ tests/integration/doap/`) and verify they pass.
+
 
 
 

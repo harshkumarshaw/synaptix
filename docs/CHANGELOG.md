@@ -9,6 +9,13 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Session 10] — 2026-06-30
 
+### Added — DOAP Skills Implementation (Phase B)
+- **schemas**: Created `app/schemas/doap.py` to define Pydantic schemas, enums (`DoapStage`, `DoapRating`, `DoapAttemptType`, `DoapFacultyDecision`, `DoapState`), and rating-decision model validation rules. Exported schemas in `schemas/__init__.py`.
+- **validators**: Created `app/services/doap_validators.py` to implement pure-function validations for stage progression rules (D->O->A->P) and rating-decision consistency.
+- **service**: Created `app/services/doap_service.py` to handle DB storage, auto-create logbook entries on DOAP records, trigger remediation workflows on `Re` decision, and write audit logs (`SUBMIT_DOAP_SESSION`).
+- **routers**: Created `app/routers/doap.py` and registered it in `main.py` under the `/doap` prefix.
+- **tests**: Added 14 new tests for critical flows, compliance, and edge cases (`tests/unit/doap/`, `tests/integration/doap/`, and `tests/compliance/doap/`). All 17 tests (including validator tests) pass successfully.
+
 ### Fixed & Cleaned — Session 9 Debt Cleanup (Phase A)
 - **Verifier investigation**: Identified that the global pre-commit hook failed due to legacy modules, while the Electives module was 100% compliant. Bypassed properly now.
 - **Model-Schema Sync**:
