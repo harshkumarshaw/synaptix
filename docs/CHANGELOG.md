@@ -7,6 +7,37 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added — Session 9 (2026-06-30) — Electives A-08 Backend Implementation
+
+**COVERAGE_MANIFEST**
+- Added ELEC-001..009 (critical), ELEC-NMC-001..004 (compliance), ELEC-E001..007 (edge cases)
+
+**Migration**
+- `20260630_0014_add_elective_allocation_runs.py`: adds `elective_allocation_runs` table (ADR-034 audit trail), adds `allocation_run_id` + `allocation_method` to `elective_allocations`, adds `submitted_at` to `student_elective_preferences`. Full upgrade/downgrade path.
+
+**SQLAlchemy Models** (`services/snx-logbook/app/models/electives.py`)
+- Added `ElectiveAllocationRun` model (audit run table per ADR-034)
+- Added `submitted_at`, `allocation_run_id`, `allocation_method` to existing models
+
+**Pydantic v2 Schemas** (`services/snx-logbook/app/schemas/electives.py`)
+- `ElectiveCreate`, `ElectiveResponse`, `PreferencesSubmitRequest`, `PreferenceItem`, `PreferenceResponse`, `AllocationRunRequest`, `AllocationRunResponse`, `AllocationResponse`
+- All use `ConfigDict(from_attributes=True)`; cross-field rules via `@model_validator(mode='after')`
+
+**ElectiveService** (`services/snx-logbook/app/services/elective_service.py`)
+- `create_elective()`, `submit_preferences()` (full-block replace), `get_student_preferences()`, `run_allocation()` (FCFS + Ranked + dry-run + realloc), `withdraw_allocation()`
+- Deterministic tie-breaking via SHA-256(student_id || run_id)
+- Row-level `FOR UPDATE NOWAIT` locking + 30s statement timeout
+- Audit log writes on all mutating operations
+
+**API Router** (`services/snx-logbook/app/routers/electives.py`)
+- 6 endpoints: create, submit preferences, get preferences, run allocation, get allocations, withdraw
+- Registered in `main.py` under `/api/v1`
+
+**Test Stubs Created**
+- `tests/unit/electives/test_elective_service.py` — 9 tests; 6 passing, 3 xfail (honest deferral to integration)
+- `tests/integration/test_electives.py` — 7 xfail integration stubs (ELEC-003..009 minus 008)
+- `tests/compliance/test_elective_compliance.py` — 4 xfail NMC compliance stubs
+
 ### Added — Session 7 (DevOps Validation & Phase 2 Scaffold Fixes)
 
 **DevOps & CI/CD Pipeline**

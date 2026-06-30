@@ -8,7 +8,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from app.config import get_settings
-from app.routers import logbook
+from app.routers import electives, logbook
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -102,6 +102,7 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(logbook.router, prefix="/api/v1")
+    app.include_router(electives.router, prefix="/api/v1")
 
     @app.get("/health", tags=["infrastructure"])
     async def health() -> dict[str, str]:

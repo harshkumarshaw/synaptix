@@ -81,6 +81,13 @@ Format: `[YYYY-MM-DD HH:MM:SS] [agent-id] command`
 [2026-06-27 11:45:00] [09-devops] powershell.exe -ExecutionPolicy Bypass -File scripts/pre-commit-hook.ps1
 ```
 
+## 2026-06-30 — Session 9
+
+```
+[2026-06-30 16:50:00] [02-backend] f:\Synaptix\.venv\Scripts\ruff.exe check services/snx-logbook/
+[2026-06-30 17:00:00] [02-backend] $env:PYTHONPATH = "f:\Synaptix\services\snx-logbook;f:\Synaptix" ; f:\Synaptix\.venv\Scripts\python.exe -m pytest tests/unit/electives/ -v
+```
+
 ## 2026-06-18
 
 ```

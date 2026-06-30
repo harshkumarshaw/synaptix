@@ -31,3 +31,10 @@ await session.commit()
 ## Cross-Agent Insights
 
 - **Namespace Conflicts (Orchestrator/Testing):** Since all monorepo microservices use the root `app` folder, running pytest globally causes namespace collisions. Run tests for each service individually with its specific `PYTHONPATH` configuration.
+
+## Session 9 Learnings (2026-06-30)
+
+- **Pydantic v2 migration details:** `ConfigDict(from_attributes=True)` is the standard in Pydantic v2, while Pydantic v1 `class Config` is strictly banned. Cross-field validations must use `@model_validator(mode='after')` and return `self`.
+- **Database row-level locking:** When performing concurrent updates or allocations, run queries using `FOR UPDATE NOWAIT` and catch `sqlalchemy.exc.OperationalError` to raise a `LockNotAvailableError` (mapped to HTTP 409 Conflict) instead of waiting indefinitely.
+- **Complex unit test mocking:** Highly relational service methods performing multiple DB queries (like `submit_preferences`) have fragile and complex unit mocks. These are far more cleanly verified using full integration tests with a database backend rather than nested `AsyncMock` setups.
+

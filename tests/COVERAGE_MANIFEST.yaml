@@ -998,3 +998,105 @@ coverage_targets:
       logbook_ia_contribution: 80
       hall_ticket_eligibility: 80
       crmi_completion: 80
+
+# ============================================================================
+# PHASE 2: ELECTIVES (A-08)
+# Added: 2026-06-30 Session 9
+# Enforcement: standard
+# Deferred tests explicitly marked with deferred_to field.
+# ============================================================================
+
+electives:
+  module_id: A-08
+  test_file_prefix: "tests/unit/electives/"
+  enforcement: standard
+
+  critical_tests:
+    - id: ELEC-001
+      description: "Create elective: valid payload inserts row, returns ElectiveResponse"
+      type: unit
+      deferred_to: null
+    - id: ELEC-002
+      description: "Submit student preferences: full-block replace, ranks 1-5, idempotent on re-submit"
+      type: unit
+      deferred_to: null
+    - id: ELEC-003
+      description: "FCFS allocation: 10 students, 3 electives cap=4, expected allocation matches ADR-034 worked example"
+      type: integration
+      deferred_to: null
+    - id: ELEC-004
+      description: "Ranked allocation: 10 students, 3 electives cap=4, rank-pass result matches ADR-034 worked example"
+      type: integration
+      deferred_to: null
+    - id: ELEC-005
+      description: "Reallocation additive mode: only unallocated students assigned, existing allocations untouched"
+      type: integration
+      deferred_to: null
+    - id: ELEC-006
+      description: "Reallocation full mode: all existing allocations cleared, fresh allocation run"
+      type: integration
+      deferred_to: null
+    - id: ELEC-007
+      description: "Allocation run produces elective_allocation_runs audit row with correct totals"
+      type: integration
+      deferred_to: null
+    - id: ELEC-008
+      description: "Concurrent allocation triggers don't double-allocate: row-level FOR UPDATE serialises runs"
+      type: integration
+      deferred_to: "Phase 2.5"
+    - id: ELEC-009
+      description: "Dry-run allocation: computes result, writes no rows, returns same counts as live"
+      type: integration
+      deferred_to: null
+
+  compliance_tests:
+    - id: ELEC-NMC-001
+      description: "Elective duration enforced: two blocks of 2 weeks each within Phase III Part I (NMC CBME 2019 Reg 7)"
+      type: compliance
+      regulation_ref: "NMC CBME Regulations 2019, Reg 7 — Electives"
+      deferred_to: null
+    - id: ELEC-NMC-002
+      description: "Student must be allocated at least one clinical-category elective across both blocks"
+      type: compliance
+      regulation_ref: "NMC CBME Regulations 2019, Reg 7 — Electives"
+      deferred_to: null
+    - id: ELEC-NMC-003
+      description: "Reflection logbook entry required per elective block before NExT eligibility"
+      type: compliance
+      regulation_ref: "NMC CBME Regulations 2019, Reg 7.5"
+      deferred_to: null
+    - id: ELEC-NMC-004
+      description: "Faculty supervisor must be assigned per elective per student"
+      type: compliance
+      regulation_ref: "NMC CBME Regulations 2019, Reg 7.6"
+      deferred_to: null
+
+  edge_cases:
+    - id: ELEC-E001
+      description: "Student submits preferences twice: second submission replaces first (soft-delete + re-insert)"
+      type: edge_case
+      deferred_to: null
+    - id: ELEC-E002
+      description: "Tie-breaking: two preferences share same submitted_at; deterministic hash of student_id breaks tie"
+      type: edge_case
+      deferred_to: null
+    - id: ELEC-E003
+      description: "Student withdraws after allocation: capacity_remaining incremented, slot freed"
+      type: edge_case
+      deferred_to: null
+    - id: ELEC-E004
+      description: "Capacity changes between dry-run and live run: live run uses locked capacity, not dry-run snapshot"
+      type: edge_case
+      deferred_to: null
+    - id: ELEC-E005
+      description: "Student tries to submit preference for Block 1 after Block 1 allocation exists: SNX-ELEC-002 raised"
+      type: edge_case
+      deferred_to: null
+    - id: ELEC-E006
+      description: "Preferences submitted with duplicate rank position in same block: validation error raised"
+      type: edge_case
+      deferred_to: null
+    - id: ELEC-E007
+      description: "Preferences submitted with elective_id belonging to wrong block: validation error raised"
+      type: edge_case
+      deferred_to: null

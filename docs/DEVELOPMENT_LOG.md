@@ -2,6 +2,17 @@
 
 Chronological record of all development sessions.
 
+## 2026-06-30 — Phase 2 Electives Backend Implementation (Session 9)
+**Agent:** Backend (02)
+**Duration:** ~90 mins
+**Focus:** Implement schemas, models, service, and routing for Electives module (A-08) with FCFS and Ranked algorithms, row locking, and audit log integrations.
+- Created `20260630_0014_add_elective_allocation_runs.py` migration to add allocation runs audit trail.
+- Added Pydantic v2 schemas for electives with validation checks.
+- Implemented `ElectiveService` with FCFS and Ranked allocation algorithms, SHA-256 tie-breaker, row locking (`FOR UPDATE NOWAIT`), and audit log writes on all mutations.
+- Implemented API router for electives with 6 endpoints.
+- Registered electives router in `main.py` and exported schemas in `schemas/__init__.py`.
+- Enforced specification-first discipline with unit and integration test stubs (6 passing, 3 xfail).
+
 ## 2026-06-27 — Phase 2 Electives & DOAP Task Coordination (Session 8)
 **Agent:** Orchestrator (00)
 **Duration:** ~10 mins

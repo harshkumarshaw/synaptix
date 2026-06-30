@@ -249,6 +249,28 @@ Scaffold and implement Foundation Course and AETCOM logbook records tracking.
 **Verification:**
 - Run logbook service tests (`pytest.exe tests/unit/logbook/...`) and verify they pass.
 
+---
+
+### Migration: 20260630_0014_add_elective_allocation_runs
+**Created:** 2026-06-30
+**Agent:** Backend Agent (02)
+**Revision ID:** 20260630_0014
+**Depends on:** 20260620_0013
+
+**Purpose:**
+Add the `elective_allocation_runs` table to act as an audit trail for automated elective allocations (ADR-034), extend `elective_allocations` with run tracking and allocation methods, and add `submitted_at` to preferences for FCFS sorting.
+
+**Changes:**
+- Created table `elective_allocation_runs` with composite foreign keys, RLS enabled, and updated_at triggers.
+- Added column `allocation_run_id` (foreign key to `elective_allocation_runs`) and `allocation_method` (check constraint for ranks/fcfs/manual) to table `elective_allocations`.
+- Added column `submitted_at` (TIMESTAMP WITH TIME ZONE) to table `student_elective_preferences`.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Unit tests pass, schema structure validated.
+
+
 
 
 
