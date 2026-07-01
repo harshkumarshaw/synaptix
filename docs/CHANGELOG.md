@@ -7,7 +7,39 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [Session 10] — 2026-06-30
+## [Session 11] — 2026-07-01
+
+### Added — R0 Framework Reconciliation
+
+- **scripts/verify_edge_case_coverage.py**: Full AgentForge-pattern verifier. Scans EDGE_CASES.md and COVERAGE_MANIFEST edge_cases sections for catalogued IDs; checks presence in test codebase; respects `deferred_to` field.
+- **scripts/verify_compliance_coverage.py**: Full AgentForge-pattern NMC compliance verifier. Three-way gap check: manifest → NMC_COMPLIANCE_TESTS.md → test codebase. Respects `deferred_to` field.
+- **docs/verification/phase2_test_categorisation.md**: Complete categorisation of all 263 manifest test IDs into Must Pass Phase 2 / Phase 2.5 / Phase 3 / Phase 4. All descriptions sourced verbatim from COVERAGE_MANIFEST description fields.
+- **docs/verification/baseline_*.txt**: Four baseline verifier output files captured at R0 state (2026-07-01).
+- **docs/PHASE2_SCHEMA.md**: Cross-referenced schema specification for all 14 tables, 1 view, and 4 triggers added in migrations 0011–0015. Documents known deviations from ADR spec and R1 action items.
+
+### Modified — R0 Framework Reconciliation
+
+- **scripts/verify_coverage_manifest.py**: Added `deferred_to` field support. Deferred tests excluded from required count. Prints per-target deferral summary.
+- **tests/COVERAGE_MANIFEST.yaml**: Added `deferred_to` fields for 78 tests:
+  - 17 → Phase 2.5 (RFID, GPS, offline sync, mobile QR)
+  - 41 → Phase 3 (exam management, MFA, curriculum migration, face recognition, biometric)
+  - 20 → Phase 4 (CRMI internship module)
+- **conventions/DATABASE_CONVENTIONS.md**: Appended three new sections:
+  1. Cross-Reference Integrity Triggers (formalises ADR-021 trigger pattern)
+  2. Composite Foreign Key Requirements (formalises ADR-009)
+  3. Trigger vs Service Layer Decision Matrix (formalises ADR-030)
+
+### Post-R0 Coverage Baseline
+
+| Metric | Value |
+|--------|-------|
+| Total tests in manifest | 263 |
+| Deferred (acknowledged) | 78 |
+| Active required | 185 |
+| Implemented | 99 |
+| Missing (Phase 2 must close) | **86** |
+| Coverage | 53.5% |
+
 
 ### Added — DOAP Skills Implementation (Phase B)
 - **schemas**: Created `app/schemas/doap.py` to define Pydantic schemas, enums (`DoapStage`, `DoapRating`, `DoapAttemptType`, `DoapFacultyDecision`, `DoapState`), and rating-decision model validation rules. Exported schemas in `schemas/__init__.py`.

@@ -316,6 +316,172 @@ Every architectural decision documented as an ADR.
 - (+) Keeps the codebase compiling and relationship links valid.
 - (-) Application processing must be handled manually or externally until Phase 2.5.
 
+## ADR-030: AETCOM Sync via Service Layer (not DB Trigger)
+
+**Date:** 2026-06-20
+**Status:** Accepted (Retroactive — formalised 2026-07-01 in Session 11)
+**Deciders:** Human supervisor + Backend Agent 02
+**Context:** AETCOM module completion depends on three independent conditions: attendance at AETCOM sessions, student reflection submission, and faculty sign-off. This non-linear, cross-table logic is unsuitable for a database trigger, which would require querying multiple tables and implementing complex conditional branching in PL/pgSQL.
+**Decision:** AETCOM sync is implemented in service-layer Python (`aetcom_sync_service.on_attendance_change()`), not as a database trigger. Called from: `attendance_service.mark_attendance()`, `logbook_service.submit_aetcom_reflection()`, `logbook_service.signoff_aetcom_module()`.
+**Alternatives Considered:**
+- Database trigger on `attendance` table (rejected: cross-module, non-linear, would need to query logbook + signoff tables from within a trigger — architecturally fragile)
+- Scheduled job to periodically recompute AETCOM status (rejected: introduces latency and makes status stale)
+**Consequences:**
+- (+) Clean separation of concerns — AETCOM logic stays in Python where it can be tested easily
+- (+) Unit-testable without a database
+- (-) Must be explicitly called from every entry point that can change AETCOM status — easy to miss
+- Mitigation: Documented caller list in service file docstring
+
+## ADR-031: Two-Phase NOT NULL Migration for courses.subject_code
+
+**Date:** 2026-06-20
+**Status:** Accepted (Retroactive — formalised 2026-07-01 in Session 11)
+**Deciders:** Human supervisor + Backend Agent 02
+**Context:** Adding `subject_code` to the existing `courses` table. The column must ultimately be NOT NULL (every course must have a subject code), but existing rows in the database have no value. A DEFAULT of `'ANAT'` would incorrectly mark all existing courses as Anatomy, corrupting data.
+**Decision:** Three-step migration: (1) Add column as NULLABLE in the schema migration. (2) Run admin backfill script (`scripts/admin/backfill_subject_codes.py`) per tenant with explicit per-course mapping. (3) A follow-up migration adds the NOT NULL constraint after backfill is verified.
+**Alternatives Considered:**
+- DEFAULT 'ANAT' (rejected: silently corrupts data — all existing courses become Anatomy)
+- DEFAULT 'TBD' sentinel value (rejected: 'TBD' is not a valid subject code; would break CHECK constraints downstream)
+- Single-step migration with inline data fix (rejected: requires all courses to be pre-seeded, which is not guaranteed in production)
+**Consequences:**
+- (+) No data corruption; backfill is explicit and auditable per tenant
+- (+) Backfill failure doesn't block the schema migration
+- (-) Two-step process requires coordination between ops and deployment teams
+- (-) Schema is temporarily nullable; service code must handle NULL during the gap
+
+## ADR-032: Logbook Elective Discriminator — NULLABLE subject_code
+
+**Date:** 2026-06-20
+**Status:** Accepted (Retroactive — formalised 2026-07-01 in Session 11)
+**Deciders:** Human supervisor + Backend Agent 02
+**Context:** `logbook_entries` stores both regular course entries (with `subject_code`) and elective entries (with `elective_id`). A discriminator is needed. The original plan used a sentinel value `subject_code = 'ELECTIVE'` which is fragile and breaks subject-code-based queries.
+**Decision:** Make `subject_code` NULLABLE. Enforce a CHECK constraint: `(elective_id IS NULL AND subject_code IS NOT NULL) OR (elective_id IS NOT NULL AND subject_code IS NULL)`. Exactly one of the two must be non-null on any given row.
+**Alternatives Considered:**
+- Sentinel string `'ELECTIVE'` (rejected: magic string, must be excluded from all subject-code aggregation queries, error-prone)
+- Separate `elective_logbook_entries` table (rejected: duplicates validation rules, sign-off service, and portfolio queries)
+- Boolean `is_elective` flag (rejected: doesn't enforce mutual exclusivity with subject_code)
+**Consequences:**
+- (+) Structurally enforces mutual exclusivity at the database level
+- (+) Queries filtering by subject_code naturally exclude elective entries (WHERE subject_code IS NOT NULL)
+- (-) Application code must always set exactly one of the two columns, never both and never neither
+
+## ADR-033: internship_rotations Scaffolded in Phase 2 for FK Validity
+
+**Date:** 2026-06-20
+**Status:** Accepted (Retroactive — formalised 2026-07-01 in Session 11)
+**Deciders:** Human supervisor + Backend Agent 02
+**Context:** `leave_requests` has a nullable FK to `internship_rotations` (for CRMI intern leave cap enforcement). The full internship/CRMI module is scoped to Phase 4. Without the table existing, the FK cannot be declared, breaking the schema.
+**Decision:** Create a minimal scaffold table (`id`, `tenant_id`, `student_id`, `department`, `start_date`, `end_date`, `leave_days_used`, `status`) in Phase 2 to make the FK valid. Phase 4 adds the full CRMI rotation logic, scheduling, assessment, and completion certificate workflow, expanding the table.
+**Alternatives Considered:**
+- Defer `rotation_id` column to Phase 4 (rejected: loses the intern leave cap link for the duration of Phase 2–3, creating technical debt in leave management)
+- Remove FK and use application-level check (rejected: breaks composite FK discipline from ADR-009; cross-tenant reference risk)
+**Consequences:**
+- (+) Leave management can enforce the 15-day CRMI leave cap in Phase 2
+- (+) FK integrity maintained throughout
+- (-) Scaffold table has no business logic until Phase 4; must not be exposed in public API
+
+## ADR-034: Elective Allocation Algorithm (FCFS + Ranked)
+
+**Date:** 2026-06-23
+**Status:** Accepted (Retroactive — formalised 2026-07-01 in Session 11)
+**Deciders:** Human supervisor + Backend Agent 02
+**Context:** NMC CBME 2019 mandates two 2-week elective blocks during Phase III Part I. Students rank preferences; the allocator assigns based on preferences and capacity. Prior iteration used FCFS only; the ranked algorithm was deferred. Session 9 implemented both.
+**Decision:** Two algorithms implemented, selectable per tenant via MDM configuration (`mdm.elective_allocation_algorithm`):
+- **FCFS (`first_come_first_served`)**: processes preferences ordered by `submitted_at ASC`. Default for institutions without sophisticated needs.
+- **Ranked (`ranked`)**: processes rank-by-rank across all students. Rank-1 for everyone first, then rank-2 for still-unallocated students, etc. Tie-breaking within a rank tier: earliest `submitted_at`, then deterministic hash of `student_id + allocation_run_id`.
+
+Operational endpoint: `POST /electives/allocate` with `dry_run` flag, `algorithm` selection, `force_reallocate` modes (additive/full). Cross-block constraint: same `elective_id` cannot be allocated in both Block 1 and Block 2 for a student. Every run creates an `elective_allocation_runs` audit row.
+
+**Worked example (Ranked, verified in Session 10 Phase A):** 10 students, 3 electives (A/B/C capacity 4). Pass rank-1: S1-S4→A (A full), S6-S8→B, S9-S10→C, S5 skipped. Pass rank-2: S5→B (S5's rank-2). Result: A=4, B=4, C=2, 0 unallocated.
+**Alternatives Considered:**
+- FCFS only (rejected: doesn't respect student preference rankings; penalises late submitters systematically)
+- Random assignment (rejected: no audit trail, NMC inspection concern)
+- Lottery system (rejected: not aligned with NMC CBME 2019 preference-based framework)
+**Consequences:**
+- (+) Both algorithms satisfy NMC requirements for elective allocation transparency
+- (+) MDM-configurable — institutions can choose without code change
+- (+) Full audit trail per allocation run
+- (-) Ranked algorithm is O(students × ranks × electives) — must be a background job for large batches
+- (-) Concurrent allocation triggers require row-level FOR UPDATE lock to prevent double-allocation
+
+## ADR-035: DOAP State Machine (D→O→A→P Progression)
+
+**Date:** 2026-06-30
+**Status:** Accepted (Retroactive — formalised 2026-07-01 in Session 11)
+**Deciders:** Human supervisor + Backend Agent 02
+**Context:** NMC CBME 2019 mandates the DOAP (Demonstration → Observation → Assistance → Performance) progression for procedural skills. The schema was approved in Phase 2 v3, but the state machine — what transitions are valid — was not formally specified.
+**Decision:** State machine with stages NOT_STARTED → DEMONSTRATED → OBSERVED → ASSISTED → PERFORMED → CERTIFIED. Implemented as pure validator functions (`doap_validators.py`) for testability.
+
+Rules:
+- Stage progression requires at least one C-decision record at ALL prior stages
+- Backward attempts allowed (refresher D after reaching O) — these don't regress state
+- Multiple sessions per stage allowed
+- Faculty decision codes: C (Certify), R (Repeat), Re (Remediate)
+- Attempt types: F (First), R (Repeat), Re (Remediation)
+- Rating B + decision C is INVALID (validated as DOAP-NMC-003 compliance)
+
+Cross-module integration: auto-creates `logbook_entries`; Re decision auto-creates `workflow_instance` for remediation; evidence via `evidence_asset_ids JSONB` column.
+**Alternatives Considered:**
+- Database-level state enforcement via trigger (rejected: complex multi-table query in trigger; hard to unit test)
+- Status column with ad-hoc checks in each endpoint (rejected: duplicates logic across routes; misses edge cases)
+**Consequences:**
+- (+) Pure validator functions are fully unit-testable without a database
+- (+) State machine is explicit and auditable
+- (-) Service code must call validators consistently — missing a call site creates a compliance gap
+
+## ADR-036: Leave-to-Attendance Materialisation
+
+**Date:** 2026-06-20
+**Status:** Accepted (Retroactive — formalised 2026-07-01 in Session 11)
+**Deciders:** Human supervisor + Backend Agent 02
+**Context:** When a student's leave is approved, attendance rows must be automatically created or updated for events during the leave window, so the student is not incorrectly marked absent.
+**Decision:** Materialisation happens at leave approval time (status `pending` → `approved`) via service-layer function `leave_service.on_approval()`.
+
+Status mapping: medical leave → `'medical'`; academic/casual/other → `'excused'`.
+
+Conflict rules:
+- If no attendance row exists for an event in the leave window: CREATE with leave status
+- If attendance row exists with status != `'present'`: UPDATE to leave status, set `needs_review=true`
+- If attendance row exists with status == `'present'`: DO NOT override (student actually attended despite approved leave; log warning to needs_review queue)
+
+Future events: When a new event is created within an existing approved leave window, an event-creation hook checks for active leaves and auto-creates the attendance row.
+
+Rejection rollback: When a previously-approved leave is rejected or cancelled, materialised attendance rows are soft-deleted and a `compliance_incidents` row is logged.
+**Alternatives Considered:**
+- Database trigger on `leave_requests` status change (rejected: cross-module query from trigger; would need to query events table which may be in a different schema/service)
+- Nightly batch materialisation (rejected: leave approved today should reflect in attendance today, not tomorrow)
+**Consequences:**
+- (+) Consistent, real-time attendance reflection of approved leaves
+- (+) Protects students from false absent counts
+- (-) Leave approval is slightly slower (materialisation is synchronous within the approval transaction)
+- (-) Must handle rollback on approval failure to avoid partial materialisation
+
+## ADR-037: Attendance Conflict Resolution Semantics
+
+**Date:** 2026-06-20
+**Status:** Accepted (Retroactive — formalised 2026-07-01 in Session 11)
+**Deciders:** Human supervisor + Backend Agent 02
+**Context:** The same attendance can be marked twice — faculty A marks present, faculty B marks absent due to misidentification; or offline + online sync collision. A deterministic resolution rule is required.
+**Decision:** Conflict resolution key: **latest of MAX(original_marked_at, marked_at) wins**.
+
+Worked examples:
+1. **Two online marks**: Faculty A at 10:00, Faculty B at 11:00. B wins (later wall-clock).
+2. **Online then offline-sync**: Faculty A online at 10:00; Faculty B offline at 09:30, syncs at 12:00. MAX(09:30, 12:00) = 12:00 > 10:00: B wins. BUT marked_at - original_marked_at > 2 hours: flag `needs_review`.
+3. **Two offline syncs**: A marked at 09:00, synced at 14:00; B marked at 09:05, synced at 13:00. MAX(09:00, 14:00) = 14:00 > 13:00: A wins. BOTH flagged `needs_review` (different original times within 5 minutes is suspicious).
+
+`needs_review` flagging triggers when: (a) original_marked_at times differ by < 10 minutes, (b) sync gap > 2 hours, (c) status changes from present to non-present.
+
+Implementation: Service-layer Python (not ON CONFLICT SQL — too complex for SQL expression). Unique constraint `UNIQUE (tenant_id, event_id, student_id) WHERE deleted_at IS NULL` prevents duplicate live rows.
+**Alternatives Considered:**
+- Last-write-wins by `marked_at` only (rejected: disadvantages offline marks which sync late even if made earlier)
+- Faculty seniority-based resolution (rejected: NMC doesn't recognise hierarchical attendance authority)
+- Manual reconciliation always (rejected: creates admin bottleneck at scale)
+**Consequences:**
+- (+) Deterministic and auditable — same inputs always produce same winner
+- (+) Offline faculty not systematically disadvantaged
+- (-) Sync gap > 2h always triggers needs_review, creating noise for legitimate rural offline use cases
+- Mitigation: needs_review queue is a triage tool, not a block; attendance is materialised immediately
+
 ## Template for New ADRs
 
 ```markdown

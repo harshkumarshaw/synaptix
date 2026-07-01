@@ -8,11 +8,31 @@ End-of-session notes for the next agent session.
 
 ## Current Status
 
-**Last session:** 2026-06-30 — Session 10 (Backend Agent 02 — DOAP + Debt Cleanup)
-**Phase:** Phase 2 — Session 10 COMPLETE.
-**Status:** Both Phase A (Session 9 Debt Cleanup) and Phase B (DOAP Skills Implementation) are 100% complete. All tests pass, and linter is fully green. Next session is strictly Session 11 (R0 ADR Reconciliation).
+**Last session:** 2026-07-01 — Session 11 (Orchestrator 00 — R0 Framework Reconciliation)
+**Phase:** R0 COMPLETE. R1 ready to begin.
+**Status:** All R0 deliverables are complete. The codebase now has a fully measured, auditable baseline with 185 active-required tests, 99 implemented, 86 missing. The 78 deferred tests are acknowledged in COVERAGE_MANIFEST.yaml with `deferred_to` fields. All three verifier scripts are production-ready. PHASE2_SCHEMA.md documents every table in migrations 0011–0015 with known deviations flagged.
+
+**R1 Agent:** Backend Agent 02 is the designated implementation agent for R1. Start with the schema gap fixes, then attendance engine tests, then logbook tests.
 
 ---
+
+## What Was Completed (Session 11)
+
+### R0 — Framework Reconciliation (100% Complete)
+
+- **verify_edge_case_coverage.py**: Full AgentForge verifier created. Scans EDGE_CASES.md + COVERAGE_MANIFEST edge_cases. Respects `deferred_to`.
+- **verify_compliance_coverage.py**: Full AgentForge verifier created. Three-way gap check (manifest → NMC doc → codebase).
+- **verify_coverage_manifest.py**: Updated to skip `deferred_to` tests from required count. Now accurate.
+- **docs/verification/phase2_test_categorisation.md**: Complete test ID categorisation table (descriptions from manifest, not from plan docs). **ATT-003 is RFID, not QR** — confirmed from manifest.
+- **docs/verification/baseline_*.txt**: Verifier output snapshots at R0 state.
+- **tests/COVERAGE_MANIFEST.yaml**: 78 `deferred_to` fields added (17 Phase 2.5, 41 Phase 3, 20 Phase 4).
+- **docs/PHASE2_SCHEMA.md**: Full schema specification for migrations 0011–0015 with 7 known gaps/deviations documented.
+- **conventions/DATABASE_CONVENTIONS.md**: Three new sections: Cross-Reference Integrity Triggers, Composite FK Requirements, Trigger vs Service Layer Matrix.
+- **docs/DECISIONS.md**: ADRs 030–037 appended (prior session).
+- **scripts/verify_adr_sequence.py**: Created (prior session). ADR chain 001–037 confirmed gapless.
+
+---
+
 
 ## What Was Completed (Session 10)
 

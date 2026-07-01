@@ -34,18 +34,22 @@ def find_test_ids_in_codebase() -> set[str]:
 
 
 def get_required_test_ids() -> dict[str, list[str]]:
-    """Read COVERAGE_MANIFEST and extract all required test IDs."""
+    """Read COVERAGE_MANIFEST and extract all required (non-deferred) test IDs."""
     with open(MANIFEST) as f:
         manifest = yaml.safe_load(f)
 
-    required = {}
+    required: dict[str, list[str]] = {}
+    deferred_count = 0
+    deferred_by_target: dict[str, int] = {}
+
     for module_name, module_data in manifest.items():
         if not isinstance(module_data, dict):
             continue
-        ids = []
+        ids: list[str] = []
         for category in [
             "critical_tests",
             "nmc_compliance_tests",
+            "compliance_tests",
             "edge_cases",
             "offline_sync_tests",
         ]:
@@ -54,9 +58,20 @@ def get_required_test_ids() -> dict[str, list[str]]:
                 continue
             for test in tests:
                 if isinstance(test, dict) and "id" in test:
+                    deferred_to = test.get("deferred_to")
+                    if deferred_to:
+                        # Count deferrals but don't include in required
+                        deferred_count += 1
+                        deferred_by_target[deferred_to] = deferred_by_target.get(deferred_to, 0) + 1
+                        continue
                     ids.append(test["id"])
         if ids:
             required[module_name] = ids
+
+    if deferred_count:
+        print(f"Deferred tests (excluded from required): {deferred_count}")
+        for target in sorted(deferred_by_target.keys()):
+            print(f"  → {target}: {deferred_by_target[target]} tests")
 
     return required
 
