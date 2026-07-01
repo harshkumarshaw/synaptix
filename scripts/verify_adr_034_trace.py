@@ -1,26 +1,32 @@
 """Manually trace ADR-034 worked example against current implementation."""
+
 import asyncio
+import datetime
 import os
 import uuid
-import datetime
-from datetime import timezone
-from sqlalchemy import text, select
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.pool import NullPool
+
+from app.models.electives import (
+    Elective,
+    ElectiveAllocation,
+    StudentElectivePreference,
+)
+from app.schemas.electives import AllocationRunRequest
 
 # Import the service and models
 from app.services.elective_service import ElectiveService
-from app.schemas.electives import AllocationRunRequest
-from app.models.electives import Elective, StudentElectivePreference, ElectiveAllocation, ElectiveAllocationRun
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.pool import NullPool
 
 # Tenant and curriculum IDs
 TENANT_ID = uuid.UUID("00000000-0000-0000-0000-000000000001")
 CURRICULUM_ID = uuid.UUID("33333333-3333-3333-3333-333333333333")
 
+
 async def main():
     database_url = os.environ.get(
         "SNX_DATABASE_URL",
-        "postgresql+asyncpg://snx_test:snx_test_pass@localhost:5436/synaptix_test"
+        "postgresql+asyncpg://snx_test:snx_test_pass@localhost:5436/synaptix_test",
     )
     engine = create_async_engine(database_url, poolclass=NullPool)
     session_factory = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
@@ -28,9 +34,13 @@ async def main():
     async with session_factory() as session:
         # Disable foreign key triggers for seeding (single transaction)
         await session.execute(text("SET session_replication_role = 'replica'"))
-        
+
         # Step 1: Clean up electives tables
-        await session.execute(text("TRUNCATE TABLE student_elective_preferences, elective_allocations, electives, elective_allocation_runs CASCADE"))
+        await session.execute(
+            text(
+                "TRUNCATE TABLE student_elective_preferences, elective_allocations, electives, elective_allocation_runs CASCADE"
+            )
+        )
 
         # Step 2: Seed Electives (A, B, C) with capacity 4 each
         sa_id_a = uuid.UUID("a0000000-0000-0000-0000-000000000000")
@@ -71,12 +81,11 @@ async def main():
 
         # Seed students with preferences per ADR-034
         students = {
-            f"S{i}": uuid.UUID(f"{i:08x}-0000-0000-0000-000000000000")
-            for i in range(1, 11)
+            f"S{i}": uuid.UUID(f"{i:08x}-0000-0000-0000-000000000000") for i in range(1, 11)
         }
 
         # Submission times
-        base_time = datetime.datetime(2026, 6, 30, 9, 0, 0, tzinfo=timezone.utc)
+        base_time = datetime.datetime(2026, 6, 30, 9, 0, 0, tzinfo=datetime.UTC)
         sub_times = {
             "S1": base_time,
             "S2": base_time + datetime.timedelta(seconds=30),
@@ -115,7 +124,7 @@ async def main():
                     elective_id=elective_map[el_code],
                     block="Block 1",
                     rank_position=rank,
-                    submitted_at=sub_times[sname]
+                    submitted_at=sub_times[sname],
                 )
                 session.add(pref)
         await session.flush()
@@ -138,6 +147,7 @@ async def main():
         except Exception as e:
             print("ERROR OCCURRED:", e)
             import traceback
+
             traceback.print_exc()
             return
 
@@ -167,25 +177,34 @@ async def main():
 
         print("# ADR-034 Worked Example Trace Results")
         print("\n## Verification Status")
-        
+
         all_passed = True
         for code in ["A", "B", "C"]:
             match = actual.get(code, set()) == expected[code]
             status = "PASS" if match else "FAIL"
             if not match:
                 all_passed = False
-            print(f"- **Elective {code}**: expected {sorted(list(expected[code]))}, got {sorted(list(actual.get(code, set())))} -> **{status}**")
+            print(
+                f"- **Elective {code}**: expected {sorted(list(expected[code]))}, got {sorted(list(actual.get(code, set())))} -> **{status}**"
+            )
 
         print(f"\n- **Total allocated**: {result.total_allocated} (expected 10)")
-        print(f"- **Unallocated pending review**: {result.total_unallocated_pending_review} (expected 0)")
+        print(
+            f"- **Unallocated pending review**: {result.total_unallocated_pending_review} (expected 0)"
+        )
         print(f"- **Allocations by rank**: {result.allocations_by_rank}")
         print(f"- **Overall status**: **{'PASS' if all_passed else 'FAIL'}**")
 
         # Cleanup table after verification
-        await session.execute(text("TRUNCATE TABLE student_elective_preferences, elective_allocations, electives, elective_allocation_runs CASCADE"))
+        await session.execute(
+            text(
+                "TRUNCATE TABLE student_elective_preferences, elective_allocations, electives, elective_allocation_runs CASCADE"
+            )
+        )
         await session.commit()
 
     await engine.dispose()
+
 
 if __name__ == "__main__":
     asyncio.run(main())

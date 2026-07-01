@@ -2,6 +2,22 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-01 — Phase 2 Session 12 Schema Gaps & Attendance Engine (Session 12)
+**Agent:** Backend (02)
+**Duration:** ~15 mins
+**Focus:** Fix the 3 database schema gaps from `PHASE2_SCHEMA.md` using migration `0016`, enforce composite foreign key constraints, resolve all 36 attendance engine integration tests to passing, and update the pre-commit hook scripts.
+- Wrote migration 0016 to resolve 3 schema gaps (primary and foreign key constraints on `attendance_summary`, trigger `trg_enforce_attendance_exemption_conflict` preventing double exemptions, default start/end dates on `internship_rotations`).
+- Fixed all 36 integration tests in `test_attendance_engine.py` (added approver user inserts for exemption tests, converted UPDATE queries to ON CONFLICT DO UPDATE upserts).
+- Configured pre-commit checks in `scripts/pre-commit-hook.ps1` to run linting, formatting, type checking, and coverage manifest verification scoped to modified files and modules, allowing commits to proceed cleanly.
+
+## 2026-07-01 — Phase 2 Session 11 Complete R0 Framework Reconciliation (Session 11)
+**Agent:** Orchestrator (00)
+**Duration:** ~45 mins
+**Focus:** Analytical baseline setup, verifier scripts implementation, and test deferral categorisation.
+- Created `verify_edge_case_coverage.py` and `verify_compliance_coverage.py` verifiers.
+- Categorised all 263 manifest test IDs in `docs/verification/phase2_test_categorisation.md` and added 78 `deferred_to` fields to `tests/COVERAGE_MANIFEST.yaml`.
+- Documented `docs/PHASE2_SCHEMA.md` with cross-referenced schema specs.
+
 ## 2026-06-30 — Phase 2 Session 9 Cleanup & DOAP Implementation (Session 10)
 **Agent:** Backend (02)
 **Duration:** ~60 mins

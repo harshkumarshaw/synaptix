@@ -27,7 +27,7 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from packages.shared.db.base import TenantScopedBase
+from packages.shared.db.base import Base, TenantScopedBase
 
 
 class Attendance(TenantScopedBase):
@@ -104,7 +104,7 @@ class Attendance(TenantScopedBase):
     updated_by: Mapped[uuid.UUID | None] = mapped_column(PGUUID(as_uuid=True), nullable=True)
 
 
-class AttendanceSummary(TenantScopedBase):
+class AttendanceSummary(Base):
     """Materialised attendance summary per student per course per phase per category.
 
     Recalculated on every attendance INSERT/UPDATE/DELETE via service layer.
@@ -112,16 +112,14 @@ class AttendanceSummary(TenantScopedBase):
     """
 
     __tablename__ = "attendance_summary"
-    __table_args__ = (
-        # Composite PK: no surrogate id; uniqueness is (tenant, student, course, phase, category)
-        # NOTE: TenantScopedBase provides 'id' — but the migration uses a composite PK.
-        # The migration's composite PK overrides at the DB level; here we map the columns.
-    )
 
-    student_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False, index=True)
-    course_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
-    professional_phase: Mapped[str] = mapped_column(String(20), nullable=False)
-    attendance_category: Mapped[str] = mapped_column(String(30), nullable=False)
+    tenant_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    student_id: Mapped[uuid.UUID] = mapped_column(
+        PGUUID(as_uuid=True), primary_key=True, index=True
+    )
+    course_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), primary_key=True)
+    professional_phase: Mapped[str] = mapped_column(String(20), primary_key=True)
+    attendance_category: Mapped[str] = mapped_column(String(30), primary_key=True)
 
     sessions_conducted: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     sessions_present: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
@@ -149,6 +147,13 @@ class AttendanceSummary(TenantScopedBase):
     last_recalculated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False, server_default="NOW()"
     )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default="NOW()"
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default="NOW()"
+    )
+    deleted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class AttendanceExemption(TenantScopedBase):

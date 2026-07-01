@@ -31,6 +31,13 @@ class InternshipRotation(TenantScopedBase):
 
     __tablename__ = "internship_rotations"
 
+    student_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
+    department: Mapped[str] = mapped_column(String(100), nullable=False)
+    start_date: Mapped[date] = mapped_column(Date(), nullable=False)
+    end_date: Mapped[date] = mapped_column(Date(), nullable=False)
+    leave_days_used: Mapped[int] = mapped_column(nullable=False, server_default="0")
+    status: Mapped[str] = mapped_column(String(30), nullable=False, server_default="scheduled")
+
 
 class LeaveRequest(TenantScopedBase):
     """Student leave request with workflow-driven approval.

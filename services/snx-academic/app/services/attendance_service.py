@@ -15,20 +15,27 @@ Conflict resolution (offline vs online sync):
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
+from typing import Any
 
 from sqlalchemy import select, text
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.attendance import Attendance, AttendanceAccommodation, AttendanceSummary
+from app.models.attendance import (
+    Attendance,
+    AttendanceAccommodation,
+    AttendanceExemption,
+    AttendanceSummary,
+)
 from app.schemas.attendance import (
     AttendanceBulkMarkRequest,
     AttendanceMarkRequest,
     EligibilityCheckOut,
 )
 from app.services.audit_logger import write_audit_log
+from packages.shared.errors import AttendanceCorrectionWindowExpiredError
 from packages.shared.logging import get_logger
 
 logger = get_logger(__name__)
@@ -83,8 +90,38 @@ class AttendanceService:
         Returns:
             The upserted Attendance record.
         """
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         original_ts = req.original_marked_at or now
+
+        # 1. 24-hour Correction Window Validation (ATT-E006)
+        stmt_existing = select(Attendance).where(
+            Attendance.tenant_id == self._tenant_id,
+            Attendance.student_id == req.student_id,
+            Attendance.event_id == req.event_id,
+            Attendance.deleted_at.is_(None),
+        )
+        res_existing = await self._db.execute(stmt_existing)
+        existing = res_existing.scalars().first()
+
+        if existing:
+            age = now - existing.created_at
+            if age > timedelta(hours=24) and not req.is_hod_approved:
+                raise AttendanceCorrectionWindowExpiredError(
+                    "Attendance correction window expired. HOD approval required."
+                )
+
+        # 2. Cancelled Event Verification (ATT-E004)
+        from app.models.calendar import Event
+
+        event_stmt = select(Event).where(
+            Event.tenant_id == self._tenant_id, Event.id == req.event_id
+        )
+        res_event = await self._db.execute(event_stmt)
+        event = res_event.scalars().first()
+
+        needs_review = False
+        if event and event.status == "cancelled":
+            needs_review = True
 
         stmt = (
             pg_insert(Attendance)
@@ -103,12 +140,13 @@ class AttendanceService:
                 qr_token=req.qr_token,
                 marked_at=now,
                 original_marked_at=original_ts,
-                needs_review=False,
+                needs_review=needs_review,
                 created_by=self._actor_id,
                 updated_by=self._actor_id,
             )
             .on_conflict_do_update(
-                constraint="uq_attendance_event_student",
+                index_elements=["tenant_id", "event_id", "student_id"],
+                index_where=text("deleted_at IS NULL"),
                 set_={
                     "status": pg_insert(Attendance).excluded.status,
                     "method": pg_insert(Attendance).excluded.method,
@@ -119,8 +157,8 @@ class AttendanceService:
                         "GREATEST(COALESCE(attendance.original_marked_at, attendance.marked_at), EXCLUDED.marked_at)"
                     ),
                     "needs_review": text(
-                        # Flag for review if method changes (e.g., offline→online conflict)
-                        "attendance.method != EXCLUDED.method"
+                        # Flag for review if method changes or if excluded already needs review
+                        "attendance.method != EXCLUDED.method OR EXCLUDED.needs_review"
                     ),
                 },
             )
@@ -130,6 +168,7 @@ class AttendanceService:
         result = await self._db.execute(stmt)
         attendance = result.scalars().one()
         await self._db.flush()
+        await self._db.refresh(attendance)
 
         # Recalculate summary for this student+course+phase+category
         await self._recalculate_summary(
@@ -177,6 +216,27 @@ class AttendanceService:
         Returns:
             List of upserted Attendance records.
         """
+        # Check for bulk absent change alert (ATT-E005)
+        absent_count = sum(1 for r in req.records if r.status == "absent")
+        if absent_count > 20:
+            logger.warning(
+                "Bulk attendance change alert: >20 students marked absent at once",
+                extra={
+                    "tenant_id": str(self._tenant_id),
+                    "event_id": str(req.event_id),
+                    "absent_count": absent_count,
+                },
+            )
+            await write_audit_log(
+                db=self._db,
+                tenant_id=self._tenant_id,
+                actor_user_id=self._actor_id,
+                action="BULK_ABSENT_ALERT_TRIGGERED",
+                resource_type="event",
+                resource_id=req.event_id,
+                new_values={"absent_count": absent_count},
+            )
+
         results: list[Attendance] = []
         for record in req.records:
             single = AttendanceMarkRequest(
@@ -201,6 +261,7 @@ class AttendanceService:
         student_id: uuid.UUID,
         course_id: uuid.UUID,
         professional_phase: str,
+        late_counts_as_half: bool = False,
     ) -> EligibilityCheckOut:
         """Check NMC attendance eligibility for a student in a course+phase.
 
@@ -215,25 +276,38 @@ class AttendanceService:
             student_id: Student UUID.
             course_id: Course UUID.
             professional_phase: e.g. 'Phase II'.
+            late_counts_as_half: If True, late arrivals count as 0.5 present.
 
         Returns:
             EligibilityCheckOut with per-threshold pass/fail results.
         """
-        # Get theory summary
-        theory_summary = await self._get_summary(
-            student_id, course_id, professional_phase, "theory"
-        )
-        # Get practical summary (aggregates practical + clinical + doap + ece)
-        practical_pct = await self._get_aggregate_practical_pct(
-            student_id, course_id, professional_phase
-        )
+        # Get theory summary/percentage
+        if late_counts_as_half:
+            theory_pct = await self._calculate_dynamic_pct(
+                student_id, course_id, professional_phase, ["theory"], late_counts_as_half
+            )
+            practical_pct = await self._calculate_dynamic_pct(
+                student_id,
+                course_id,
+                professional_phase,
+                ["practical", "clinical", "doap", "ece"],
+                late_counts_as_half,
+            )
+        else:
+            theory_summary = await self._get_summary(
+                student_id, course_id, professional_phase, "theory"
+            )
+            theory_pct = theory_summary.attendance_pct if theory_summary else Decimal("0.00")
+            # Get practical summary (aggregates practical + clinical + doap + ece)
+            practical_pct = await self._get_aggregate_practical_pct(
+                student_id, course_id, professional_phase
+            )
 
         # Check for active accommodations (threshold overrides)
         theory_threshold, practical_threshold = await self._get_effective_thresholds(
             student_id, professional_phase
         )
 
-        theory_pct = theory_summary.attendance_pct if theory_summary else Decimal("0.00")
         is_theory_ok = theory_pct >= theory_threshold
         is_practical_ok = practical_pct >= practical_threshold
 
@@ -258,6 +332,56 @@ class AttendanceService:
             is_eligible=is_theory_ok and is_practical_ok,
             failures=failures,
         )
+
+    async def _calculate_dynamic_pct(
+        self,
+        student_id: uuid.UUID,
+        course_id: uuid.UUID,
+        professional_phase: str,
+        categories: list[str],
+        late_counts_as_half: bool,
+    ) -> Decimal:
+        """Calculate dynamic attendance percentage including late scaling."""
+        sql = text("""
+            SELECT
+                COUNT(*) FILTER (WHERE e.status = 'conducted' AND a.deleted_at IS NULL) AS conducted,
+                COUNT(*) FILTER (WHERE e.status = 'conducted' AND a.status = 'present' AND a.deleted_at IS NULL) AS present,
+                COUNT(*) FILTER (WHERE e.status = 'conducted' AND a.status = 'excused' AND a.deleted_at IS NULL) AS excused,
+                COUNT(*) FILTER (WHERE e.status = 'conducted' AND a.status = 'official_duty' AND a.deleted_at IS NULL) AS official_duty,
+                COUNT(*) FILTER (WHERE e.status = 'conducted' AND a.status = 'medical' AND a.deleted_at IS NULL) AS medical,
+                COUNT(*) FILTER (WHERE e.status = 'conducted' AND a.status = 'late' AND a.deleted_at IS NULL) AS late
+            FROM attendance a
+            JOIN events e ON e.tenant_id = a.tenant_id AND e.id = a.event_id
+            JOIN event_courses ec ON ec.tenant_id = e.tenant_id AND ec.event_id = e.id
+            WHERE a.tenant_id = :tenant_id
+              AND a.student_id = :student_id
+              AND ec.course_id = :course_id
+              AND a.professional_phase = :professional_phase
+              AND a.attendance_category = ANY(:categories)
+        """)
+        result = await self._db.execute(
+            sql,
+            {
+                "tenant_id": self._tenant_id,
+                "student_id": student_id,
+                "course_id": course_id,
+                "professional_phase": professional_phase,
+                "categories": list(categories),
+            },
+        )
+        row = result.one_or_none()
+        if not row or not row.conducted:
+            return Decimal("0.00")
+
+        numerator = row.present + row.excused + row.official_duty + row.medical
+        if late_counts_as_half:
+            numerator += Decimal(str(row.late)) * Decimal("0.5")
+        else:
+            # Under standard rules, late counts as absent (0.0)
+            pass
+
+        pct = (Decimal(str(numerator)) / Decimal(str(row.conducted))) * Decimal("100.00")
+        return Decimal(str(round(pct, 2)))
 
     # ─────────────────────────────────────────────────────────────────────
     # Public: Summary query helpers
@@ -449,6 +573,8 @@ class AttendanceService:
         from datetime import date
 
         today = date.today()
+
+        # 1. Check for student-specific overrides
         stmt = select(AttendanceAccommodation).where(
             AttendanceAccommodation.tenant_id == self._tenant_id,
             AttendanceAccommodation.student_id == student_id,
@@ -464,4 +590,224 @@ class AttendanceService:
             practical = accommodation.practical_threshold_override or PRACTICAL_THRESHOLD
             return theory, practical
 
+        # 2. Check for active tenant-wide emergency override (e.g. pandemic) - ATT-E008
+        global_uuid = uuid.UUID("00000000-0000-0000-0000-000000000000")
+        stmt_global = select(AttendanceAccommodation).where(
+            AttendanceAccommodation.tenant_id == self._tenant_id,
+            AttendanceAccommodation.student_id == global_uuid,
+            AttendanceAccommodation.effective_from <= today,
+            AttendanceAccommodation.effective_until >= today,
+            AttendanceAccommodation.deleted_at.is_(None),
+        )
+        res_global = await self._db.execute(stmt_global)
+        global_accommodation = res_global.scalars().first()
+
+        if global_accommodation:
+            theory = global_accommodation.theory_threshold_override or THEORY_THRESHOLD
+            practical = global_accommodation.practical_threshold_override or PRACTICAL_THRESHOLD
+            return theory, practical
+
         return THEORY_THRESHOLD, PRACTICAL_THRESHOLD
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Public: Exemption management (ATT-NMC-016, ATT-NMC-017)
+    # ─────────────────────────────────────────────────────────────────────
+
+    async def grant_exemption(
+        self,
+        student_id: uuid.UUID,
+        event_id: uuid.UUID,
+        reason: str,
+        approved_by: uuid.UUID,
+    ) -> Attendance:
+        """Grant an attendance exemption for a student at an event.
+
+        Creates an AttendanceExemption record, marks the student as 'exempt',
+        and logs the action in the audit trail.
+        """
+        # Create exemption log entry
+        exemption = AttendanceExemption(
+            tenant_id=self._tenant_id,
+            student_id=student_id,
+            event_id=event_id,
+            reason=reason,
+            approved_by=approved_by,
+            created_by=self._actor_id,
+            updated_by=self._actor_id,
+        )
+        self._db.add(exemption)
+
+        # Retrieve event details to fill required fields in attendance
+        from app.models.calendar import Event
+
+        event_stmt = select(Event).where(Event.tenant_id == self._tenant_id, Event.id == event_id)
+        res_event = await self._db.execute(event_stmt)
+        event = res_event.scalars().one()
+
+        # Seed attendance as 'exempt'
+        req = AttendanceMarkRequest(
+            student_id=student_id,
+            event_id=event_id,
+            status="exempt",
+            attendance_category=event.attendance_category,  # type: ignore[arg-type]
+            professional_phase=event.professional_phase,  # type: ignore[arg-type]
+            method="manual",
+        )
+        attendance = await self.mark_attendance(req)
+        await self._db.flush()
+
+        # NMC-ATT-017 Audit logging
+        await write_audit_log(
+            db=self._db,
+            tenant_id=self._tenant_id,
+            actor_user_id=self._actor_id,
+            action="ATTENDANCE_EXEMPTION_GRANTED",
+            resource_type="attendance_exemption",
+            resource_id=exemption.id,
+            new_values={
+                "student_id": str(student_id),
+                "event_id": str(event_id),
+                "reason": reason,
+                "approved_by": str(approved_by),
+            },
+        )
+
+        return attendance
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Public: At-Risk & Trajectory Analysis (ATT-009, ATT-010)
+    # ─────────────────────────────────────────────────────────────────────
+
+    async def get_at_risk_students(
+        self,
+        course_id: uuid.UUID,
+        professional_phase: str,
+        theory_threshold: Decimal | None = None,
+        practical_threshold: Decimal | None = None,
+    ) -> list[dict[str, Any]]:
+        """Get list of students whose attendance is below the required thresholds."""
+        t_thresh = theory_threshold or THEORY_THRESHOLD
+        p_thresh = practical_threshold or PRACTICAL_THRESHOLD
+
+        sql = text("""
+            WITH theory_stats AS (
+                SELECT
+                    student_id,
+                    attendance_pct AS theory_pct
+                FROM attendance_summary
+                WHERE tenant_id = :tenant_id
+                  AND course_id = :course_id
+                  AND professional_phase = :professional_phase
+                  AND attendance_category = 'theory'
+                  AND deleted_at IS NULL
+            ),
+            practical_stats AS (
+                SELECT
+                    student_id,
+                    CASE WHEN SUM(sessions_conducted) = 0 THEN 0.00
+                         ELSE ROUND(
+                             100.0 * SUM(sessions_present + sessions_excused + sessions_official_duty + sessions_medical)::numeric
+                             / SUM(sessions_conducted), 2
+                         )
+                    END AS practical_pct
+                FROM attendance_summary
+                WHERE tenant_id = :tenant_id
+                  AND course_id = :course_id
+                  AND professional_phase = :professional_phase
+                  AND attendance_category IN ('practical', 'clinical', 'doap', 'ece')
+                  AND deleted_at IS NULL
+                GROUP BY student_id
+            )
+            SELECT
+                s.id as student_id,
+                u.full_name,
+                COALESCE(t.theory_pct, 0.00) as theory_pct,
+                COALESCE(p.practical_pct, 0.00) as practical_pct
+            FROM students s
+            JOIN users u ON u.tenant_id = s.tenant_id AND u.id = s.user_id
+            LEFT JOIN theory_stats t ON t.student_id = s.id
+            LEFT JOIN practical_stats p ON p.student_id = s.id
+            WHERE s.tenant_id = :tenant_id
+              AND (COALESCE(t.theory_pct, 0.00) < :theory_threshold OR COALESCE(p.practical_pct, 0.00) < :practical_threshold)
+        """)
+
+        result = await self._db.execute(
+            sql,
+            {
+                "tenant_id": self._tenant_id,
+                "course_id": course_id,
+                "professional_phase": professional_phase,
+                "theory_threshold": t_thresh,
+                "practical_threshold": p_thresh,
+            },
+        )
+
+        return [
+            {
+                "student_id": row.student_id,
+                "full_name": row.full_name,
+                "theory_pct": Decimal(str(row.theory_pct)),
+                "practical_pct": Decimal(str(row.practical_pct)),
+            }
+            for row in result.all()
+        ]
+
+    async def predict_trajectory(
+        self,
+        student_id: uuid.UUID,
+        course_id: uuid.UUID,
+        professional_phase: str,
+        category: str = "theory",
+    ) -> str:
+        """Predict attendance trajectory (improving, declining, stable)."""
+        sql = text("""
+            SELECT a.status
+            FROM attendance a
+            JOIN events e ON e.tenant_id = a.tenant_id AND e.id = a.event_id
+            JOIN event_courses ec ON ec.tenant_id = e.tenant_id AND ec.event_id = e.id
+            WHERE a.tenant_id = :tenant_id
+              AND a.student_id = :student_id
+              AND ec.course_id = :course_id
+              AND a.professional_phase = :professional_phase
+              AND a.attendance_category = :category
+              AND e.status = 'conducted'
+              AND a.deleted_at IS NULL
+            ORDER BY e.date ASC, e.start_time ASC
+        """)
+
+        result = await self._db.execute(
+            sql,
+            {
+                "tenant_id": self._tenant_id,
+                "student_id": student_id,
+                "course_id": course_id,
+                "professional_phase": professional_phase,
+                "category": category,
+            },
+        )
+
+        rows = result.all()
+        if len(rows) < 4:
+            return "stable"
+
+        # Split into first and second halves
+        mid = len(rows) // 2
+        first_half = list(rows[:mid])
+        second_half = list(rows[mid:])
+
+        def get_pct(records: list[Any]) -> float:
+            attended = sum(
+                1
+                for r in records
+                if r.status in ("present", "excused", "official_duty", "medical", "exempt")
+            )
+            return (attended / len(records)) * 100.0
+
+        p1 = get_pct(first_half)
+        p2 = get_pct(second_half)
+
+        if p2 > p1 + 5.0:
+            return "improving"
+        elif p2 < p1 - 5.0:
+            return "declining"
+        return "stable"

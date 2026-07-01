@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Verify that docs/DECISIONS.md contains a sequential ADR series with no gaps.
 
 Exits 0 if all ADRs are present and sequential.
@@ -89,9 +88,9 @@ def main() -> int:
             print(f"  ADR-{num:03d}: {adrs[num]}")
 
     if missing:
-        print(f"\n=== GAPS DETECTED ===")
+        print("\n=== GAPS DETECTED ===")
         print(f"Missing ADR numbers: {[f'ADR-{n:03d}' for n in missing]}")
-        print(f"\nGap detail:")
+        print("\nGap detail:")
         for n in missing:
             prev = n - 1
             nxt = n + 1

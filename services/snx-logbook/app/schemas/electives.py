@@ -96,10 +96,14 @@ class PreferencesSubmitRequest(BaseModel):
         elective_ids = [p.elective_id for p in self.preferences]
 
         if len(ranks) != len(set(ranks)):
-            raise ValueError("Duplicate rank_position values are not allowed within a block submission")
+            raise ValueError(
+                "Duplicate rank_position values are not allowed within a block submission"
+            )
 
         if len(elective_ids) != len(set(elective_ids)):
-            raise ValueError("Duplicate elective_id values are not allowed within a block submission")
+            raise ValueError(
+                "Duplicate elective_id values are not allowed within a block submission"
+            )
 
         # Ranks must start at 1 and be contiguous (1, 2, 3 — not 1, 3, 5)
         sorted_ranks = sorted(ranks)

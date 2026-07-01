@@ -14,9 +14,7 @@ from __future__ import annotations
 import uuid
 
 import pytest
-import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession
-
 
 # ---------------------------------------------------------------------------
 # ELEC-003: FCFS allocation — ADR-034 worked example
@@ -33,8 +31,8 @@ async def test_elec_003_fcfs_allocation(db_session: AsyncSession) -> None:
     - First 4 to want A get A; first 4 to want B get B; first 2 to want C get C
     - All 10 students allocated (in FCFS, order = submission time)
     """
-    from app.services.elective_service import ElectiveService
     from app.schemas.electives import AllocationRunRequest
+    from app.services.elective_service import ElectiveService
 
     tenant_id = uuid.uuid4()
     curriculum_id = uuid.uuid4()
@@ -78,8 +76,8 @@ async def test_elec_004_ranked_allocation_adr034_example(db_session: AsyncSessio
     - allocations_by_rank: {rank_1: 9, rank_2: 1}
     - 0 unallocated
     """
-    from app.services.elective_service import ElectiveService
     from app.schemas.electives import AllocationRunRequest
+    from app.services.elective_service import ElectiveService
 
     tenant_id = uuid.uuid4()
     curriculum_id = uuid.uuid4()
@@ -119,8 +117,8 @@ async def test_elec_005_reallocation_additive(db_session: AsyncSession) -> None:
     - Run additive reallocate
     - Existing 8 allocations unchanged; 2 new ones created
     """
-    from app.services.elective_service import ElectiveService
     from app.schemas.electives import AllocationRunRequest
+    from app.services.elective_service import ElectiveService
 
     tenant_id = uuid.uuid4()
     curriculum_id = uuid.uuid4()
@@ -157,8 +155,8 @@ async def test_elec_006_reallocation_full(db_session: AsyncSession) -> None:
     - Verify new allocations are created
     - audit_log has two entries (initial + reallocate)
     """
-    from app.services.elective_service import ElectiveService
     from app.schemas.electives import AllocationRunRequest
+    from app.services.elective_service import ElectiveService
 
     tenant_id = uuid.uuid4()
     curriculum_id = uuid.uuid4()
@@ -184,16 +182,18 @@ async def test_elec_006_reallocation_full(db_session: AsyncSession) -> None:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.xfail(strict=False, reason="ELEC-007: elective_allocation_runs audit row not yet implemented")
+@pytest.mark.xfail(
+    strict=False, reason="ELEC-007: elective_allocation_runs audit row not yet implemented"
+)
 @pytest.mark.asyncio
 async def test_elec_007_allocation_run_audit_row(db_session: AsyncSession) -> None:
     """
     ELEC-007: Every live run_allocation inserts exactly 1 row into elective_allocation_runs
     with correct totals and algorithm_used.
     """
-    from app.services.elective_service import ElectiveService
-    from app.schemas.electives import AllocationRunRequest
     from app.models.electives import ElectiveAllocationRun
+    from app.schemas.electives import AllocationRunRequest
+    from app.services.elective_service import ElectiveService
     from sqlalchemy import select
 
     tenant_id = uuid.uuid4()
@@ -232,10 +232,10 @@ async def test_elec_009_dry_run_matches_live(db_session: AsyncSession) -> None:
     ELEC-009: Dry-run returns same allocation counts as live run
     but writes no rows to elective_allocations or elective_allocation_runs.
     """
-    from app.services.elective_service import ElectiveService
-    from app.schemas.electives import AllocationRunRequest
     from app.models.electives import ElectiveAllocation
-    from sqlalchemy import select, func
+    from app.schemas.electives import AllocationRunRequest
+    from app.services.elective_service import ElectiveService
+    from sqlalchemy import func, select
 
     tenant_id = uuid.uuid4()
     curriculum_id = uuid.uuid4()
@@ -263,9 +263,9 @@ async def test_elec_009_dry_run_matches_live(db_session: AsyncSession) -> None:
 
     # Verify no actual rows written
     count = await db_session.scalar(
-        select(func.count()).select_from(ElectiveAllocation).where(
-            ElectiveAllocation.tenant_id == tenant_id
-        )
+        select(func.count())
+        .select_from(ElectiveAllocation)
+        .where(ElectiveAllocation.tenant_id == tenant_id)
     )
     assert count == 0
 

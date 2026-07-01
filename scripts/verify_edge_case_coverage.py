@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Verify that every edge case catalogued in tests/EDGE_CASES.md has a corresponding test.
 
 Scans EDGE_CASES.md for EC-NNN identifiers and ATT-E/LOG-E/etc edge case IDs,

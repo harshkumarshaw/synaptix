@@ -20,7 +20,6 @@ import uuid
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # ELEC-NMC-001: Elective duration — 2 blocks × 2 weeks = 4 weeks total
 # ---------------------------------------------------------------------------
@@ -36,7 +35,6 @@ async def test_elec_nmc_001_elective_duration_four_weeks() -> None:
     ELEC-NMC-001: NMC CBME 2019 Reg 7 — Elective blocks must total 4 weeks (2 × 2 weeks).
     Validator must reject an elective configuration where block_duration_weeks != 2.
     """
-    from app.services.elective_service import ElectiveService
     from app.schemas.electives import ElectiveCreate
 
     # Block duration = 1 week — must raise compliance error

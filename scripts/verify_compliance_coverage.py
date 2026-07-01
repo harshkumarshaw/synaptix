@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """Verify that every NMC compliance test declared in COVERAGE_MANIFEST.yaml is:
   1. Implemented in test files (ID appears in codebase)
   2. Has an entry in tests/NMC_COMPLIANCE_TESTS.md (regulation-to-test mapping)
@@ -119,7 +118,7 @@ def main() -> int:
             if not in_code:
                 not_in_code.append(tid)
 
-    print(f"\n=== Compliance Test Status ===")
+    print("\n=== Compliance Test Status ===")
     print(f"Active declared: {len(active)}")
     print(f"In compliance doc ({COMPLIANCE_TESTS_DOC.name}): {len(doc_ids)}")
     print(f"In test codebase:             {len(code_ids)}")
@@ -155,7 +154,7 @@ def main() -> int:
         failures.append(f"{len(not_in_code)} compliance test(s) not implemented in codebase")
 
     if failures:
-        print(f"\nBuild FAILED:")
+        print("\nBuild FAILED:")
         for f in failures:
             print(f"  - {f}")
         return 1

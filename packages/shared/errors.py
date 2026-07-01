@@ -188,6 +188,14 @@ class AttendanceConflictError(SynaptixError):
     code = "SNX-ATT-006"
 
 
+class AttendanceCorrectionWindowExpiredError(SynaptixError):
+    """Raised when trying to correct attendance after the 24h window has passed
+    without HOD approval.
+    """
+
+    code = "SNX-ATT-008"
+
+
 class QRCodeExpiredError(SynaptixError):
     """Raised when a student scans an expired QR code for attendance."""
 

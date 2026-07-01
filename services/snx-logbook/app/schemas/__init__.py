@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+from app.schemas.doap import (
+    DoapProgressionResponse,
+    DoapSessionCreate,
+    DoapSessionResponse,
+    DoapStateResponse,
+)
 from app.schemas.electives import (
     AllocationResponse,
     AllocationRunRequest,
@@ -16,13 +22,6 @@ from app.schemas.logbook import (
     FoundationCourseHoursLog,
     FoundationCourseRecordResponse,
     FoundationCourseSignoffPayload,
-)
-
-from app.schemas.doap import (
-    DoapSessionCreate,
-    DoapSessionResponse,
-    DoapStateResponse,
-    DoapProgressionResponse,
 )
 
 __all__ = [
@@ -47,4 +46,3 @@ __all__ = [
     "DoapStateResponse",
     "DoapProgressionResponse",
 ]
-

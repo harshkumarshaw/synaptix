@@ -71,7 +71,7 @@ def get_required_test_ids() -> dict[str, list[str]]:
     if deferred_count:
         print(f"Deferred tests (excluded from required): {deferred_count}")
         for target in sorted(deferred_by_target.keys()):
-            print(f"  → {target}: {deferred_by_target[target]} tests")
+            print(f"  -> {target}: {deferred_by_target[target]} tests")
 
     return required
 

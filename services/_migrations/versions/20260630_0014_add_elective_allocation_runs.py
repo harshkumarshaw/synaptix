@@ -55,7 +55,9 @@ def upgrade() -> None:
         sa.Column("force_reallocate", sa.String(20), nullable=True),  # 'additive' | 'full' | NULL
         sa.Column("total_students", sa.Integer(), nullable=False, server_default="0"),
         sa.Column("total_allocated", sa.Integer(), nullable=False, server_default="0"),
-        sa.Column("total_unallocated_pending_review", sa.Integer(), nullable=False, server_default="0"),
+        sa.Column(
+            "total_unallocated_pending_review", sa.Integer(), nullable=False, server_default="0"
+        ),
         sa.Column("run_duration_ms", sa.Integer(), nullable=True),
         # JSONB summary: {"rank_1": 9, "rank_2": 1, "manual": 0}
         sa.Column(
@@ -90,9 +92,7 @@ def upgrade() -> None:
             ondelete="RESTRICT",
         ),
         sa.UniqueConstraint("tenant_id", "id", name="uq_elective_allocation_runs_tenant_id"),
-        sa.CheckConstraint(
-            "block IN ('Block 1', 'Block 2')", name="chk_allocation_runs_block"
-        ),
+        sa.CheckConstraint("block IN ('Block 1', 'Block 2')", name="chk_allocation_runs_block"),
         sa.CheckConstraint(
             "algorithm_used IN ('fcfs', 'ranked')", name="chk_allocation_runs_algorithm"
         ),
@@ -231,7 +231,11 @@ def downgrade() -> None:
     )
 
     # 1. Drop elective_allocation_runs
-    op.execute("DROP TRIGGER IF EXISTS trg_elective_allocation_runs_update ON elective_allocation_runs;")
-    op.execute("DROP POLICY IF EXISTS tenant_isolation_elective_allocation_runs ON elective_allocation_runs;")
+    op.execute(
+        "DROP TRIGGER IF EXISTS trg_elective_allocation_runs_update ON elective_allocation_runs;"
+    )
+    op.execute(
+        "DROP POLICY IF EXISTS tenant_isolation_elective_allocation_runs ON elective_allocation_runs;"
+    )
     op.drop_index("idx_allocation_runs_tenant_block", table_name="elective_allocation_runs")
     op.drop_table("elective_allocation_runs")

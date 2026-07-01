@@ -17,18 +17,18 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import (
+    JSON,
     Boolean,
     CheckConstraint,
     DateTime,
     Integer,
-    JSON,
     String,
     UniqueConstraint,
 )
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from packages.shared.db.base import Base, SoftDeleteMixin, TenantScopedBase, TimestampMixin
+from packages.shared.db.base import Base, TenantScopedBase, TimestampMixin
 
 
 class Elective(TenantScopedBase):
@@ -72,9 +72,7 @@ class ElectiveAllocationRun(Base, TimestampMixin):
     __tablename__ = "elective_allocation_runs"
     __table_args__ = (
         UniqueConstraint("tenant_id", "id", name="uq_elective_allocation_runs_tenant_id"),
-        CheckConstraint(
-            "block IN ('Block 1', 'Block 2')", name="chk_allocation_runs_block"
-        ),
+        CheckConstraint("block IN ('Block 1', 'Block 2')", name="chk_allocation_runs_block"),
         CheckConstraint(
             "algorithm_used IN ('fcfs', 'ranked')", name="chk_allocation_runs_algorithm"
         ),
@@ -106,7 +104,9 @@ class ElectiveAllocationRun(Base, TimestampMixin):
 
     total_students: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     total_allocated: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    total_unallocated_pending_review: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    total_unallocated_pending_review: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0
+    )
     run_duration_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     results_summary: Mapped[dict] = mapped_column(JSON, nullable=False, default=dict)
 

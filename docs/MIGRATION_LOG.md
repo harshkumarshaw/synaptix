@@ -290,8 +290,28 @@ Add `evidence_asset_ids` (JSONB) and `notes` (TEXT) columns to the `doap_session
 
 **Verification:**
 - Run DOAP unit and integration tests (`pytest tests/unit/doap/ tests/integration/doap/`) and verify they pass.
+---
 
+### Migration: 20260701_d7ce0e58cbc0_resolve_schema_gaps
+**Created:** 2026-07-01
+**Agent:** Backend Agent (02)
+**Revision ID:** d7ce0e58cbc0
+**Depends on:** bf787ada4ee4
 
+**Purpose:**
+Address three database schema gaps from `PHASE2_SCHEMA.md` to ensure constraints and defaults conform to the system design:
+- Add primary key and composite foreign keys on `attendance_summary`.
+- Add RLS policy and unique triggers on `attendance_exemptions` to prevent double exemptions.
+- Add default values (`started_at`, `ended_at`, `deleted_at`) for columns on `internship_rotations`.
 
+**Changes:**
+- Altered `attendance_summary` to add a primary key constraint on `(tenant_id, student_id, course_id, professional_phase, attendance_category)` and a foreign key constraint referencing `users` on `(tenant_id, student_id)`.
+- Altered `attendance_exemptions` to enforce foreign keys referencing `users` on `(tenant_id, approved_by)` and `(tenant_id, student_id)`.
+- Created trigger function `fn_attendance_exemption_conflict_check` and trigger `trg_enforce_attendance_exemption_conflict` on `attendance_exemptions` to prevent overlapping exemptions.
+- Altered `internship_rotations` to add defaults for `started_at`, `ended_at`, and `deleted_at`.
 
+**Rollback Tested:** Yes
+
+**Verification:**
+- Connect to database, run alembic migrations (`alembic upgrade head`), and execute pytest integration tests on attendance engine (`pytest tests/integration/test_attendance_engine.py`).
 

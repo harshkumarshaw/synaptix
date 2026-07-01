@@ -41,6 +41,8 @@ class AttendanceMarkRequest(BaseModel):
     qr_token: str | None = None
     # Conflict resolution: original offline timestamp when syncing
     original_marked_at: datetime | None = None
+    # 24-hour correction window override
+    is_hod_approved: bool = False
 
 
 class AttendanceBulkMarkRequest(BaseModel):

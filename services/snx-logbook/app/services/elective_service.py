@@ -561,11 +561,13 @@ class ElectiveService:
 
             capacity_map[pref.elective_id] -= 1
             allocated_students.add(pref.student_id)
-            allocations.append({
-                "student_id": pref.student_id,
-                "elective_id": pref.elective_id,
-                "allocation_method": "fcfs",
-            })
+            allocations.append(
+                {
+                    "student_id": pref.student_id,
+                    "elective_id": pref.elective_id,
+                    "allocation_method": "fcfs",
+                }
+            )
             allocations_by_rank["fcfs"] = allocations_by_rank.get("fcfs", 0) + 1
 
         return allocations, allocations_by_rank
@@ -601,15 +603,15 @@ class ElectiveService:
         for rank in range(1, 11):
             rank_key = f"rank_{rank}"
             # Collect candidates at this rank, sorted by tie-breaking criteria
-            rank_candidates: list[tuple[float, uuid.UUID, uuid.UUID]] = []  # (sort_key, student_id, elective_id)
+            rank_candidates: list[tuple[float, uuid.UUID, uuid.UUID]] = (
+                []
+            )  # (sort_key, student_id, elective_id)
 
             for student_id in candidate_students:
                 if student_id in allocated_students:
                     continue
                 prefs = prefs_by_student.get(student_id, [])
-                pref_at_rank = next(
-                    (p for p in prefs if p.rank_position == rank), None
-                )
+                pref_at_rank = next((p for p in prefs if p.rank_position == rank), None)
                 if pref_at_rank is None:
                     continue
                 if capacity_map.get(pref_at_rank.elective_id, 0) <= 0:
@@ -633,11 +635,13 @@ class ElectiveService:
 
                 capacity_map[elective_id] -= 1
                 allocated_students.add(student_id)
-                allocations.append({
-                    "student_id": student_id,
-                    "elective_id": elective_id,
-                    "allocation_method": rank_key,
-                })
+                allocations.append(
+                    {
+                        "student_id": student_id,
+                        "elective_id": elective_id,
+                        "allocation_method": rank_key,
+                    }
+                )
                 allocations_by_rank[rank_key] = allocations_by_rank.get(rank_key, 0) + 1
 
         return allocations, allocations_by_rank

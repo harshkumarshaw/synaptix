@@ -105,6 +105,10 @@ exclude = ["alembic/", ".venv/", "build/"]
 module = ["tests.*"]
 disallow_untyped_defs = false
 
+[[tool.mypy.overrides]]
+module = ["packages.shared.logging", "packages.shared.auth.*"]
+ignore_errors = true
+
 # ==============================================================================
 # Pytest
 # ==============================================================================

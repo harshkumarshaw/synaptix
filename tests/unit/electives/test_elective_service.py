@@ -15,8 +15,6 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
-import pytest_asyncio
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -56,8 +54,8 @@ def mock_db() -> AsyncMock:
 @pytest.mark.asyncio
 async def test_elec_001_create_elective(mock_db: AsyncMock, tenant_id: uuid.UUID) -> None:
     """ELEC-001: Create elective with valid payload inserts row, returns ElectiveResponse."""
-    from app.services.elective_service import ElectiveService
     from app.schemas.electives import ElectiveCreate, ElectiveResponse
+    from app.services.elective_service import ElectiveService
 
     payload = ElectiveCreate(
         curriculum_id=uuid.uuid4(),
@@ -71,6 +69,7 @@ async def test_elec_001_create_elective(mock_db: AsyncMock, tenant_id: uuid.UUID
     # by patching the Elective constructor to return a MagicMock with required attributes
     import datetime as dt
     from unittest.mock import patch
+
     from app.models.electives import Elective
 
     fake_elective = MagicMock(spec=Elective)
@@ -82,12 +81,14 @@ async def test_elec_001_create_elective(mock_db: AsyncMock, tenant_id: uuid.UUID
     fake_elective.block = "Block 1"
     fake_elective.elective_type = "clinical"
     fake_elective.capacity = 10
-    fake_elective.created_at = dt.datetime(2026, 6, 30, 12, 0, tzinfo=dt.timezone.utc)
-    fake_elective.updated_at = dt.datetime(2026, 6, 30, 12, 0, tzinfo=dt.timezone.utc)
+    fake_elective.created_at = dt.datetime(2026, 6, 30, 12, 0, tzinfo=dt.UTC)
+    fake_elective.updated_at = dt.datetime(2026, 6, 30, 12, 0, tzinfo=dt.UTC)
 
     service = ElectiveService(db=mock_db)
     with patch("app.services.elective_service.Elective", return_value=fake_elective):
-        result = await service.create_elective(tenant_id=tenant_id, payload=payload, actor_id=uuid.uuid4())
+        result = await service.create_elective(
+            tenant_id=tenant_id, payload=payload, actor_id=uuid.uuid4()
+        )
 
     assert isinstance(result, ElectiveResponse)
     assert result.code == "ELEC-CARD-01"
@@ -105,12 +106,12 @@ async def test_elec_002_submit_preferences_idempotent(
     test_db_session: AsyncSession, tenant_id: uuid.UUID, student_id: uuid.UUID
 ) -> None:
     """ELEC-002: Submit preferences: full-block replace; re-submit replaces existing set."""
-    from app.services.elective_service import ElectiveService
-    from app.schemas.electives import PreferencesSubmitRequest, PreferenceItem
     from app.models.electives import Elective, StudentElectivePreference
+    from app.schemas.electives import PreferenceItem, PreferencesSubmitRequest
+    from app.services.elective_service import ElectiveService
 
     elective_ids = [uuid.uuid4() for _ in range(3)]
-    
+
     # Seed electives
     for eid in elective_ids:
         elective = Elective(
@@ -145,6 +146,7 @@ async def test_elec_002_submit_preferences_idempotent(
 
     # Query preferences
     from sqlalchemy import select
+
     result = await test_db_session.execute(
         select(StudentElectivePreference).where(
             StudentElectivePreference.tenant_id == tenant_id,
@@ -167,12 +169,12 @@ async def test_elec_e001_preferences_replace_on_resubmit(
     test_db_session: AsyncSession, tenant_id: uuid.UUID, student_id: uuid.UUID
 ) -> None:
     """ELEC-E001: Student submits 5 preferences, then re-submits 3. Final state = 3 preferences only."""
-    from app.services.elective_service import ElectiveService
-    from app.schemas.electives import PreferencesSubmitRequest, PreferenceItem
     from app.models.electives import Elective, StudentElectivePreference
+    from app.schemas.electives import PreferenceItem, PreferencesSubmitRequest
+    from app.services.elective_service import ElectiveService
 
     elective_ids = [uuid.uuid4() for _ in range(5)]
-    
+
     # Seed electives
     for eid in elective_ids:
         elective = Elective(
@@ -191,23 +193,32 @@ async def test_elec_e001_preferences_replace_on_resubmit(
     first_payload = PreferencesSubmitRequest(
         student_id=student_id,
         block="Block 1",
-        preferences=[PreferenceItem(elective_id=elective_ids[i], rank_position=i + 1) for i in range(5)],
+        preferences=[
+            PreferenceItem(elective_id=elective_ids[i], rank_position=i + 1) for i in range(5)
+        ],
     )
     second_payload = PreferencesSubmitRequest(
         student_id=student_id,
         block="Block 1",
-        preferences=[PreferenceItem(elective_id=elective_ids[i], rank_position=i + 1) for i in range(3)],
+        preferences=[
+            PreferenceItem(elective_id=elective_ids[i], rank_position=i + 1) for i in range(3)
+        ],
     )
 
     service = ElectiveService(db=test_db_session)
-    await service.submit_preferences(tenant_id=tenant_id, payload=first_payload, actor_id=student_id)
+    await service.submit_preferences(
+        tenant_id=tenant_id, payload=first_payload, actor_id=student_id
+    )
     await test_db_session.commit()
 
-    result = await service.submit_preferences(tenant_id=tenant_id, payload=second_payload, actor_id=student_id)
+    result = await service.submit_preferences(
+        tenant_id=tenant_id, payload=second_payload, actor_id=student_id
+    )
     await test_db_session.commit()
 
     # Query active preferences
     from sqlalchemy import select
+
     res = await test_db_session.execute(
         select(StudentElectivePreference).where(
             StudentElectivePreference.tenant_id == tenant_id,
@@ -242,7 +253,9 @@ async def test_elec_e002_tie_breaking_deterministic(
     rank1 = service._tiebreak_rank(s1, run_id)
     rank2 = service._tiebreak_rank(s1, run_id)  # same call — must be identical
     assert rank1 == rank2  # deterministic
-    assert service._tiebreak_rank(s1, run_id) != service._tiebreak_rank(s2, run_id)  # different students differ
+    assert service._tiebreak_rank(s1, run_id) != service._tiebreak_rank(
+        s2, run_id
+    )  # different students differ
 
 
 # ---------------------------------------------------------------------------
@@ -286,16 +299,15 @@ async def test_elec_e003_withdraw_restores_capacity(
 
 
 @pytest.mark.asyncio
-async def test_elec_e004_dry_run_does_not_write(
-    mock_db: AsyncMock, tenant_id: uuid.UUID
-) -> None:
+async def test_elec_e004_dry_run_does_not_write(mock_db: AsyncMock, tenant_id: uuid.UUID) -> None:
     """ELEC-E004: Dry-run run_allocation makes no writes to elective_allocations."""
-    from app.services.elective_service import ElectiveService
     from app.schemas.electives import AllocationRunRequest
+    from app.services.elective_service import ElectiveService
 
     elective_id_a = str(uuid.uuid4())
     # Mock: execute returns rows for the elective lock query + empty prefs + empty allocated set
     call_count = 0
+
     def side_effect_execute(*args, **kwargs):
         nonlocal call_count
         call_count += 1
@@ -326,7 +338,9 @@ async def test_elec_e004_dry_run_does_not_write(
         force_reallocate=None,
     )
     service = ElectiveService(db=mock_db)
-    result = await service.run_allocation(tenant_id=tenant_id, request=payload, actor_id=uuid.uuid4())
+    result = await service.run_allocation(
+        tenant_id=tenant_id, request=payload, actor_id=uuid.uuid4()
+    )
 
     assert result.dry_run is True
     # No rows should be added in dry-run mode
@@ -344,8 +358,8 @@ async def test_elec_e005_submit_preferences_blocked_after_allocation(
     mock_db: AsyncMock, tenant_id: uuid.UUID, student_id: uuid.UUID
 ) -> None:
     """ELEC-E005: If block already allocated, submit_preferences must raise SNX-ELEC-002."""
-    from app.services.elective_service import ElectiveService, ElectiveBlockAllocatedError
-    from app.schemas.electives import PreferencesSubmitRequest, PreferenceItem
+    from app.schemas.electives import PreferenceItem, PreferencesSubmitRequest
+    from app.services.elective_service import ElectiveBlockAllocatedError, ElectiveService
 
     # Mock: allocation exists for this student+block
     mock_result = MagicMock()
@@ -371,10 +385,12 @@ async def test_elec_e005_submit_preferences_blocked_after_allocation(
 
 
 @pytest.mark.asyncio
-async def test_elec_e006_duplicate_rank_rejected(tenant_id: uuid.UUID, student_id: uuid.UUID) -> None:
+async def test_elec_e006_duplicate_rank_rejected(
+    tenant_id: uuid.UUID, student_id: uuid.UUID
+) -> None:
     """ELEC-E006: Two preferences with same rank_position in same block must be rejected at schema level."""
+    from app.schemas.electives import PreferenceItem, PreferencesSubmitRequest
     from pydantic import ValidationError
-    from app.schemas.electives import PreferencesSubmitRequest, PreferenceItem
 
     elective_id_1 = uuid.uuid4()
     elective_id_2 = uuid.uuid4()
@@ -400,12 +416,12 @@ async def test_elec_e007_wrong_block_elective_rejected(
     test_db_session: AsyncSession, tenant_id: uuid.UUID, student_id: uuid.UUID
 ) -> None:
     """ELEC-E007: Preference referencing a Block 2 elective submitted for Block 1 must be rejected."""
-    from app.services.elective_service import ElectiveService, ElectiveWrongBlockError
-    from app.schemas.electives import PreferencesSubmitRequest, PreferenceItem
     from app.models.electives import Elective
+    from app.schemas.electives import PreferenceItem, PreferencesSubmitRequest
+    from app.services.elective_service import ElectiveService, ElectiveWrongBlockError
 
     wrong_elective_id = uuid.uuid4()
-    
+
     # Seed wrong elective (Block 2)
     elective = Elective(
         id=wrong_elective_id,
