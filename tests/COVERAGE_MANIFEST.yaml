@@ -1247,3 +1247,27 @@ doap_skills:
       description: "Stage skip attempt (P without prior A) - must reject with specific error"
       type: edge_case
       deferred_to: null
+
+admissions:
+  module_id: I-02
+  test_file_prefix: "tests/unit/admissions/"
+  enforcement: standard
+
+  critical_tests:
+    - id: ADM-001
+      description: "Create admission application"
+      type: unit
+      deferred_to: null
+    - id: ADM-002
+      description: "List admission applications with pagination"
+      type: unit
+      deferred_to: null
+    - id: ADM-003
+      description: "Get admission application by ID"
+      type: unit
+      deferred_to: null
+    - id: ADM-004
+      description: "Unique application_number per tenant enforced"
+      type: unit
+      deferred_to: null
+

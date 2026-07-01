@@ -14,6 +14,7 @@ from fastapi.responses import JSONResponse
 from app.config import get_settings
 from app.routers import (
     academic,
+    admissions,
     attendance,
     calendar,
     curriculum_migration,
@@ -114,9 +115,9 @@ def create_app() -> FastAPI:
     app.include_router(lesson_plan.router, prefix="/api/v1")
     app.include_router(session.router, prefix="/api/v1")
     app.include_router(curriculum_migration.router, prefix="/api/v1")
-    # Phase 2
     app.include_router(attendance.router, prefix="/api/v1")
     app.include_router(leave.router, prefix="/api/v1")
+    app.include_router(admissions.router, prefix="/api/v1")
 
     @app.get("/health", tags=["infrastructure"])
     async def health() -> dict[str, str]:

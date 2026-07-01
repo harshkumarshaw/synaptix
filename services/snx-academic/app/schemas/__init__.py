@@ -5,6 +5,10 @@ from app.schemas.academic import (
     TimetableEntryResponse,
     TimetableSlotResponse,
 )
+from app.schemas.admissions import (
+    AdmissionApplicationCreate,
+    AdmissionApplicationResponse,
+)
 from app.schemas.calendar import (
     EventCreate,
     EventResponse,
@@ -40,4 +44,6 @@ __all__ = [
     "SessionResponse",
     "CurriculumMigrationAuditCreate",
     "CurriculumMigrationAuditResponse",
+    "AdmissionApplicationCreate",
+    "AdmissionApplicationResponse",
 ]

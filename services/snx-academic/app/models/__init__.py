@@ -1,4 +1,5 @@
 from app.models.academic_year import AcademicYear
+from app.models.admissions import AdmissionApplication
 from app.models.attendance import (
     Attendance,
     AttendanceAccommodation,
@@ -52,4 +53,5 @@ __all__ = [
     "AttendanceAccommodation",
     "LeaveRequest",
     "InternshipRotation",
+    "AdmissionApplication",
 ]

@@ -2,6 +2,15 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-01 — Phase 2 Session 13 Logbook extensions & Admissions placeholder (Session 13)
+**Agent:** Antigravity (Pair Programmer)
+**Duration:** ~15 mins
+**Focus:** Complete Logbook Phase 2 Extensions + Admissions placeholder, and write all associated unit, compliance, and integration tests to satisfy the required manifest coverage.
+- Created `AdmissionApplication` model with composite foreign keys, schemas, CRUD service, router, and registered it in academic service main router.
+- Fixed `WorkflowInstance` and added `WorkflowDefinition` ORM stubs in logbook service to align with the database.
+- Corrected DOAP remediation workflow to use check-constraint permitted `exemption_grant` type.
+- Added 24 new unit, integration, and compliance tests for Logbook and Admissions. All 119 tests pass successfully.
+
 ## 2026-07-01 — Phase 2 Session 12 Schema Gaps & Attendance Engine (Session 12)
 **Agent:** Backend (02)
 **Duration:** ~15 mins

@@ -5,7 +5,7 @@ from typing import Annotated
 from uuid import UUID, uuid4
 
 from app.models.logbook_phase2 import DoapSessionRecord, LogbookEntry
-from app.models.stubs import WorkflowInstance
+from app.models.stubs import WorkflowDefinition, WorkflowInstance
 from app.schemas.doap import (
     DoapSessionCreate,
     DoapSessionResponse,
@@ -125,15 +125,32 @@ class DoapService:
 
         # Step 6: Trigger remediation workflow if Re decision (DOAP-006)
         if data.faculty_decision == "Re":
+            def_stmt = select(WorkflowDefinition).where(
+                WorkflowDefinition.tenant_id == tenant_id,
+                WorkflowDefinition.code == "doap_remediation",
+            )
+            def_res = await self.db.execute(def_stmt)
+            wf_def = def_res.scalar_one_or_none()
+            if not wf_def:
+                wf_def = WorkflowDefinition(
+                    tenant_id=tenant_id,
+                    code="doap_remediation",
+                    name="DOAP Remediation Workflow",
+                    steps={},
+                )
+                self.db.add(wf_def)
+                await self.db.flush()
+
             workflow = WorkflowInstance(
                 id=uuid4(),
                 tenant_id=tenant_id,
-                workflow_definition_code="doap_remediation",
-                entity_type="doap_session_record",
+                definition_id=wf_def.id,
+                entity_type="exemption_grant",
                 entity_id=new_record.id,
+                current_step="submitted",
                 status="initiated",
-                initiated_by=user_id,
-                initiated_at=datetime.now(UTC),
+                history=[],
+                context={},
             )
             self.db.add(workflow)
 

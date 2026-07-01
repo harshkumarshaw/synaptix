@@ -6,6 +6,7 @@ from app.schemas.doap import DoapSessionCreate
 from app.services.doap_service import DoapService
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 
 class TestDoapWorkflows:
@@ -45,8 +46,10 @@ class TestDoapWorkflows:
 
         # Assert workflow was created in DB
         workflows_res = await test_db_session.execute(
-            select(WorkflowInstance).where(
-                WorkflowInstance.entity_type == "doap_session_record",
+            select(WorkflowInstance)
+            .options(selectinload(WorkflowInstance.definition))
+            .where(
+                WorkflowInstance.entity_type == "exemption_grant",
                 WorkflowInstance.entity_id == result.id,
             )
         )

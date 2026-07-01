@@ -5,6 +5,27 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Session 13] — 2026-07-01
+
+### Added — Logbook Phase 2 Extensions & Admissions Placeholder
+
+- **services/snx-academic/app/models/admissions.py** [NEW]: Created `AdmissionApplication` model with composite foreign keys.
+- **services/snx-academic/app/schemas/admissions.py** [NEW]: Created `AdmissionApplicationCreate` and `Response` Pydantic v2 schemas.
+- **services/snx-academic/app/services/admission_service.py** [NEW]: Implemented CRUD endpoints and audit logger actions for Admissions.
+- **services/snx-academic/app/routers/admissions.py** [NEW]: Created Admissions FastAPI router endpoints.
+- **services/snx-academic/app/main.py**: Registered Admissions router in snx-academic service.
+- **tests/unit/admissions/test_admissions.py** [NEW]: Added 4 new unit tests covering ADM-001 through ADM-004.
+- **tests/unit/logbook/** [NEW]: Created unit tests for entries, backdating thresholds, IA Cap (20%), and sign-off validations.
+- **tests/compliance/logbook/test_nmc_compliance.py** [NEW]: Added NMC compliance test stubs for digital logbook.
+
+### Fixed & Improved
+
+- **services/snx-logbook/app/models/stubs.py**: Fixed `WorkflowInstance` to match the actual database schema and added `WorkflowDefinition` ORM stub.
+- **services/snx-logbook/app/services/logbook_service.py**: Improved backdating workflow to dynamically fetch/seed definition rows.
+- **services/snx-logbook/app/services/doap_service.py**: Updated DOAP remediation workflow to use `exemption_grant` to pass PostgreSQL check constraints.
+- **tests/conftest.py**: Truncated `admission_applications` during database cleanup.
+- **tests/integration/doap/test_doap_workflows.py**: Eager loaded definition relationships and queried for `exemption_grant` to avoid lazy load issues in async tests.
+
 ## [Session 12] — 2026-07-01
 
 ### Fixed — Schema Gaps & Attendance Tests

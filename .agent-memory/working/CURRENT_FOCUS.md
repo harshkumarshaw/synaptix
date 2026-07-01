@@ -4,16 +4,16 @@
 
 ## Current Phase
 
-**R1 IN PROGRESS (Session 12 complete).**
-**Next:** Session 13 — Logbook Phase 2 + Admission placeholder.
+**R1 IN PROGRESS (Session 13 complete).**
+**Next:** Session 14 — Calendar, Planning & Cross-cutting tests.
 
-## R1 Baseline (as of 2026-07-01 Session 12)
+## R1 Baseline (as of 2026-07-01 Session 13)
 
 | Metric | Value |
 |--------|-------|
-| Active required tests | 185 |
-| Implemented | 127 |
-| Missing (Phase 2 remaining) | **58** |
+| Active required tests | 189 |
+| Implemented | 151 |
+| Missing (Phase 2 remaining) | **38** |
 | Deferred Phase 2.5 | 17 |
 | Deferred Phase 3 | 41 |
 | Deferred Phase 4 | 20 |
@@ -33,6 +33,11 @@
 
 ## Recently Completed
 
+- **2026-07-01 Session 13 (Backend Agent — Logbook & Admissions):**
+  - Created Admissions placeholder ORM models, schemas, CRUD service, and router.
+  - Corrected logbook stubs/services to support dynamic definitions and match PostgreSQL check constraints.
+  - Implemented 24 new unit, compliance, and integration tests for Logbook and Admissions.
+  - Session log: `docs/sessions/2026-07-01-session-13.md`
 - **2026-07-01 Session 12 (Backend 02 — Attendance & Schema Gaps):**
   - Wrote migration 0016 fixing three database schema gaps (constraints, triggers, defaults).
   - Fixed and verified all 36 integration tests in `test_attendance_engine.py` (Tier 1: 22/22, Tier 2: 14/14).

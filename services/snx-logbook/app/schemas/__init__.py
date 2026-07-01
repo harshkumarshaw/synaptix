@@ -23,6 +23,14 @@ from app.schemas.logbook import (
     FoundationCourseRecordResponse,
     FoundationCourseSignoffPayload,
 )
+from app.schemas.logbook_phase2 import (
+    LogbookEntryCreate,
+    LogbookEntryResponse,
+    LogbookSignoffRequest,
+    LogbookEntrySubmitRequest,
+    LogbookAssessmentResponse,
+    IAMarksCalculation,
+)
 
 __all__ = [
     # Logbook / Foundation / AETCOM
@@ -32,6 +40,13 @@ __all__ = [
     "AetcomReflectionSubmit",
     "AetcomSignoffPayload",
     "AetcomRecordResponse",
+    # Phase 2
+    "LogbookEntryCreate",
+    "LogbookEntryResponse",
+    "LogbookSignoffRequest",
+    "LogbookEntrySubmitRequest",
+    "LogbookAssessmentResponse",
+    "IAMarksCalculation",
     # Electives
     "ElectiveCreate",
     "ElectiveResponse",
@@ -46,3 +61,4 @@ __all__ = [
     "DoapStateResponse",
     "DoapProgressionResponse",
 ]
+
