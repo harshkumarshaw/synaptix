@@ -306,3 +306,46 @@ Any implementation notes or known limitations.
 - [x] Tested (17 passed)
 - [x] Verified
 **Notes:** Prevents certification when below expectation.
+
+---
+
+## Session 14 Updates (2026-07-01)
+
+### FCS-SYNC-001: Foundation Course Hours Auto-Recomputed from Attendance
+**Source:** NMC CBME 2019 Reg 6.2 — Foundation Course minimum hours (120h over Phase I)
+**Effective Date:** 2026-07-01
+**Applies To:** MBBS Phase I
+**Implementing Module:** DB trigger 	rg_attendance_foundation_sync on ttendance table
+**Test IDs:** FCS-001 (PASS), FCS-002 (XFAIL — trigger actor_id bug, fix in S15)
+**Test File:** tests/integration/test_sync.py
+**Compliance Status:**
+- [x] Implemented (DB trigger fires on attendance INSERT/UPDATE/DELETE)
+- [x] Tested (FCS-001 passing; FCS-002 xfail pending migration fix)
+- [ ] Fully Verified (FCS-002 blocked by trigger bug)
+**Notes:** Trigger auto-updates oundation_course_records.completed_hours. FCS-002 will pass after migration 0017 fixes actor_id column name in trigger.
+
+### AES-SYNC-001: AETCOM Reflection Status Auto-Set from Attendance
+**Source:** NMC CBME 2023 Reg 7.3 — AETCOM mandatory attendance and reflection
+**Effective Date:** 2026-07-01
+**Applies To:** MBBS all phases
+**Implementing Module:** DB trigger 	rg_attendance_aetcom_sync on ttendance table
+**Test IDs:** AES-001 (PASS)
+**Test File:** tests/integration/test_sync.py
+**Compliance Status:**
+- [x] Implemented (DB trigger fires on attendance INSERT)
+- [x] Tested (AES-001 passing)
+- [x] Verified
+**Notes:** When attendance is marked 'present' for an AETCOM session, the corresponding aetcom_records row status changes to 'reflection_submitted'.
+
+### ATT-THRESHOLD-001: Two-Threshold Attendance (75% Theory / 80% Practical)
+**Source:** NMC CBME 2019 Reg 8.1 — Attendance thresholds for examination eligibility
+**Effective Date:** 2026-07-01
+**Applies To:** MBBS all phases
+**Implementing Module:** A-11 (Attendance Engine)
+**Test IDs:** ATT-NMC-001 (75.00% eligible), ATT-NMC-002 (74.99% blocked), ATT-NMC-013 (80.00% eligible), ATT-NMC-014 (79.99% blocked)
+**Test File:** tests/integration/test_attendance_engine.py
+**Compliance Status:**
+- [x] Implemented
+- [x] Tested (All 4 boundary tests PASSING)
+- [x] Verified
+**Notes:** Phase D spot-check confirmed boundary precision to 2 decimal places.

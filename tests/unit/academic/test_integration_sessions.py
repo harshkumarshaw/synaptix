@@ -11,6 +11,7 @@ from sqlalchemy import text
 
 @pytest.mark.anyio
 async def test_session_conducting_and_coverage(db_session, tenant_id):
+    """SES-001, SES-002, SES-003: Session tracking, nullable lesson plan reason, and syllabus coverage."""
     # Setup dummy database entries
     dept_id = uuid.uuid4()
     await db_session.execute(

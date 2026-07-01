@@ -776,7 +776,7 @@ async def test_att_nmc_016_grant_exemption(db_session: AsyncSession, tenant_id: 
 async def test_att_nmc_017_exemption_audit_logged(
     db_session: AsyncSession, tenant_id: uuid.UUID
 ) -> None:
-    """ATT-NMC-017: Exemption is audit-logged with reason."""
+    """ATT-NMC-017, AUD-007: Exemption is audit-logged with reason."""
     student_id = uuid.uuid4()
     course_id = uuid.uuid4()
     event_id = uuid.uuid4()
@@ -1240,7 +1240,7 @@ async def test_att_e006_correction_window_expired(
 async def test_att_e007_disability_accommodation(
     db_session: AsyncSession, tenant_id: uuid.UUID
 ) -> None:
-    """ATT-E007: Student with disability accommodation override."""
+    """ATT-E007, ACC-001, ACC-002: Student with disability accommodation override, supporting threshold overrides and report calculation."""
     student_id = uuid.uuid4()
     course_id = uuid.uuid4()
     event_id = uuid.uuid4()

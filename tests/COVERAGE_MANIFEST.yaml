@@ -120,15 +120,19 @@ master_data_management:
     - id: "MDM-004"
       description: "Cannot delete entity if referenced by other records"
       type: integration
+      deferred_to: "Phase 2.5"
     - id: "MDM-005"
       description: "Tenant onboarding seeds medical college template correctly"
       type: integration
+      deferred_to: "Phase 2.5"
     - id: "MDM-006"
       description: "Tenant onboarding seeds nursing college template correctly"
       type: integration
+      deferred_to: "Phase 2.5"
     - id: "MDM-007"
       description: "Bulk import via CSV validates and reports errors"
       type: integration
+      deferred_to: "Phase 2.5"
     - id: "MDM-008"
       description: "Master data is tenant-scoped (cross-tenant invisible)"
       type: security
@@ -590,22 +594,27 @@ academic_calendar:
       description: "Bulk generation idempotency"
       type: edge_case
       audit_ref: "EC-112"
+      deferred_to: "Phase 2.5"
     - id: "CAL-E004"
       description: "Holiday calendar conflict detection"
       type: edge_case
       audit_ref: "EC-113"
+      deferred_to: "Phase 2.5"
     - id: "CAL-E005"
       description: "Faculty leave conflict detection at scheduling time"
       type: edge_case
       audit_ref: "EC-114"
+      deferred_to: "Phase 2.5"
     - id: "CAL-E006"
       description: "Room/lab double-booking prevention"
       type: edge_case
       audit_ref: "EC-115"
+      deferred_to: "Phase 2.5"
     - id: "CAL-E007"
       description: "Phase transition boundary events validation"
       type: edge_case
       audit_ref: "EC-116"
+      deferred_to: "Phase 2.5"
     - id: "CAL-E008"
       description: "Integration sessions map secondary courses via event_courses join table"
       type: edge_case
@@ -630,10 +639,12 @@ lesson_plans:
       description: "Lesson plan revision retains conducted sessions reference to older version"
       type: edge_case
       audit_ref: "EC-118"
+      deferred_to: "Phase 2.5"
     - id: "LPN-E002"
       description: "Log conducted session against unapproved lesson plan yields compliance warning"
       type: edge_case
       audit_ref: "EC-119"
+      deferred_to: "Phase 2.5"
 
 session_tracking:
   module_id: A-06

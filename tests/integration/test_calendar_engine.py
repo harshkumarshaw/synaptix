@@ -11,6 +11,7 @@ from sqlalchemy import text
 
 @pytest.mark.anyio
 async def test_calendar_engine_lifecycle(db_session, tenant_id):
+    """CAL-001, CAL-E001, CAL-E002: Calendar event creation, rescheduling, and cancellation."""
     # Setup JMN Tenant if not present
     tenant = await db_session.get(Tenant, tenant_id)
     if not tenant:
@@ -165,3 +166,104 @@ async def test_calendar_engine_lifecycle(db_session, tenant_id):
     assert cancelled_event.status == "cancelled"
     assert cancelled_event.cancellation_reason == "Holiday declared"
     assert cancelled_event.cancelled_by == faculty_user_id
+
+
+@pytest.mark.anyio
+async def test_calendar_integration_sessions_secondary_courses(db_session, tenant_id):
+    """CAL-E008: Integration sessions map secondary courses via event_courses join table."""
+    from app.models.calendar import Event, EventCourse
+    from app.models.course import Course
+    from app.models.tenant import Tenant
+    from sqlalchemy import select
+
+    # Setup Tenant if not present
+    tenant = await db_session.get(Tenant, tenant_id)
+    if not tenant:
+        tenant = Tenant(
+            id=tenant_id,
+            code="JMN",
+            name="JMN Medical College",
+            institution_type="medical",
+            regulatory_body="NMC",
+        )
+        db_session.add(tenant)
+        await db_session.commit()
+
+    dept_id = uuid.uuid4()
+    from sqlalchemy import text
+    await db_session.execute(
+        text("INSERT INTO departments (id, tenant_id, name, code) VALUES (:id, :t_id, 'Anatomy Dept', 'ANAT_C_E008')"),
+        {"id": dept_id, "t_id": tenant_id},
+    )
+    prog_id = uuid.uuid4()
+    await db_session.execute(
+        text("INSERT INTO programs (id, tenant_id, name, code, type, duration_years) VALUES (:id, :t_id, 'MBBS', 'MBBS-CBME-E008', 'professional_phase', 5)"),
+        {"id": prog_id, "t_id": tenant_id},
+    )
+    curr_id = uuid.uuid4()
+    await db_session.execute(
+        text("INSERT INTO curricula (id, tenant_id, program_id, name, version_code) VALUES (:id, :t_id, :p_id, 'CBME 2023', 'CBME-2023-E008')"),
+        {"id": curr_id, "t_id": tenant_id, "p_id": prog_id},
+    )
+
+    course_a = Course(
+        id=uuid.uuid4(),
+        tenant_id=tenant_id,
+        curriculum_id=curr_id,
+        department_id=dept_id,
+        name="Course A",
+        code="ANAT-A",
+        default_attendance_category="theory",
+    )
+    course_b = Course(
+        id=uuid.uuid4(),
+        tenant_id=tenant_id,
+        curriculum_id=curr_id,
+        department_id=dept_id,
+        name="Course B",
+        code="ANAT-B",
+        default_attendance_category="theory",
+    )
+    db_session.add_all([course_a, course_b])
+
+    ay_id = uuid.uuid4()
+    await db_session.execute(
+        text("INSERT INTO academic_years (id, tenant_id, name, start_date, end_date, is_current) VALUES (:id, :t_id, '2026-2027', '2026-08-01', '2027-07-31', true)"),
+        {"id": ay_id, "t_id": tenant_id},
+    )
+    batch_id = uuid.uuid4()
+    await db_session.execute(
+        text("INSERT INTO batches (id, tenant_id, academic_year_id, program_id, name, code) VALUES (:id, :t_id, :ay_id, :prog_id, 'MBBS 2026', 'MBBS2026-E008')"),
+        {"id": batch_id, "t_id": tenant_id, "ay_id": ay_id, "prog_id": prog_id},
+    )
+    await db_session.commit()
+
+    event = Event(
+        id=uuid.uuid4(),
+        tenant_id=tenant_id,
+        batch_id=batch_id,
+        academic_year_id=ay_id,
+        title="Integration Session",
+        event_type="lecture",
+        attendance_category="theory",
+        professional_phase="Phase I",
+        date=datetime.date(2026, 9, 10),
+        start_time=datetime.time(9, 0),
+        end_time=datetime.time(10, 0),
+        status="scheduled",
+    )
+    db_session.add(event)
+
+    ec_a = EventCourse(tenant_id=tenant_id, event_id=event.id, course_id=course_a.id, is_primary=True)
+    ec_b = EventCourse(tenant_id=tenant_id, event_id=event.id, course_id=course_b.id, is_primary=False)
+    db_session.add_all([ec_a, ec_b])
+    await db_session.commit()
+
+    # Query using calendar service
+    calendar_service = CalendarService(db_session)
+    full_event = await calendar_service.get_event(tenant_id, event.id)
+    assert len(full_event.courses) == 2
+    primary_course = [c for c in full_event.courses if c.is_primary][0]
+    secondary_course = [c for c in full_event.courses if not c.is_primary][0]
+    assert primary_course.course_id == course_a.id
+    assert secondary_course.course_id == course_b.id

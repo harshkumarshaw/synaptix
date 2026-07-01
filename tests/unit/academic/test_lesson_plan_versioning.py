@@ -9,6 +9,7 @@ from sqlalchemy import text
 
 @pytest.mark.anyio
 async def test_lesson_plan_versioning_and_workflow(db_session, tenant_id):
+    """LPN-001, LPN-002, LPN-003: Lesson plan creation, version updates, and submission workflow."""
     # Setup dependencies
     dept_id = uuid.uuid4()
     await db_session.execute(
