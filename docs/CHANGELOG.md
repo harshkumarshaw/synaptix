@@ -5,6 +5,23 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Session F1] — 2026-07-04
+
+### Added — Frontend Scaffold: Next.js Scaffold & Auth
+
+- **frontend-web/**: Set up the React/Next.js 14 App Router project template with TypeScript and Tailwind CSS.
+- **npm packages**: Installed core frontend packages (`axios`, `zustand`, `@tanstack/react-query`, `jose`, `react-hook-form`, `zod`, `@hookform/resolvers`, `tailwindcss-animate`).
+- **shadcn/ui**: Initialized shadcn/ui components (`button`, `card`, `input`, `label`, `form`, `sonner` toast, `sidebar`, `navigation-menu`, `dropdown-menu`, `avatar`, `badge`, `table`, `dialog`, `sheet`, `separator`, `skeleton`).
+- **stores/auth-store.ts**: Created the Zustand state store for managing JWT access tokens, auto-decoding tenant payload context on the client side, and persisting user session.
+- **lib/api.ts**: Configured Axios client instance with automatic JWT Authorization headers attachment and auto-logout on `401 Unauthorized`.
+- **components/auth/auth-guard.tsx**: Built a client-side layout wrap guard to enforce login redirection on protected routes.
+- **components/auth/login-form.tsx**: Implemented a responsive login form with client validation schema (zod) and a developer bypass panel with preset JWT tokens for Admin, Faculty, and Student roles.
+- **components/layout/app-sidebar.tsx**: Created a responsive sidebar navigation menu customized by role using Base UI render properties.
+- **app/(authenticated)/dashboard/**: Created three dashboard variants (Admin, Faculty, Student) with visual cards mapping key academic statistics.
+- **Placeholders**: Created 9 placeholder pages for attendance, logbook, DOAP, electives, leave, admissions, people, settings, and departments.
+
+---
+
 ## [Session 16] — 2026-07-04
 
 ### Added — Phase 2.5 Pull-In (11 tests)

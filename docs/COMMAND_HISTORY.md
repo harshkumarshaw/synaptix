@@ -111,3 +111,25 @@ Format: `[YYYY-MM-DD HH:MM:SS] [agent-id] command`
 [2026-07-04 13:33:00] [02-backend] $env:PYTHONPATH=".;services/snx-logbook"; uv run pytest tests/unit/logbook tests/unit/doap tests/unit/electives tests/integration/test_logbook_service.py tests/integration/test_electives.py tests/integration/doap tests/compliance/test_elective_compliance.py tests/compliance/doap -v
 [2026-07-04 13:34:00] [02-backend] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/unit/academic tests/integration/test_academic_service.py tests/integration/test_calendar_engine.py tests/integration/test_lesson_plan_service.py tests/integration/test_attendance.py tests/integration/test_leave.py tests/compliance/test_attendance_thresholds.py tests/compliance/test_nmc_compliance_stubs.py tests/security/academic -v
 ```
+
+## 2026-07-04 — Session 16
+
+```
+[2026-07-04 14:05:00] [02-backend] uv run python scripts/verify_coverage_manifest.py
+[2026-07-04 14:10:00] [02-backend] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/integration/test_calendar_engine.py -v
+[2026-07-04 14:15:00] [02-backend] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/unit/academic/test_lesson_plan_versioning.py -v
+[2026-07-04 14:20:00] [02-backend] $env:PYTHONPATH=".;services/snx-workflow"; uv run pytest tests/unit/workflow/ tests/unit/assets/ tests/integration/workflow/ tests/security/workflow/ tests/unit/mdm/ -v
+[2026-07-04 14:25:00] [02-backend] $env:PYTHONPATH=".;services/snx-logbook"; uv run pytest tests/unit/electives/ -v
+```
+
+## 2026-07-04 — Session F1
+
+```
+[2026-07-04 15:35:00] [03-frontend] npx shadcn@latest init --defaults --yes
+[2026-07-04 15:40:00] [03-frontend] npx shadcn@latest add --yes sonner sidebar navigation-menu dropdown-menu avatar badge table dialog sheet separator skeleton
+[2026-07-04 15:42:00] [03-frontend] npx shadcn@latest add --yes form
+[2026-07-04 15:46:00] [03-frontend] npm install axios zustand @tanstack/react-query jose react-hook-form zod @hookform/resolvers
+[2026-07-04 15:47:00] [03-frontend] npm install tailwindcss-animate
+[2026-07-04 15:52:00] [03-frontend] npm run build
+[2026-07-04 16:12:00] [03-frontend] npm run dev
+```

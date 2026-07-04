@@ -2,6 +2,19 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-04 — Frontend Scaffold & Auth (Session F1)
+**Agent:** Frontend (03)
+**Duration:** ~75 mins
+**Focus:** Scaffold Next.js 14 App Router project with Tailwind CSS, shadcn/ui components, Zustand store, Axios client, Login layout/flows, and Developer Bypass authentication.
+- Set up a clean Next.js 14 project in `frontend-web/` with TypeScript and Tailwind CSS.
+- Added 17 core shadcn/ui components (sidebar, navigation-menu, button, card, input, label, form, sonner, etc.) using `default` style.
+- Created `src/stores/auth-store.ts` managing user context and JWT access tokens locally using Zustand and local storage persistence.
+- Configured Axios client `src/lib/api.ts` with auto-attached JWT headers and auto-logout on `401 Unauthorized`.
+- Implemented `LoginPage` and `LoginForm` with schema-based validation (zod) and a developer bypass panel to mock JWT tokens (Admin, HOD/Faculty, Student).
+- Built responsive layout shells including `AppSidebar`, `Header` and `Breadcrumbs` using Base UI component properties.
+- Implemented three dashboard views (Admin, Faculty, Student) and 9 navigation placeholder pages.
+- Verified compilation and layout rendering successfully using a Chromium browser subagent across all three user roles.
+
 ## 2026-07-04 — Phase 2.5 Pull-In Implementation (Session 16)
 **Agent:** Backend (02)
 **Duration:** ~35 mins

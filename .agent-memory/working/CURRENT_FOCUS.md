@@ -4,8 +4,8 @@
 
 ## Current Phase
 
-**PHASE 2.5 PULL-IN COMPLETE (Session 16 done — 2026-07-04).**
-**Next:** Proceed with rest of Phase 2.5 (DOAP + Logbook NMC compliance) or Phase 3.
+**PHASE 2.5 PULL-IN COMPLETE & FRONTEND SCAFFOLD (SESSION F1) COMPLETE (2026-07-04).**
+**Next:** Begin Session F2 (FastAPI integration & Attendance marking UI).
 
 ## Phase 2 Final State (as of 2026-07-04 Session 16)
 
@@ -29,12 +29,22 @@
 - `services/snx-institution` — scaffold complete
 - `services/snx-workflow` — scaffold complete
 - `services/snx-logbook` — Phase 2 Electives & DOAP COMPLETE; NMC logbook compliance deferred to Phase 2.5
+- `frontend-web` — Scaffold & Auth COMPLETE: login page, role dashboards, sidebars, query provider, auth guards configured
 
 ## Active Branch
 
 `chore/devops-scaffolding`
 
 ## Recently Completed
+
+- **2026-07-04 Session F1 (Frontend Agent 03 — Frontend Scaffold & Auth):**
+  - Scaffolded Next.js 14 App Router project with TypeScript and Tailwind CSS v3.
+  - Configured Zustand state store, Axios API client with JWT interceptor, and client-side route Auth Guard.
+  - Implemented LoginPage with zod validation and developer bypass preset logins.
+  - Created role-based AppSidebar, Header, and breadcrumbs using Base UI render properties.
+  - Developed Admin, Faculty, and Student dashboard views and 9 navigation placeholder pages.
+  - Verified compilation and layout rendering successfully using a Chromium browser subagent across all user roles.
+  - Session log: `docs/sessions/2026-07-04-session-3.md`
 
 - **2026-07-04 Session 16 (Backend Agent 02 — Phase 2.5 Pull-In):**
   - Implemented 11 deferred tests: MDM-004..007, CAL-E003..007, LPN-E001..E002.
@@ -62,7 +72,7 @@
 
 ## Up Next (Session 17 Priority Order)
 
-1. Complete the rest of Phase 2.5 (DOAP + Logbook NMC compliance) or Phase 3.
+1. Begin Session F2: Connect frontend dashboards and attendance page with FastAPI backend services and implement attendance marking UI.
 
 ## Blockers
 
