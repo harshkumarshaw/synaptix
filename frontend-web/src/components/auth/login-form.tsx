@@ -25,9 +25,12 @@ interface LoginFormProps {
 
 // Pre-generated mock JWTs for local development bypass
 const MOCK_TOKENS = {
-  admin: "eyJhbGciOiJub25lIn0.eyJzdWIiOiJkZWQtYWRtaW4tMTIzIiwidGVuYW50X2lkIjoiZGVkLXRlbmFudC00NTYiLCJlbWFpbCI6ImFkbWluQGptbi5lZHUuaW4iLCJuYW1lIjoiRGV2IEFkbWluIiwicm9sZSI6ImFkbWluIn0.",
-  faculty: "eyJhbGciOiJub25lIn0.eyJzdWIiOiJkZWQtZmFjdWx0eS0xMjMiLCJ0ZW5hbnRfaWQiOiJkZWQtdGVuYW50LTQ1NiIsImVtYWlsIjoiZmFjdWx0eUBqbW4uZWR1LmluIiwibmFtZSI6IkRldiBGYWN1bHR5Iiwicm9sZSI6ImZhY3VsdHkifQ.",
-  student: "eyJhbGciOiJub25lIn0.eyJzdWIiOiJkZWQtc3R1ZGVudC0xMjMiLCJ0ZW5hbnRfaWQiOiJkZWQtdGVuYW50LTQ1NiIsImVtYWlsIjoic3R1ZGVudEBqbW4uZWR1LmluIiwibmFtZSI6IkRldiBTdHVkZW50Iiwicm9sZSI6InN0dWRlbnQiLCJzdHVkZW50X2lkIjoic3RkLTc4OSJ9.",
+  admin:
+    "eyJhbGciOiJub25lIn0.eyJzdWIiOiJkZWQtYWRtaW4tMTIzIiwidGVuYW50X2lkIjoiZGVkLXRlbmFudC00NTYiLCJlbWFpbCI6ImFkbWluQGptbi5lZHUuaW4iLCJuYW1lIjoiRGV2IEFkbWluIiwicm9sZSI6ImFkbWluIn0.",
+  faculty:
+    "eyJhbGciOiJub25lIn0.eyJzdWIiOiJkZWQtZmFjdWx0eS0xMjMiLCJ0ZW5hbnRfaWQiOiJkZWQtdGVuYW50LTQ1NiIsImVtYWlsIjoiZmFjdWx0eUBqbW4uZWR1LmluIiwibmFtZSI6IkRldiBGYWN1bHR5Iiwicm9sZSI6ImZhY3VsdHkifQ.",
+  student:
+    "eyJhbGciOiJub25lIn0.eyJzdWIiOiJkZWQtc3R1ZGVudC0xMjMiLCJ0ZW5hbnRfaWQiOiJkZWQtdGVuYW50LTQ1NiIsImVtYWlsIjoic3R1ZGVudEBqbW4uZWR1LmluIiwibmFtZSI6IkRldiBTdHVkZW50Iiwicm9sZSI6InN0dWRlbnQiLCJzdHVkZW50X2lkIjoic3RkLTc4OSJ9.",
 };
 
 export function LoginForm({ onSubmit, error, loading }: LoginFormProps) {
@@ -100,18 +103,32 @@ export function LoginForm({ onSubmit, error, loading }: LoginFormProps) {
             <span className="w-full border-t" />
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted-foreground">Developer Bypass</span>
+            <span className="bg-card px-2 text-muted-foreground">
+              Developer Bypass
+            </span>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2">
-          <Button variant="outline" size="sm" onClick={() => handleDevBypass("admin")}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDevBypass("admin")}
+          >
             Admin
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handleDevBypass("faculty")}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDevBypass("faculty")}
+          >
             Faculty
           </Button>
-          <Button variant="outline" size="sm" onClick={() => handleDevBypass("student")}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => handleDevBypass("student")}
+          >
             Student
           </Button>
         </div>

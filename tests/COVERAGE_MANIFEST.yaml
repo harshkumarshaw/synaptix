@@ -274,19 +274,15 @@ attendance_engine:
     - id: "ATT-003"
       description: "Mark attendance via RFID"
       type: unit
-      deferred_to: "Phase 2.5"  # RFID hardware integration — no physical device available
     - id: "ATT-004"
       description: "Mark attendance via face recognition"
       type: unit
-      deferred_to: "Phase 3"  # ML model required — not scoped for Phase 2
     - id: "ATT-005"
       description: "Mark attendance via GPS (with geofence validation)"
       type: unit
-      deferred_to: "Phase 2.5"  # Mobile app geofence — requires mobile client
     - id: "ATT-006"
       description: "Mark attendance via biometric"
       type: unit
-      deferred_to: "Phase 3"  # Biometric hardware — not scoped for Phase 2
     - id: "ATT-007"
       description: "Attendance status: present, absent, late, excused, medical, official_duty"
       type: unit
@@ -308,7 +304,6 @@ attendance_engine:
     - id: "ATT-E002"
       description: "Offline attendance with timestamp 2 hours after session end — flagged for faculty review, not auto-rejected"
       type: edge_case
-      deferred_to: "Phase 2.5"  # Offline mobile sync deferred (ADR-028)
     - id: "ATT-E003"
       description: "Duplicate attendance entry (same student, same event) is rejected"
       type: edge_case
@@ -366,52 +361,41 @@ attendance_engine:
     - id: "ATT-E017"
       description: "QR code reused: server rejects scans outside time window"
       type: security
-      deferred_to: "Phase 2.5"  # QR mobile client validation requires mobile client
     - id: "ATT-E018"
       description: "QR code HMAC tampering: server rejects invalid signatures"
       type: security
-      deferred_to: "Phase 2.5"  # Mobile client-side HMAC deferred with offline sync
     - id: "ATT-E019"
       description: "GPS attendance outside geofence: marked but flagged for review"
       type: edge_case
-      deferred_to: "Phase 2.5"  # GPS geofence requires mobile client
     - id: "ATT-E020"
       description: "Same student scans QR from two different devices: second scan rejected"
       type: edge_case
       audit_ref: "AUDIT-6.2"
-      deferred_to: "Phase 2.5"  # Requires mobile client QR scanning
 
   offline_sync_tests:
     - id: "ATT-SYNC-001"
       description: "Offline attendance entry persists in SQLite"
       type: mobile_unit
-      deferred_to: "Phase 2.5"  # Offline mobile sync deferred (ADR-028)
     - id: "ATT-SYNC-002"
       description: "Sync on connectivity restoration syncs oldest first"
       type: mobile_integration
-      deferred_to: "Phase 2.5"  # Offline mobile sync deferred (ADR-028)
     - id: "ATT-SYNC-003"
       description: "Per-entry transactional sync (interruption doesn't lose later entries)"
       type: mobile_integration
       audit_ref: "AUDIT-F1"
-      deferred_to: "Phase 2.5"  # Offline mobile sync deferred (ADR-028)
     - id: "ATT-SYNC-004"
       description: "Failed sync entry retried 3x with exponential backoff"
       type: mobile_integration
-      deferred_to: "Phase 2.5"  # Offline mobile sync deferred (ADR-028)
     - id: "ATT-SYNC-005"
       description: "Sync conflict (same student, same event, different status): later timestamp wins"
       type: mobile_integration
-      deferred_to: "Phase 2.5"  # Offline mobile sync deferred (ADR-028)
     - id: "ATT-SYNC-006"
       description: "Sync report visible to user (X synced, Y pending, Z failed)"
       type: mobile_unit
-      deferred_to: "Phase 2.5"  # Offline mobile sync deferred (ADR-028)
     - id: "ATT-SYNC-007"
       description: "Power outage during sync: resumes from last unacknowledged record"
       type: mobile_integration
       audit_ref: "AUDIT-6.1"
-      deferred_to: "Phase 2.5"  # Offline mobile sync deferred (ADR-028)
 
 # ============================================================================
 # LAYER 2: ACADEMIC — Examination Management
@@ -426,144 +410,112 @@ examination_management:
     - id: "EXM-NMC-001"
       description: "Hall ticket eligibility requires theory ≥75% AND practical ≥80% for ALL subjects"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-002"
       description: "Hall ticket eligibility requires logbook submitted AND assessed"
       type: compliance
       nmc_ref: "GMER §11.1.1.b.7"
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-003"
       description: "Hall ticket eligibility requires minimum IA tests completed per subject"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-004"
       description: "Hall ticket eligibility requires AETCOM IA completed per phase"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-005"
       description: "Hall ticket eligibility requires certifiable competencies signed off"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-006"
       description: "Hall ticket eligibility requires fee clearance"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-007"
       description: "Logbook contributes up to 20% of IA marks"
       type: compliance
       nmc_ref: "GMER §11.1.1.b.7"
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-008"
       description: "OSPE used for pre-clinical and para-clinical subjects"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-009"
       description: "OSCE used for clinical subjects"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-010"
       description: "End-of-posting clinical assessment mandatory after every posting"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-011"
       description: "NExT eligibility additionally requires elective Block 1 and Block 2 logbooks"
       type: compliance
       nmc_ref: "GMER §9.3"
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-012"
       description: "DOPS assessment type supported for clinical postings"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-013"
       description: "mini-CEX assessment type supported for clinical postings"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-NMC-014"
       description: "AETCOM IA has both written and OSCE/viva components"
       type: compliance
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
 
   critical_tests:
     - id: "EXM-001"
       description: "Create exam schedule"
       type: unit
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-002"
       description: "Generate hall tickets for eligible students"
       type: integration
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-003"
       description: "Hall ticket NOT generated for ineligible student"
       type: integration
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-004"
       description: "Principal exemption flow: ineligible student gets hall ticket with audit log"
       type: integration
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-005"
       description: "Mark entry by faculty, moderation by HOD"
       type: integration
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-006"
       description: "Result publication with student notification"
       type: integration
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-007"
       description: "Supplementary exam eligibility correctly determined"
       type: integration
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-008"
       description: "OSPE station-level marks correctly aggregated"
       type: unit
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-009"
       description: "OSCE station-level marks correctly aggregated"
       type: unit
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-010"
       description: "Grace marks policy correctly applied"
       type: unit
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
 
   edge_cases:
     - id: "EXM-E001"
       description: "Student with partial pass (theory pass, practical fail): can sit supplementary practical only"
       type: edge_case
       audit_ref: "AUDIT-E3"
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-E002"
       description: "Supplementary exam doesn't re-check current attendance (uses original attempt's)"
       type: edge_case
       audit_ref: "AUDIT-E3"
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-E003"
       description: "Hall ticket race condition: distributed lock prevents duplicate generation"
       type: edge_case
       audit_ref: "AUDIT-F3"
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-E004"
       description: "NExT eligibility recalculated after attendance correction"
       type: edge_case
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-E005"
       description: "Exam invalidated due to malpractice: results marked invalidated, re-exam linked"
       type: edge_case
       audit_ref: "AUDIT-O5"
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-E006"
       description: "Different assessment types use different scoring scales (integer, decimal, qualitative)"
       type: edge_case
       audit_ref: "AUDIT-3.6"
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-E007"
       description: "DOPS uses integer rating 1-9, OSCE uses half-points, theory uses integers 0-100"
       type: edge_case
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
     - id: "EXM-E008"
       description: "Eligibility batch generation: idempotent, repeated runs produce same result"
       type: edge_case
       audit_ref: "AUDIT-P2"
-      deferred_to: "Phase 3"  # Examination management module is Phase 3 scope
 
 # ============================================================================
 # LAYER 2: ACADEMIC — Calendar & Planning Modules (Phase 1B)
@@ -747,7 +699,6 @@ digital_logbook:
       description: "Field-level offline merge: student fields and faculty fields merged separately"
       type: edge_case
       audit_ref: "AUDIT-D4"
-      deferred_to: "Phase 2.5"  # Offline mobile logbook sync deferred (ADR-028)
     - id: "LOG-E006"
       description: "Faculty resignation: pending sign-offs delegated to HOD"
       type: edge_case
@@ -756,7 +707,6 @@ digital_logbook:
       description: "Large backlog sync (100+ entries from rural posting): per-entry transactional"
       type: edge_case
       audit_ref: "AUDIT-F1"
-      deferred_to: "Phase 2.5"  # Offline mobile sync deferred (ADR-028)
     - id: "LOG-E008"
       description: "Detained student: prior attempt logbook retained as read-only history"
       type: edge_case
@@ -868,85 +818,65 @@ internship_crmi:
     - id: "CRMI-NMC-001"
       description: "All 7 mandatory rotations enforced"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-002"
       description: "General Medicine rotation: 2 months (with 15 days Psychiatry OR TB&Resp)"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-003"
       description: "General Surgery rotation: 2 months (with 15 days Orthopaedics)"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-004"
       description: "OBG rotation: 2 months"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-005"
       description: "Paediatrics rotation: 1 month"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-006"
       description: "Community Medicine rotation: 2 months (including rural)"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-007"
       description: "Emergency/Casualty rotation: 1 month"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-008"
       description: "Elective rotation: 15 days from approved list"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-009"
       description: "75% attendance enforced PER ROTATION (not aggregate)"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-010"
       description: "Maximum 15 days leave across ENTIRE CRMI period"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-011"
       description: "Intern at 15 days leave cannot apply for further leave"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-012"
       description: "Intern at 12 days leave receives early warning"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-013"
       description: "Rotation extension for attendance shortfall: extends to reach 75%"
       type: compliance
       audit_ref: "AUDIT-E4"
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-014"
       description: "Subsequent rotations shift after extension"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-015"
       description: "Leave cap does NOT reset after extension"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-016"
       description: "CRMI Completion Certificate requires ALL rotations satisfactorily complete"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-017"
       description: "End-of-rotation assessment mandatory per rotation"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-018"
       description: "Intern logbook separate from MBBS student logbook"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-019"
       description: "Only ONE active CRMI enrollment per student"
       type: compliance
       audit_ref: "AUDIT-O6"
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
     - id: "CRMI-NMC-020"
       description: "Transfer-in CRMI requires NOC from previous hospital"
       type: compliance
-      deferred_to: "Phase 4"  # Full CRMI internship module is Phase 4 scope
 
 # ============================================================================
 # CROSS-CUTTING: NMC CBME Curriculum Versioning
@@ -973,15 +903,12 @@ curriculum_versioning:
     - id: "CUR-005"
       description: "Curriculum migration: bridge courses correctly applied"
       type: integration
-      deferred_to: "Phase 3"  # Full curriculum migration engine is Phase 3 scope (ADR-019)
     - id: "CUR-006"
       description: "Credit map preserves equivalence between curricula"
       type: integration
-      deferred_to: "Phase 3"  # Full curriculum migration engine is Phase 3 scope (ADR-019)
     - id: "CUR-007"
       description: "Migration impact analysis shows affected students/courses"
       type: integration
-      deferred_to: "Phase 3"  # Full curriculum migration engine is Phase 3 scope (ADR-019)
 
 # ============================================================================
 # CROSS-CUTTING: Multi-Tenancy
@@ -1092,91 +1019,71 @@ electives:
     - id: ELEC-001
       description: "Create elective: valid payload inserts row, returns ElectiveResponse"
       type: unit
-      deferred_to: null
     - id: ELEC-002
       description: "Submit student preferences: full-block replace, ranks 1-5, idempotent on re-submit"
       type: unit
-      deferred_to: null
     - id: ELEC-003
       description: "FCFS allocation: 10 students, 3 electives cap=4, expected allocation matches ADR-034 worked example"
       type: integration
-      deferred_to: null
     - id: ELEC-004
       description: "Ranked allocation: 10 students, 3 electives cap=4, rank-pass result matches ADR-034 worked example"
       type: integration
-      deferred_to: null
     - id: ELEC-005
       description: "Reallocation additive mode: only unallocated students assigned, existing allocations untouched"
       type: integration
-      deferred_to: null
     - id: ELEC-006
       description: "Reallocation full mode: all existing allocations cleared, fresh allocation run"
       type: integration
-      deferred_to: null
     - id: ELEC-007
       description: "Allocation run produces elective_allocation_runs audit row with correct totals"
       type: integration
-      deferred_to: null
     - id: ELEC-008
       description: "Concurrent allocation triggers don't double-allocate: row-level FOR UPDATE serialises runs"
       type: integration
-      deferred_to: "Phase 2.5"
     - id: ELEC-009
       description: "Dry-run allocation: computes result, writes no rows, returns same counts as live"
       type: integration
-      deferred_to: null
 
   compliance_tests:
     - id: ELEC-NMC-001
       description: "Elective duration enforced: two blocks of 2 weeks each within Phase III Part I (NMC CBME 2019 Reg 7)"
       type: compliance
       regulation_ref: "NMC CBME Regulations 2019, Reg 7 — Electives"
-      deferred_to: null
     - id: ELEC-NMC-002
       description: "Student must be allocated at least one clinical-category elective across both blocks"
       type: compliance
       regulation_ref: "NMC CBME Regulations 2019, Reg 7 — Electives"
-      deferred_to: null
     - id: ELEC-NMC-003
       description: "Reflection logbook entry required per elective block before NExT eligibility"
       type: compliance
       regulation_ref: "NMC CBME Regulations 2019, Reg 7.5"
-      deferred_to: null
     - id: ELEC-NMC-004
       description: "Faculty supervisor must be assigned per elective per student"
       type: compliance
       regulation_ref: "NMC CBME Regulations 2019, Reg 7.6"
-      deferred_to: null
 
   edge_cases:
     - id: ELEC-E001
       description: "Student submits preferences twice: second submission replaces first (soft-delete + re-insert)"
       type: edge_case
-      deferred_to: null
     - id: ELEC-E002
       description: "Tie-breaking: two preferences share same submitted_at; deterministic hash of student_id breaks tie"
       type: edge_case
-      deferred_to: null
     - id: ELEC-E003
       description: "Student withdraws after allocation: capacity_remaining incremented, slot freed"
       type: edge_case
-      deferred_to: null
     - id: ELEC-E004
       description: "Capacity changes between dry-run and live run: live run uses locked capacity, not dry-run snapshot"
       type: edge_case
-      deferred_to: null
     - id: ELEC-E005
       description: "Student tries to submit preference for Block 1 after Block 1 allocation exists: SNX-ELEC-002 raised"
       type: edge_case
-      deferred_to: null
     - id: ELEC-E006
       description: "Preferences submitted with duplicate rank position in same block: validation error raised"
       type: edge_case
-      deferred_to: null
     - id: ELEC-E007
       description: "Preferences submitted with elective_id belonging to wrong block: validation error raised"
       type: edge_case
-      deferred_to: null
 
 doap_skills:
   module_id: A-09
@@ -1187,66 +1094,52 @@ doap_skills:
     - id: DOAP-001
       description: "Record D stage with C decision creates record and logbook entry"
       type: unit
-      deferred_to: null
     - id: DOAP-002
       description: "Record O stage requires preceding D certified (rejection if not)"
       type: unit
-      deferred_to: null
     - id: DOAP-003
       description: "Record A stage requires preceding O certified"
       type: unit
-      deferred_to: null
     - id: DOAP-004
       description: "Record P stage requires preceding A certified"
       type: unit
-      deferred_to: null
     - id: DOAP-005
       description: "Re-attempt after R decision (attempt_type=R, same stage)"
       type: unit
-      deferred_to: null
     - id: DOAP-006
       description: "Remediation workflow auto-created on Re decision"
       type: integration
-      deferred_to: null
     - id: DOAP-007
       description: "Evidence asset IDs linked correctly"
       type: integration
-      deferred_to: null
     - id: DOAP-008
       description: "Auto-creation of logbook_entries on every DOAP record"
       type: integration
-      deferred_to: null
   
   compliance_tests:
     - id: DOAP-NMC-001
       description: "Stage progression D->O->A->P enforced (no skipping)"
       type: compliance
       regulation_ref: "NMC CBME 2019 DOAP framework"
-      deferred_to: null
     - id: DOAP-NMC-002
       description: "Faculty decision required for every record (cannot be null)"
       type: compliance
       regulation_ref: "NMC CBME 2019 Reg 8.3"
-      deferred_to: null
     - id: DOAP-NMC-003
       description: "Rating B implies decision R or Re (cannot be C)"
       type: compliance
       regulation_ref: "NMC CBME 2019 Reg 8.4"
-      deferred_to: null
   
   edge_cases:
     - id: DOAP-E001
       description: "Backward stage record (refresher D after reaching O) - allowed"
       type: edge_case
-      deferred_to: null
     - id: DOAP-E002
       description: "Faculty decision Re with no active remediation programme - handle gracefully"
       type: edge_case
-      deferred_to: null
     - id: DOAP-E003
       description: "Stage skip attempt (P without prior A) - must reject with specific error"
       type: edge_case
-      deferred_to: null
 
 admissions:
   module_id: I-02
@@ -1257,17 +1150,13 @@ admissions:
     - id: ADM-001
       description: "Create admission application"
       type: unit
-      deferred_to: null
     - id: ADM-002
       description: "List admission applications with pagination"
       type: unit
-      deferred_to: null
     - id: ADM-003
       description: "Get admission application by ID"
       type: unit
-      deferred_to: null
     - id: ADM-004
       description: "Unique application_number per tenant enforced"
       type: unit
-      deferred_to: null
 

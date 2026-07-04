@@ -43,6 +43,6 @@ export const useAuthStore = create<AuthState>()(
         set({ token: null, user: null, isAuthenticated: false });
       },
     }),
-    { name: "synaptix-auth" }
-  )
+    { name: "synaptix-auth" },
+  ),
 );

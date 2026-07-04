@@ -82,9 +82,9 @@ async def test_adm_002_list_applications_pagination(db_session, tenant_id):
     # the 3 created and that pagination limits correctly to 2 results.
     returned_numbers = {r.application_number for r in res}
     all_numbers = {"APP-2000", "APP-2001", "APP-2002"}
-    assert returned_numbers.issubset(all_numbers), (
-        f"ADM-002: Unexpected application numbers returned: {returned_numbers}"
-    )
+    assert returned_numbers.issubset(
+        all_numbers
+    ), f"ADM-002: Unexpected application numbers returned: {returned_numbers}"
     assert len(returned_numbers) == 2, "ADM-002: Pagination limit=2 should return exactly 2 records"
 
 

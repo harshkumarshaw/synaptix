@@ -1,14 +1,51 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarCheck, BookOpen, Stethoscope, GraduationCap } from "lucide-react";
+import {
+  CalendarCheck,
+  BookOpen,
+  Stethoscope,
+  GraduationCap,
+} from "lucide-react";
+import { useStudentSummary } from "@/hooks/use-attendance";
+import { useAuthStore } from "@/stores/auth-store";
 
 export function StudentDashboard() {
-  const stats = [
-    { label: "Overall Attendance", value: "—%", icon: CalendarCheck, color: "text-green-600" },
-    { label: "Logbook Entries", value: "—", icon: BookOpen, color: "text-blue-600" },
-    { label: "DOAP Progress", value: "—", icon: Stethoscope, color: "text-purple-600" },
-    { label: "Elective Status", value: "—", icon: GraduationCap, color: "text-amber-600" },
+  const { user } = useAuthStore();
+  const { data: summaries, isLoading } = useStudentSummary(
+    user?.student_id ?? "",
+  );
+
+  // Compute overall attendance across all subjects
+  const overallPct = summaries?.length
+    ? summaries.reduce((sum, s) => sum + s.attendance_pct, 0) / summaries.length
+    : 0;
+
+  const cards = [
+    {
+      label: "Overall Attendance",
+      value: isLoading ? "..." : summaries ? `${overallPct.toFixed(0)}%` : "—",
+      icon: CalendarCheck,
+      color: overallPct >= 75 ? "text-green-600" : "text-red-600",
+    },
+    {
+      label: "Logbook Entries",
+      value: "—",
+      icon: BookOpen,
+      color: "text-blue-600",
+    },
+    {
+      label: "DOAP Progress",
+      value: "—",
+      icon: Stethoscope,
+      color: "text-purple-600",
+    },
+    {
+      label: "Elective Status",
+      value: "—",
+      icon: GraduationCap,
+      color: "text-amber-600",
+    },
   ];
 
   return (
@@ -19,7 +56,7 @@ export function StudentDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {cards.map((stat) => (
           <Card key={stat.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
@@ -52,7 +89,8 @@ export function StudentDashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Your recent logbook entries and signoff status will appear here in Session F4.
+              Your recent logbook entries and signoff status will appear here in
+              Session F4.
             </p>
           </CardContent>
         </Card>

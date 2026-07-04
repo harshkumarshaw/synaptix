@@ -39,6 +39,8 @@ class AttendanceMarkRequest(BaseModel):
     geo_lng: Decimal | None = None
     device_id: str | None = None
     qr_token: str | None = None
+    rfid_card_id: str | None = None
+    biometric_hash: str | None = None
     # Conflict resolution: original offline timestamp when syncing
     original_marked_at: datetime | None = None
     # 24-hour correction window override

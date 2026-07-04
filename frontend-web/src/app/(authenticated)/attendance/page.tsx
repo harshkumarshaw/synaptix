@@ -1,12 +1,14 @@
 "use client";
 
+import { useAuthStore } from "@/stores/auth-store";
+import { FacultyAttendance } from "./faculty-attendance";
+import { StudentAttendance } from "./student-attendance";
+
 export default function AttendancePage() {
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-bold">Attendance</h1>
-      <p className="text-muted-foreground">
-        Attendance marking and tracking will be implemented in Session F2.
-      </p>
-    </div>
-  );
+  const { user } = useAuthStore();
+
+  if (user?.role === "student") {
+    return <StudentAttendance />;
+  }
+  return <FacultyAttendance />;
 }

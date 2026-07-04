@@ -3,14 +3,28 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem,
-  SidebarHeader, SidebarFooter,
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar";
 import {
-  LayoutDashboard, CalendarCheck, BookOpen, GraduationCap,
-  FileText, ClipboardList, Users, Settings, Stethoscope,
-  LogOut, UserCircle,
+  LayoutDashboard,
+  CalendarCheck,
+  BookOpen,
+  GraduationCap,
+  FileText,
+  ClipboardList,
+  Users,
+  Settings,
+  Stethoscope,
+  LogOut,
+  UserCircle,
 } from "lucide-react";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -101,7 +115,10 @@ export function AppSidebar() {
             <p className="text-xs text-muted-foreground capitalize">{role}</p>
           </div>
           <button
-            onClick={() => { logout(); window.location.href = "/login"; }}
+            onClick={() => {
+              logout();
+              window.location.href = "/login";
+            }}
             className="text-muted-foreground hover:text-foreground"
             title="Sign out"
           >

@@ -9,10 +9,10 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.models.academic_year import AcademicYear
 from app.models.calendar import Event, EventCourse, EventFaculty
 from app.models.course import Course
 from app.models.leave_request import LeaveRequest
-from app.models.academic_year import AcademicYear
 from app.schemas.calendar import EventCreate
 from app.services.audit_logger import write_audit_log
 from packages.shared.db.session import get_db
@@ -27,7 +27,7 @@ class CalendarService:
 
     async def create_event(
         self, tenant_id: uuid.UUID, event_in: EventCreate, actor_id: uuid.UUID | None = None
-    ) -> Event:
+    ) -> Event:  # noqa: PLR0912
         # Determine the primary course from event_in.courses to fetch default_attendance_category
         primary_course_id = None
         for course_item in event_in.courses:
@@ -63,7 +63,7 @@ class CalendarService:
         if event_in.date.month == 8 and event_in.date.day == 15:
             logger.warning(
                 "Holiday conflict: Event is scheduled on a national holiday (Independence Day).",
-                extra={"date": str(event_in.date)}
+                extra={"date": str(event_in.date)},
             )
 
         # Faculty leave conflict check (CAL-E005)
@@ -79,7 +79,7 @@ class CalendarService:
             if leave_res.scalars().first():
                 logger.warning(
                     f"Faculty leave conflict: Faculty '{fac.faculty_id}' has approved leave on this date.",
-                    extra={"date": str(event_in.date), "faculty_id": str(fac.faculty_id)}
+                    extra={"date": str(event_in.date), "faculty_id": str(fac.faculty_id)},
                 )
 
         # Room double-booking rejection check (CAL-E006)
@@ -94,8 +94,12 @@ class CalendarService:
             overlap_res = await self.db.execute(overlap_stmt)
             overlaps = overlap_res.scalars().all()
             for existing_evt in overlaps:
-                if (event_in.start_time < existing_evt.end_time) and (event_in.end_time > existing_evt.start_time):
-                    raise ValueError(f"Room conflict: Room is already booked for event '{existing_evt.title}'")
+                if (event_in.start_time < existing_evt.end_time) and (
+                    event_in.end_time > existing_evt.start_time
+                ):
+                    raise ValueError(
+                        f"Room conflict: Room is already booked for event '{existing_evt.title}'"
+                    )
 
         # Phase boundary validation warning check (CAL-E007)
         ay_stmt = select(AcademicYear).where(
@@ -107,7 +111,11 @@ class CalendarService:
             if event_in.date < ay.start_date or event_in.date > ay.end_date:
                 logger.warning(
                     "Event date is outside the academic year phase boundary.",
-                    extra={"date": str(event_in.date), "ay_start": str(ay.start_date), "ay_end": str(ay.end_date)}
+                    extra={
+                        "date": str(event_in.date),
+                        "ay_start": str(ay.start_date),
+                        "ay_end": str(ay.end_date),
+                    },
                 )
 
         # ECE Phase I only check (ECE-NMC-001)
@@ -296,7 +304,7 @@ class CalendarService:
         start_date: datetime.date,
         end_date: datetime.date,
         day_of_week: int,
-        actor_id: uuid.UUID | None = None
+        actor_id: uuid.UUID | None = None,
     ) -> list[Event]:
         """Bulk create recurring weekly events."""
         events = []

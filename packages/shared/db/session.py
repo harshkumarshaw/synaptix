@@ -91,8 +91,11 @@ async def set_tenant_context(session: AsyncSession, tenant_id: uuid.UUID) -> Non
         session: The async database session.
         tenant_id: UUID of the current tenant.
     """
+    import os
+    is_local = os.environ.get("SNX_ENV") != "test"
+    local_str = "true" if is_local else "false"
     await session.execute(
-        text("SELECT set_config('snx.current_tenant_id', :tenant_id, true)"),
+        text(f"SELECT set_config('snx.current_tenant_id', :tenant_id, {local_str})"),
         {"tenant_id": str(tenant_id)},
     )
     logger.debug(

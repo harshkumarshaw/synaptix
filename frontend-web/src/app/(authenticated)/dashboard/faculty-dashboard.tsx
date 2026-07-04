@@ -5,10 +5,30 @@ import { CalendarCheck, BookOpen, Stethoscope, Clock } from "lucide-react";
 
 export function FacultyDashboard() {
   const stats = [
-    { label: "Today's Classes", value: "—", icon: CalendarCheck, color: "text-blue-600" },
-    { label: "Pending Signoffs", value: "—", icon: BookOpen, color: "text-amber-600" },
-    { label: "DOAP Assessments Due", value: "—", icon: Stethoscope, color: "text-purple-600" },
-    { label: "Leave Requests", value: "—", icon: Clock, color: "text-orange-600" },
+    {
+      label: "Today's Classes",
+      value: "—",
+      icon: CalendarCheck,
+      color: "text-blue-600",
+    },
+    {
+      label: "Pending Signoffs",
+      value: "—",
+      icon: BookOpen,
+      color: "text-amber-600",
+    },
+    {
+      label: "DOAP Assessments Due",
+      value: "—",
+      icon: Stethoscope,
+      color: "text-purple-600",
+    },
+    {
+      label: "Leave Requests",
+      value: "—",
+      icon: Clock,
+      color: "text-orange-600",
+    },
   ];
 
   return (
@@ -52,7 +72,8 @@ export function FacultyDashboard() {
           </CardHeader>
           <CardContent>
             <p className="text-sm text-muted-foreground">
-              Student submissions awaiting your review will appear here in Session F4.
+              Student submissions awaiting your review will appear here in
+              Session F4.
             </p>
           </CardContent>
         </Card>

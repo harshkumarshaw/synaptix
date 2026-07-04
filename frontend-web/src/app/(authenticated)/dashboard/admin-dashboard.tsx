@@ -2,13 +2,42 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CalendarCheck, Users, BookOpen, AlertTriangle } from "lucide-react";
+import { useDashboardStats } from "@/hooks/use-dashboard";
 
 export function AdminDashboard() {
-  const stats = [
-    { label: "Total Students", value: "—", icon: Users, color: "text-blue-600" },
-    { label: "Today's Attendance", value: "—", icon: CalendarCheck, color: "text-green-600" },
-    { label: "Pending Logbook Reviews", value: "—", icon: BookOpen, color: "text-amber-600" },
-    { label: "At-Risk Students", value: "—", icon: AlertTriangle, color: "text-red-600" },
+  const { data: stats, isLoading } = useDashboardStats();
+
+  const cards = [
+    {
+      label: "Total Students",
+      value: isLoading ? "..." : (stats?.total_students?.toString() ?? "—"),
+      icon: Users,
+      color: "text-blue-600",
+    },
+    {
+      label: "Today's Attendance",
+      value: isLoading
+        ? "..."
+        : stats?.todays_attendance_rate
+          ? `${stats.todays_attendance_rate.toFixed(0)}%`
+          : "—",
+      icon: CalendarCheck,
+      color: "text-green-600",
+    },
+    {
+      label: "Pending Reviews",
+      value: isLoading
+        ? "..."
+        : (stats?.pending_logbook_reviews?.toString() ?? "—"),
+      icon: BookOpen,
+      color: "text-amber-600",
+    },
+    {
+      label: "At-Risk Students",
+      value: isLoading ? "..." : (stats?.at_risk_students?.toString() ?? "—"),
+      icon: AlertTriangle,
+      color: "text-red-600",
+    },
   ];
 
   return (
@@ -19,7 +48,7 @@ export function AdminDashboard() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
+        {cards.map((stat) => (
           <Card key={stat.label}>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">

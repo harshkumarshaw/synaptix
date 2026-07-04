@@ -8,43 +8,39 @@ End-of-session notes for the next agent session.
 
 ## Current Status
 
-**Last session:** 2026-07-04 — Session F1 (Frontend Agent — Frontend Scaffold: Next.js Scaffold & Auth)
-**Status:** Next.js 14 App Router scaffold successfully configured. JWT auth flow with Zustand store and Axios client, dynamic role-based sidebar navigation (Admin, Faculty, Student), and three dashboard views implemented and verified via Chromium browser subagent. Compiles cleanly.
+# HANDOFF_NOTES.md
 
-**Next Session Agent:** Begin Session F2 (integrate with FastAPI backend services and build the Attendance marking/viewing UI).
+## Current State
+- Session F2 and 17 completed.
+- Frontend scaffold setup completed with shadcn, zustand, and next.js.
+- Backend hardware deferred tests implemented in `tests/unit/attendance/test_method_handlers.py`.
 
----
+## Next Steps
+- Implement frontend feature tickets.
+- Implement Phase 3 tests.
 
-## What Was Completed (Session 16)
-
-### Phase 2.5 Pull-In (100% Complete)
-
-- **MDM Seeds & Rules**: Implemented MDM-004 (restrict delete referenced tenant), MDM-005 & MDM-006 (tenant onboarding template seeds for medical/nursing), and MDM-007 (CSV validation/errors).
-- **Calendar Engine Edge Cases**: Implemented CAL-E003 (bulk generation idempotency), CAL-E004 (holiday conflict detection), CAL-E005 (faculty leave conflict warning logging), CAL-E006 (room double-booking check), and CAL-E007 (phase transition boundary checks).
-- **Lesson Plan Versioning**: Implemented LPN-E001 (retention of older plan versions for conducted sessions) and LPN-E002 (unapproved plan compliance warning logging).
+**Next Session Agent:** 02-backend (Session 17 — Hardware Stubs & Test fixes)
 
 ---
 
-## What Was Completed (Session F1)
+## What Was Completed (Session F2 - Frontend)
 
-### Frontend Scaffold & Auth (100% Complete)
+### Frontend Attendance UI (100% Complete)
 
-- **Next.js 14 Project Setup**: Configured React/Next.js 14 App Router project template with TypeScript and Tailwind CSS v3.
-- **npm packages & UI**: Installed core packages (`axios`, `zustand`, `@tanstack/react-query`, `jose`, `react-hook-form`, `zod`, `tailwindcss-animate`). Integrated 17 core shadcn/ui components in `default` style.
-- **Auth & API Setup**: Created Zustand auth state store (`auth-store.ts`) with client-side JWT decode and local storage persistence. Configured Axios client (`api.ts`) with request JWT interceptor and automatic logout on 401. Built `AuthGuard` route protector.
-- **Form & Navigation**: Created `LoginForm` with zod schema validation and Developer Bypass buttons. Created role-based `AppSidebar` and layout shells (`Header`, `Breadcrumbs`).
-- **Dashboards & Placeholders**: Built three dashboard variants (Admin, Faculty, Student) with cards representing key academic stats, and created 9 placeholder routes. Verified via Chromium browser subagent.
+- **API Hooks Layer**: Created types and React Query hooks for `GET /attendance/summary`, `GET /events/{event_id}`, `POST /attendance/mark-bulk`, etc.
+- **Faculty Attendance**: Built dynamic event lists and the mark attendance slide-out sheet (`mark-attendance-sheet.tsx`).
+- **Student Attendance**: Created subject-wise progress bars and NMC eligibility badges based on threshold rules.
+- **Live Dashboards**: Wired `admin-dashboard.tsx` and `student-dashboard.tsx` to display real-time API values and handled empty/loading states gracefully.
+- **Pre-commit Fix**: Created the `pre-commit` hook wrapper to resolve Windows spawning issues.
 
 ---
 
 ## Tasks Pending — Explicit Recipients
 
-### [TO: Session F2] Frontend Agent
-- Proceed with Session F2 plan to replace placeholder dashboard/attendance metrics with real data fetched from FastAPI backend services:
-  - `GET /attendance/student/{id}/summary`
-  - `GET /attendance/event/{id}`
-  - `POST /attendance/mark`
-  - `GET /attendance/eligibility/{student_id}/{course_id}`
+### [TO: Session 17] 02-backend
+- Phase B & C of Session 17: Implement `AttendanceMethodHandler` interfaces (manual, qr, rfid, gps, biometric, face) and implement the 17 deferred hardware tests.
+- **CRITICAL**: Fix the existing database constraint failures in `test_auth_service.py` (`user_roles_user_id_fkey`) and `test_attendance.py` (`attendance_tenant_id_student_id_fkey`) which are currently blocking all commits!
+- Update all documentation (CHANGELOG, sessions, etc.) and run `git commit` to finalize both Session F2 and Session 17.
 
 ---
 

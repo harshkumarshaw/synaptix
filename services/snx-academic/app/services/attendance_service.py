@@ -123,6 +123,39 @@ class AttendanceService:
         if event and event.status == "cancelled":
             needs_review = True
 
+        # Validate attendance method
+        from app.services.attendance_methods.base import MarkingContext
+        from app.services.attendance_methods.registry import get_handler
+
+        handler = get_handler(req.method)
+        ctx = MarkingContext(
+            tenant_id=self._tenant_id,
+            student_id=req.student_id,
+            event_id=req.event_id,
+            session_id=req.session_id,
+            device_id=req.device_id,
+            geo_lat=req.geo_lat,
+            geo_lng=req.geo_lng,
+            qr_token=req.qr_token,
+            rfid_card_id=req.rfid_card_id,
+            biometric_hash=req.biometric_hash,
+        )
+        validation_result = await handler.validate(ctx)
+        if not validation_result.success:
+            from packages.shared.errors import SynaptixError
+
+            class AttendanceServiceError(SynaptixError):
+                def __init__(self, code: str | None, message: str | None):
+                    super().__init__(message or "Attendance method error")
+                    if code:
+                        self.code = code
+
+            raise AttendanceServiceError(
+                validation_result.error_code, validation_result.error_message
+            )
+
+        needs_review = needs_review or validation_result.needs_review
+
         stmt = (
             pg_insert(Attendance)
             .values(

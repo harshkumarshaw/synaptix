@@ -17,7 +17,9 @@ export default function LoginPage() {
       await login(email, password);
       router.push("/dashboard");
     } catch (err) {
-      const errorMsg = (err as { response?: { data?: { detail?: { message?: string } } } }).response?.data?.detail?.message || "Login failed";
+      const errorMsg =
+        (err as { response?: { data?: { detail?: { message?: string } } } })
+          .response?.data?.detail?.message || "Login failed";
       setError(errorMsg);
     } finally {
       setLoading(false);

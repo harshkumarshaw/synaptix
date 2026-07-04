@@ -63,7 +63,7 @@ class SessionTrackingService:
                 raise ResourceNotFoundError(
                     f"LessonPlan with ID {session_in.lesson_plan_id} not found."
                 )
-            
+
             # Compliance warning check (LPN-E002)
             if lp.status != "approved":
                 await write_audit_log(
@@ -77,8 +77,8 @@ class SessionTrackingService:
                         "incident_type": "unapproved_lesson_plan_session",
                         "lesson_plan_id": str(lp.id),
                         "lesson_plan_status": lp.status,
-                        "description": f"Session conducted against unapproved lesson plan '{lp.topic}' (status: {lp.status})"
-                    }
+                        "description": f"Session conducted against unapproved lesson plan '{lp.topic}' (status: {lp.status})",
+                    },
                 )
         elif not session_in.session_reason or not session_in.session_reason.strip():
             raise ValidationError(

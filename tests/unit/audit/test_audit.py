@@ -6,6 +6,7 @@ Tests cover:
 - AUD-005: Old and new values stored as JSONB
 - AUD-006: Sensitive fields (passwords, OTPs) NOT logged
 """
+
 import json
 import uuid
 
@@ -155,8 +156,12 @@ async def test_aud_005_old_and_new_values_stored_as_jsonb(
     assert row is not None, "AUD-005: Audit entry not found"
 
     # PostgreSQL returns JSONB as a dict directly via asyncpg
-    old = row["old_values"] if isinstance(row["old_values"], dict) else json.loads(row["old_values"])
-    new = row["new_values"] if isinstance(row["new_values"], dict) else json.loads(row["new_values"])
+    old = (
+        row["old_values"] if isinstance(row["old_values"], dict) else json.loads(row["old_values"])
+    )
+    new = (
+        row["new_values"] if isinstance(row["new_values"], dict) else json.loads(row["new_values"])
+    )
 
     assert old["attendance_pct"] == "74.50", f"AUD-005: old_values mismatch: {old}"
     assert new["attendance_pct"] == "76.00", f"AUD-005: new_values mismatch: {new}"
@@ -202,7 +207,9 @@ async def test_aud_006_sensitive_fields_not_logged(
     row = result.mappings().first()
     assert row is not None, "AUD-006: Audit entry not found"
 
-    new = row["new_values"] if isinstance(row["new_values"], dict) else json.loads(row["new_values"])
+    new = (
+        row["new_values"] if isinstance(row["new_values"], dict) else json.loads(row["new_values"])
+    )
 
     # Confirm sensitive fields are absent
     assert "password" not in new, "AUD-006: password found in audit log — SECURITY VIOLATION"

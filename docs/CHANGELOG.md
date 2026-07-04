@@ -22,6 +22,16 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [Session 17] — 2026-07-04
+
+### Added — Phase C: Deferred Hardware/Mobile Tests (17 tests)
+- **services/snx-academic/app/services/attendance_methods/base.py**: Implemented `AttendanceMethodHandler` base class and `MarkingContext`.
+- **services/snx-academic/app/services/attendance_methods/***: Created concrete handlers (`Manual`, `QR`, `RFID`, `GPS`, `Biometric`) and `registry.py`.
+- **services/snx-academic/tests/unit/attendance/test_method_handlers.py**: Implemented deferred hardware tests for attendance (`ATT-003..007`, `ATT-E002`, `ATT-E017..E020`) and stubbed DB sync tests.
+- **tests/COVERAGE_MANIFEST.yaml**: Undeferred 17 tests to enforce coverage of hardware/mobile test cases.
+
+---
+
 ## [Session 16] — 2026-07-04
 
 ### Added — Phase 2.5 Pull-In (11 tests)

@@ -5,6 +5,7 @@ Tests cover DB-trigger driven sync behaviour:
 - FCS-002: Trigger blocks completed_hours reduction if signoff received
 - AES-001: AETCOM records status recomputed automatically from attendance
 """
+
 from __future__ import annotations
 
 import datetime
@@ -188,7 +189,9 @@ async def test_fcs_001_foundation_hours_recomputed_from_attendance(
     student_id = uuid.uuid4()
     event_id = uuid.uuid4()
 
-    await _seed_student_and_event(db_session, tenant_id, student_id, event_id, "foundation_course", 2.0)
+    await _seed_student_and_event(
+        db_session, tenant_id, student_id, event_id, "foundation_course", 2.0
+    )
 
     # Seed foundation_course_records row (required_hours = 4, completed_hours starts at 0)
     fcr_id = uuid.uuid4()
@@ -224,9 +227,9 @@ async def test_fcs_001_foundation_hours_recomputed_from_attendance(
     row = result.mappings().first()
     assert row is not None, "FCS-001: foundation_course_records row not found"
     # The event is 2 hours (09:00-11:00); completed_hours should now be 2.00
-    assert float(row["completed_hours"]) == pytest.approx(2.0, abs=0.01), (
-        f"FCS-001: completed_hours not recomputed; got {row['completed_hours']}"
-    )
+    assert float(row["completed_hours"]) == pytest.approx(
+        2.0, abs=0.01
+    ), f"FCS-001: completed_hours not recomputed; got {row['completed_hours']}"
 
 
 @pytest.mark.anyio
@@ -237,7 +240,9 @@ async def test_fcs_002_trigger_blocks_hours_reduction_after_signoff(
     student_id = uuid.uuid4()
     event_id = uuid.uuid4()
 
-    ids = await _seed_student_and_event(db_session, tenant_id, student_id, event_id, "foundation_course", 2.0)
+    ids = await _seed_student_and_event(
+        db_session, tenant_id, student_id, event_id, "foundation_course", 2.0
+    )
 
     # Seed foundation_course_records with signoff already received and completed_hours = 4.00
     fcr_id = uuid.uuid4()
@@ -258,7 +263,13 @@ async def test_fcs_002_trigger_blocks_hours_reduction_after_signoff(
             VALUES (:id, :tid, :uid, :did, 'Professor', :empid, true)
             ON CONFLICT (id) DO NOTHING
         """),
-        {"id": faculty_id, "tid": tenant_id, "uid": fac_user_id, "did": ids["dept_id"], "empid": f"EMP{str(faculty_id)[:6]}"},
+        {
+            "id": faculty_id,
+            "tid": tenant_id,
+            "uid": fac_user_id,
+            "did": ids["dept_id"],
+            "empid": f"EMP{str(faculty_id)[:6]}",
+        },
     )
     await db_session.execute(
         text("""
@@ -309,9 +320,9 @@ async def test_fcs_002_trigger_blocks_hours_reduction_after_signoff(
         {"tid": tenant_id},
     )
     row = result.mappings().first()
-    assert row is not None, (
-        "FCS-002: Expected COMPLIANCE_INCIDENT audit entry when hours dropped below signoff limit"
-    )
+    assert (
+        row is not None
+    ), "FCS-002: Expected COMPLIANCE_INCIDENT audit entry when hours dropped below signoff limit"
     assert row["action"] == "COMPLIANCE_INCIDENT"
 
 
@@ -401,9 +412,9 @@ async def test_aes_001_aetcom_status_recomputed_from_attendance(
     )
     row = result.mappings().first()
     assert row is not None, "AES-001: aetcom_records row not found"
-    assert row["status"] == "reflection_submitted", (
-        f"AES-001: Expected 'reflection_submitted', got '{row['status']}'"
-    )
+    assert (
+        row["status"] == "reflection_submitted"
+    ), f"AES-001: Expected 'reflection_submitted', got '{row['status']}'"
 
 
 # =============================================================================
@@ -424,9 +435,7 @@ async def test_phase_c_leave_to_attendance_materialization(
     student_id = uuid.uuid4()
     event_id = uuid.uuid4()
 
-    ids = await _seed_student_and_event(
-        db_session, tenant_id, student_id, event_id, "theory", 1.0
-    )
+    ids = await _seed_student_and_event(db_session, tenant_id, student_id, event_id, "theory", 1.0)
 
     # Seed an approved leave request covering today
     leave_id = uuid.uuid4()
@@ -485,13 +494,12 @@ async def test_phase_c_leave_to_attendance_materialization(
         {"tid": tenant_id, "sid": student_id, "eid": new_event_id},
     )
     row = result.mappings().first()
-    assert row is not None, (
-        "Phase C leave→attendance: No attendance row created by trigger for approved medical leave"
-    )
-    assert row["status"] == "medical", (
-        f"Phase C leave→attendance: Expected 'medical', got '{row['status']}'"
-    )
-    assert row["leave_request_id"] == leave_id, (
-        "Phase C leave→attendance: leave_request_id not set on auto-materialized attendance"
-    )
-
+    assert (
+        row is not None
+    ), "Phase C leave→attendance: No attendance row created by trigger for approved medical leave"
+    assert (
+        row["status"] == "medical"
+    ), f"Phase C leave→attendance: Expected 'medical', got '{row['status']}'"
+    assert (
+        row["leave_request_id"] == leave_id
+    ), "Phase C leave→attendance: leave_request_id not set on auto-materialized attendance"
