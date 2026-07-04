@@ -94,3 +94,20 @@ Format: `[YYYY-MM-DD HH:MM:SS] [agent-id] command`
 [2026-06-18 10:00:00] [human] mkdir -p synaptix
 [2026-06-18 10:01:00] [human] cd synaptix && git init
 ```
+
+## 2026-07-04 — Session 15
+
+```
+[2026-07-04 13:10:00] [02-backend] $env:PYTHONPATH=".;services/snx-logbook"; uv run pytest tests/unit/doap/ -v
+[2026-07-04 13:15:00] [02-backend] $env:PYTHONPATH=".;services/snx-logbook"; uv run pytest tests/unit/electives/ -v
+[2026-07-04 13:24:00] [02-backend] uv run python scripts/verify_adr_sequence.py
+[2026-07-04 13:25:00] [02-backend] uv run python scripts/verify_coverage_manifest.py
+[2026-07-04 13:26:00] [02-backend] uv run python scripts/verify_edge_case_coverage.py
+[2026-07-04 13:27:00] [02-backend] uv run python scripts/verify_compliance_coverage.py
+[2026-07-04 13:28:00] [02-backend] uv run python scripts/check_secrets.py
+[2026-07-04 13:30:00] [02-backend] $env:PYTHONPATH=".;services/snx-auth"; uv run pytest tests/unit/test_jwt_utils.py tests/integration/test_auth_service.py -v
+[2026-07-04 13:31:00] [02-backend] $env:PYTHONPATH=".;services/snx-institution"; uv run pytest tests/integration/test_institution_service.py -v
+[2026-07-04 13:32:00] [02-backend] $env:PYTHONPATH=".;services/snx-workflow"; uv run pytest tests/unit/workflow tests/unit/mdm tests/unit/assets tests/integration/workflow tests/security/workflow -v
+[2026-07-04 13:33:00] [02-backend] $env:PYTHONPATH=".;services/snx-logbook"; uv run pytest tests/unit/logbook tests/unit/doap tests/unit/electives tests/integration/test_logbook_service.py tests/integration/test_electives.py tests/integration/doap tests/compliance/test_elective_compliance.py tests/compliance/doap -v
+[2026-07-04 13:34:00] [02-backend] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/unit/academic tests/integration/test_academic_service.py tests/integration/test_calendar_engine.py tests/integration/test_lesson_plan_service.py tests/integration/test_attendance.py tests/integration/test_leave.py tests/compliance/test_attendance_thresholds.py tests/compliance/test_nmc_compliance_stubs.py tests/security/academic -v
+```

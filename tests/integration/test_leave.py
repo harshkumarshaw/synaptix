@@ -121,12 +121,14 @@ async def test_lev_001_create_leave_request(db_session: AsyncSession, tenant_id:
         reason="Fever — doctor's certificate attached",
     )
     leave = await service.create_leave_request(student_id=student_id, req=req)
-    await db_session.commit()
+    await db_session.flush()
+    await db_session.refresh(leave)
 
     assert leave.student_id == student_id
     assert leave.status == "pending"
     assert leave.leave_type == "medical"
     assert leave.tenant_id == tenant_id
+    await db_session.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -171,9 +173,11 @@ async def test_lev_002_approve_leave_request(
     # HOD approves
     hod_svc = LeaveService(db=db_session, tenant_id=tenant_id, actor_id=hod_id)
     approved = await hod_svc.approve_leave(leave.id, remarks="Approved for conference")
-    await db_session.commit()
+    await db_session.flush()
+    await db_session.refresh(approved)
 
     assert approved.status == "approved"
+    await db_session.commit()
 
 
 # ---------------------------------------------------------------------------
@@ -213,9 +217,11 @@ async def test_lev_003_reject_leave_request(db_session: AsyncSession, tenant_id:
 
     hod_svc = LeaveService(db=db_session, tenant_id=tenant_id, actor_id=hod_id)
     rejected = await hod_svc.reject_leave(leave.id, remarks="Attendance already below threshold")
-    await db_session.commit()
+    await db_session.flush()
+    await db_session.refresh(rejected)
 
     assert rejected.status == "rejected"
+    await db_session.commit()
 
 
 # ---------------------------------------------------------------------------

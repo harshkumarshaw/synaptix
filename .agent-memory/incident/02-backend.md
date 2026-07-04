@@ -27,3 +27,9 @@ Failures, near-misses, and what NOT to do.
 - **PostgreSQL CheckConstraint check block:** Encountered `CheckViolationError` on `workflow_instances` table in PostgreSQL because `entity_type` was set to `logbook_entry` and `doap_session_record`, which were not in the permitted list. Bypassed by using `exemption_grant` which is allowed.
 - **Async lazy load MissingGreenlet error:** Encountered `MissingGreenlet` error in async test assertions when referencing properties that lazy-loaded database attributes. Resolved by using `selectinload` options in query compilation.
 
+## Session 15 Incidents (2026-07-04)
+
+- **Duplicate key value violates unique constraint on dynamic tenant seeding:** Using random tenant IDs in unit tests but hardcoding tenant code "JMN" when seeding parent tables leads to `UniqueViolationError` on concurrent test runs. Fixed by dynamically generating the tenant code from the random tenant ID (e.g. `T_xxxx`).
+- **Audit log foreign key violation on actor ID:** Passing a student ID instead of a user ID as `actor_id` during service testing fails under PostgreSQL since `audit_log.actor_user_id` enforces a foreign key constraint to `users`. Fixed by ensuring `users` record has the same primary key ID as the student record during test seeding.
+
+

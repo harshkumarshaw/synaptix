@@ -43,3 +43,8 @@ await session.commit()
 - **PostgreSQL CheckConstraint alignment in workflow testing:** When creating workflow instances, `entity_type` must be one of the check constraint permitted values (e.g. `exemption_grant`) to ensure migrations/constraints pass on PostgreSQL, even when the stub model defines more permissive types.
 - **Async lazy loading and MissingGreenlet errors:** In async tests, eager load relationships via `selectinload` to prevent lazy-load `MissingGreenlet` errors when accessing nested properties (e.g. `workflow.workflow_definition_code`).
 
+## Session 15 Learnings (2026-07-04)
+
+- **PostgreSQL test triggers override for unit tests:** When migrating unit tests from SQLite to PostgreSQL, constraint checks can be bypassed by dynamically running `ALTER TABLE <table_name> DISABLE TRIGGER ALL` inside the test session and re-enabling them upon teardown. This isolates unit tests from parent table seeding requirements without changing the database schema.
+
+

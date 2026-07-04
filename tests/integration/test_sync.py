@@ -230,15 +230,6 @@ async def test_fcs_001_foundation_hours_recomputed_from_attendance(
 
 
 @pytest.mark.anyio
-@pytest.mark.xfail(
-    reason=(
-        "FCS-002: Bug in migration trigger fn_sync_attendance_to_foundation_course: "
-        "INSERT INTO audit_log uses column 'actor_id' but schema has 'actor_user_id'. "
-        "Trigger fires on attendance INSERT/UPDATE/DELETE and fails when signoff is present. "
-        "Fix: migration patch to rename actor_id→actor_user_id in trigger body."
-    ),
-    strict=False,
-)
 async def test_fcs_002_trigger_blocks_hours_reduction_after_signoff(
     db_session: AsyncSession, tenant_id: uuid.UUID
 ) -> None:

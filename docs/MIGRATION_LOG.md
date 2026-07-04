@@ -315,3 +315,23 @@ Address three database schema gaps from `PHASE2_SCHEMA.md` to ensure constraints
 **Verification:**
 - Connect to database, run alembic migrations (`alembic upgrade head`), and execute pytest integration tests on attendance engine (`pytest tests/integration/test_attendance_engine.py`).
 
+---
+
+### Migration: 20260704_a9054655e43f_fix_fcs_trigger_column
+**Created:** 2026-07-04
+**Agent:** Backend Agent (02)
+**Revision ID:** a9054655e43f
+**Depends on:** d7ce0e58cbc0
+
+**Purpose:**
+Fix the foundation course synchronization trigger (`fn_sync_attendance_to_foundation_course`) which incorrectly referenced the non-existent column `actor_id` and non-existent `original_values` column in the partitioned append-only `audit_log` table. Redefines the trigger function to insert using `actor_user_id` and `old_values` columns.
+
+**Changes:**
+- Redefined PL/pgSQL function `fn_sync_attendance_to_foundation_course()` to write to `actor_user_id` and `old_values` instead of `actor_id` and `original_values`.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run `pytest tests/integration/test_sync.py::test_fcs_002_trigger_blocks_hours_reduction_after_signoff -v` and check that the audit log insertion executes successfully on trigger firing.
+
+

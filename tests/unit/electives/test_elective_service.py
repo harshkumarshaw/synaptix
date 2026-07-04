@@ -103,12 +103,18 @@ async def test_elec_001_create_elective(mock_db: AsyncMock, tenant_id: uuid.UUID
 
 @pytest.mark.asyncio
 async def test_elec_002_submit_preferences_idempotent(
-    test_db_session: AsyncSession, tenant_id: uuid.UUID, student_id: uuid.UUID
+    test_db_session: AsyncSession,
+    tenant_id: uuid.UUID,
+    student_id: uuid.UUID,
+    seed_deps: Any,
 ) -> None:
     """ELEC-002: Submit preferences: full-block replace; re-submit replaces existing set."""
     from app.models.electives import Elective, StudentElectivePreference
     from app.schemas.electives import PreferenceItem, PreferencesSubmitRequest
     from app.services.elective_service import ElectiveService
+
+    curriculum_id = uuid.uuid4()
+    await seed_deps(test_db_session, tenant_id, student_id=student_id, curriculum_id=curriculum_id)
 
     elective_ids = [uuid.uuid4() for _ in range(3)]
 
@@ -117,7 +123,7 @@ async def test_elec_002_submit_preferences_idempotent(
         elective = Elective(
             id=eid,
             tenant_id=tenant_id,
-            curriculum_id=uuid.uuid4(),
+            curriculum_id=curriculum_id,
             code=f"ELEC-{eid}",
             title="Elective",
             block="Block 1",
@@ -166,12 +172,18 @@ async def test_elec_002_submit_preferences_idempotent(
 
 @pytest.mark.asyncio
 async def test_elec_e001_preferences_replace_on_resubmit(
-    test_db_session: AsyncSession, tenant_id: uuid.UUID, student_id: uuid.UUID
+    test_db_session: AsyncSession,
+    tenant_id: uuid.UUID,
+    student_id: uuid.UUID,
+    seed_deps: Any,
 ) -> None:
     """ELEC-E001: Student submits 5 preferences, then re-submits 3. Final state = 3 preferences only."""
     from app.models.electives import Elective, StudentElectivePreference
     from app.schemas.electives import PreferenceItem, PreferencesSubmitRequest
     from app.services.elective_service import ElectiveService
+
+    curriculum_id = uuid.uuid4()
+    await seed_deps(test_db_session, tenant_id, student_id=student_id, curriculum_id=curriculum_id)
 
     elective_ids = [uuid.uuid4() for _ in range(5)]
 
@@ -180,7 +192,7 @@ async def test_elec_e001_preferences_replace_on_resubmit(
         elective = Elective(
             id=eid,
             tenant_id=tenant_id,
-            curriculum_id=uuid.uuid4(),
+            curriculum_id=curriculum_id,
             code=f"ELEC-{eid}",
             title="Elective",
             block="Block 1",
@@ -413,12 +425,18 @@ async def test_elec_e006_duplicate_rank_rejected(
 
 @pytest.mark.asyncio
 async def test_elec_e007_wrong_block_elective_rejected(
-    test_db_session: AsyncSession, tenant_id: uuid.UUID, student_id: uuid.UUID
+    test_db_session: AsyncSession,
+    tenant_id: uuid.UUID,
+    student_id: uuid.UUID,
+    seed_deps: Any,
 ) -> None:
     """ELEC-E007: Preference referencing a Block 2 elective submitted for Block 1 must be rejected."""
     from app.models.electives import Elective
     from app.schemas.electives import PreferenceItem, PreferencesSubmitRequest
     from app.services.elective_service import ElectiveService, ElectiveWrongBlockError
+
+    curriculum_id = uuid.uuid4()
+    await seed_deps(test_db_session, tenant_id, student_id=student_id, curriculum_id=curriculum_id)
 
     wrong_elective_id = uuid.uuid4()
 
@@ -426,7 +444,7 @@ async def test_elec_e007_wrong_block_elective_rejected(
     elective = Elective(
         id=wrong_elective_id,
         tenant_id=tenant_id,
-        curriculum_id=uuid.uuid4(),
+        curriculum_id=curriculum_id,
         code=f"ELEC-{wrong_elective_id}",
         title="Elective",
         block="Block 2",  # Block 2!
