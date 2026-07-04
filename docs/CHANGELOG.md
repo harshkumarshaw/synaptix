@@ -5,6 +5,25 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Session F3 & Session 19] — 2026-07-04
+
+### Added — Frontend Logbook & DOAP Skills UI (Session F3)
+- **src/types/**: Defined TypeScript interfaces for `LogbookEntry` and `DoapRecord` structures.
+- **src/hooks/**: Added React Query hooks for logbook CRUD, signoffs, and DOAP status tracking.
+- **src/app/(authenticated)/logbook/**: Built Student logbook dashboard with entry forms, status filters, and digital initials signature validation.
+- **src/app/(authenticated)/logbook/faculty-queue.tsx**: Built Faculty queue selector and the sliding `SignoffSheet` supporting rating and decision validations (Below Expectation rating cannot be Certified).
+- **src/app/(authenticated)/doap/**: Developed DOAP progression visual pipeline displaying certified, current, and locked nodes with attempts details tables.
+- **src/components/ui/textarea.tsx**: Created text area UI component.
+
+### Added — Phase 3 R0 Examination Management Planning (Session 19)
+- **docs/DECISIONS.md**: Appended ADRs 038-048 detailing IA Aggregation, Eligibility Engine, Grade Calculation, Grace Marks, Conflict Prevention, Question Paper Versioning, and Moderation.
+- **docs/PHASE3_SCHEMA.md**: Documented DDL definitions for 11 new database tables.
+- **tests/COVERAGE_MANIFEST.yaml**: Appended Phase 3 test cases to manifest.
+- **docs/verification/phase3_test_categorisation.md**: Categorized 49 tests into MVP, Phase 3.5, and Phase 4 deferrals.
+- **docs/verification/phase3_baseline_*.txt**: Captured coverage manifest baseline output.
+
+---
+
 ## [Session F1] — 2026-07-04
 
 ### Added — Frontend Scaffold: Next.js Scaffold & Auth

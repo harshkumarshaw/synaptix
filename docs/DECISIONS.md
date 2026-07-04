@@ -482,6 +482,120 @@ Implementation: Service-layer Python (not ON CONFLICT SQL — too complex for SQ
 - (-) Sync gap > 2h always triggers needs_review, creating noise for legitimate rural offline use cases
 - Mitigation: needs_review queue is a triage tool, not a block; attendance is materialised immediately
 
+## ADR-038: IA Aggregation Formula
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** Internal Assessment (IA) marks must aggregate from multiple sources per NMC regulations.
+**Decision:** Total IA marks are calculated as a weighted sum of logbook completion, periodic viva scores, practical exam scores, and clinical posting evaluations. The weights are configurable via MDM, with a default of 20% logbook, 30% viva, 30% practical, and 20% clinical.
+**Consequences:**
+- (+) Highly modular and configurable aggregation.
+- (+) Conforms to NMC regulations.
+- (-) Complex calculations involving multiple database tables.
+
+## ADR-039: Exam Eligibility Engine
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** Students must meet specific criteria to be eligible for university examinations.
+**Decision:** Implement an eligibility engine that verifies: (1) attendance meets category-specific thresholds, (2) logbook completion is certified, (3) aggregate IA score is >= 50%, (4) no active disciplinary suspension exists, and (5) all prerequisite courses are passed.
+**Consequences:**
+- (+) Automated and objective validation.
+- (+) Detailed reason breakdown for ineligibility.
+- (-) Performance-heavy checks requiring query optimizations.
+
+## ADR-040: Grade Calculation (NMC Scheme)
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** University exams require separate evaluation and grading for theory and practical parts.
+**Decision:** Theory and practical grades are calculated independently: Distinction (>=75%), Pass (50%-74%), and Fail (<50%). A student must pass both parts independently to pass the subject. Configure up to 5 grace marks total per examination via MDM.
+**Consequences:**
+- (+) Direct compliance with NMC passing rules.
+- (-) Supplementary exams must handle partial failure cases (e.g. repeat practical only).
+
+## ADR-041: Supplementary Exam Rules
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** NMC limits supplementary attempts per subject.
+**Decision:** Enforce a maximum of 4 supplementary attempts per subject. Grace marks are not allowed for supplementary exams. Historical attempt marks are preserved, and failing the 4th attempt transitions student status to "detained".
+**Consequences:**
+- (+) Strict regulatory compliance.
+- (-) Requires persistent tracking of attempt counters across exam sessions.
+
+## ADR-042: Mark Sheet Generation
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** Students need printable, verifiable official mark sheets.
+**Decision:** Use WeasyPrint to generate print-ready PDF mark sheets from HTML templates, embedding a verification QR code and storing the result in the digital assets repository.
+**Consequences:**
+- (+) High-quality print output.
+- (+) Tamper-evident verification via QR.
+- (-) Server-side PDF generation can be resource-intensive under load.
+
+## ADR-043: Exam Scheduling Conflict Prevention
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** Prevent overlaps in student, room, and invigilator schedules.
+**Decision:** Exam schedules must enforce: (1) no student has overlapping exams, (2) no room is double-booked, and (3) a minimum 1-day gap exists between theory exams for any student.
+**Consequences:**
+- (+) Error-free planning.
+- (-) Highly constrained scheduling space.
+
+## ADR-044: Question Paper Versioning
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** Secure and track question paper drafting and locking.
+**Decision:** Store question papers as digital assets with state transitions (draft -> submitted -> approved -> locked) and log every access via audit logs.
+**Consequences:**
+- (+) Strong audit trail and access control.
+- (-) Strict locking mechanisms required.
+
+## ADR-045: Result Processing Workflow
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** Results must go through examiner, HOD, and principal checks before release.
+**Decision:** Implement result processing using the existing workflow engine: Draft -> Verified (HOD) -> Approved (Principal) -> Published. Results are hidden from students until "Published".
+**Consequences:**
+- (+) Structured approval hierarchy.
+- (+) Reuses existing workflow engine.
+- (-) Requires coordination across academic roles.
+
+## ADR-046: External Exam Integration
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** University exam marks must be imported from external systems.
+**Decision:** Support CSV-based university mark imports, matching students by enrollment number and validating against schema rules (e.g. max marks and duplicates).
+**Consequences:**
+- (+) Simple integration with legacy systems.
+- (-) Requires robust parser error handling.
+
+## ADR-047: Exam Analytics Views
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** Faculty and administrators require insights on student performance.
+**Decision:** Implement materialised views to compute pass rates, performance trends, and at-risk students (failed >=2 subjects).
+**Consequences:**
+- (+) Fast query response times for complex aggregations.
+- (-) Materialised views must be refreshed periodically (e.g. after exam workflow updates).
+
+## ADR-048: Multi-Examiner Moderation
+
+**Date:** 2026-07-04
+**Status:** Accepted
+**Context:** Moderation of clinical and viva scores across multiple examiners.
+**Decision:** The final mark is the average of two examiners' scores if the difference is <=15%. If the difference is >15%, a third examiner is automatically requested.
+**Consequences:**
+- (+) Fair assessment mechanism.
+- (-) Requires tracking examiner-specific sub-marks.
+
 ## Template for New ADRs
 
 ```markdown
