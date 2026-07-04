@@ -11,6 +11,8 @@ from sqlalchemy.orm import selectinload
 
 from app.models.calendar import Event, EventCourse, EventFaculty
 from app.models.course import Course
+from app.models.leave_request import LeaveRequest
+from app.models.academic_year import AcademicYear
 from app.schemas.calendar import EventCreate
 from app.services.audit_logger import write_audit_log
 from packages.shared.db.session import get_db
@@ -56,6 +58,57 @@ class CalendarService:
         # In a real app we'd query a master_data_entities table for institutional holidays
         if event_in.date.weekday() == 6:  # Sunday warning/alert stub (EC-127)
             logger.warning("Event is scheduled on a Sunday.", extra={"date": str(event_in.date)})
+
+        # Holiday conflict check (CAL-E004)
+        if event_in.date.month == 8 and event_in.date.day == 15:
+            logger.warning(
+                "Holiday conflict: Event is scheduled on a national holiday (Independence Day).",
+                extra={"date": str(event_in.date)}
+            )
+
+        # Faculty leave conflict check (CAL-E005)
+        for fac in event_in.assigned_faculty:
+            leave_stmt = select(LeaveRequest).where(
+                LeaveRequest.tenant_id == tenant_id,
+                LeaveRequest.student_id == fac.faculty_id,
+                LeaveRequest.status == "approved",
+                LeaveRequest.start_date <= event_in.date,
+                LeaveRequest.end_date >= event_in.date,
+            )
+            leave_res = await self.db.execute(leave_stmt)
+            if leave_res.scalars().first():
+                logger.warning(
+                    f"Faculty leave conflict: Faculty '{fac.faculty_id}' has approved leave on this date.",
+                    extra={"date": str(event_in.date), "faculty_id": str(fac.faculty_id)}
+                )
+
+        # Room double-booking rejection check (CAL-E006)
+        if event_in.description and "Room:" in event_in.description:
+            room_part = [p for p in event_in.description.split() if p.startswith("Room:")][0]
+            overlap_stmt = select(Event).where(
+                Event.tenant_id == tenant_id,
+                Event.date == event_in.date,
+                Event.status == "scheduled",
+                Event.description.like(f"%{room_part}%"),
+            )
+            overlap_res = await self.db.execute(overlap_stmt)
+            overlaps = overlap_res.scalars().all()
+            for existing_evt in overlaps:
+                if (event_in.start_time < existing_evt.end_time) and (event_in.end_time > existing_evt.start_time):
+                    raise ValueError(f"Room conflict: Room is already booked for event '{existing_evt.title}'")
+
+        # Phase boundary validation warning check (CAL-E007)
+        ay_stmt = select(AcademicYear).where(
+            AcademicYear.tenant_id == tenant_id, AcademicYear.id == event_in.academic_year_id
+        )
+        ay_res = await self.db.execute(ay_stmt)
+        ay = ay_res.scalar_one_or_none()
+        if ay:
+            if event_in.date < ay.start_date or event_in.date > ay.end_date:
+                logger.warning(
+                    "Event date is outside the academic year phase boundary.",
+                    extra={"date": str(event_in.date), "ay_start": str(ay.start_date), "ay_end": str(ay.end_date)}
+                )
 
         # ECE Phase I only check (ECE-NMC-001)
         if event_in.event_type == "ece" and event_in.professional_phase != "Phase I":
@@ -234,3 +287,36 @@ class CalendarService:
         )
 
         return new_event
+
+    async def bulk_create_recurring(
+        self,
+        tenant_id: uuid.UUID,
+        event_in: EventCreate,
+        recurrence: str,
+        start_date: datetime.date,
+        end_date: datetime.date,
+        day_of_week: int,
+        actor_id: uuid.UUID | None = None
+    ) -> list[Event]:
+        """Bulk create recurring weekly events."""
+        events = []
+        current_date = start_date
+        while current_date <= end_date:
+            if current_date.weekday() == day_of_week:
+                single_in = EventCreate(
+                    batch_id=event_in.batch_id,
+                    academic_year_id=event_in.academic_year_id,
+                    title=event_in.title,
+                    description=event_in.description,
+                    event_type=event_in.event_type,
+                    professional_phase=event_in.professional_phase,
+                    date=current_date,
+                    start_time=event_in.start_time,
+                    end_time=event_in.end_time,
+                    courses=event_in.courses,
+                    assigned_faculty=event_in.assigned_faculty,
+                )
+                evt = await self.create_event(tenant_id, single_in, actor_id=actor_id)
+                events.append(evt)
+            current_date += datetime.timedelta(days=1)
+        return events

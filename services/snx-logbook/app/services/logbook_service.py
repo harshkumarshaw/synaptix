@@ -37,6 +37,7 @@ from packages.shared.errors import (
     SynaptixError,
 )
 from packages.shared.logging import get_logger
+from packages.shared.mdm.config_service import MdmConfigService
 
 logger = get_logger(__name__)
 
@@ -638,16 +639,9 @@ class LogbookService:
     async def _get_ia_config(
         self, tenant_id: uuid.UUID, subject_code: str, professional_phase: str
     ) -> tuple[Decimal, Decimal]:
-        """Get IA config (weight% and max marks) with fallback defaults (D8 debt warning)."""
-        # Falls back to default values
-        import logging
-
-        logging.warning(
-            "MDM config not found for IA: %s/%s. Using defaults (10%%, 40 marks).",
-            subject_code,
-            professional_phase,
-        )
-        return Decimal("10.00"), Decimal("40.00")
+        """Get IA config (weight% and max marks) using MdmConfigService (resolves D8 debt)."""
+        mdm = MdmConfigService(self.db)
+        return await mdm.get_ia_config(tenant_id, subject_code, professional_phase)
 
     async def get_student_entries(
         self,

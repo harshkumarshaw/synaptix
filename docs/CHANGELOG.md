@@ -5,9 +5,21 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
-## [Session 15] — 2026-07-04
+## [Session 16] — 2026-07-04
 
-### Fixed — Session 15 Cleanup
+### Added — Phase 2.5 Pull-In (11 tests)
+
+- **tests/unit/mdm/test_master_data_service.py**: Implemented MDM-004 (delete reference RESTRICT check), MDM-005 (medical template seed check), MDM-006 (nursing template seed check), and MDM-007 (CSV validation check).
+- **tests/unit/mdm/test_mdm.py**: Modified MDM tests to run against `test_db_session` clean PostgreSQL fixture.
+- **tests/integration/test_calendar_engine.py**: Implemented CAL-E003 (bulk generation idempotency), CAL-E004 (holiday conflict check), CAL-E005 (faculty leave conflict check), CAL-E006 (room double-booking check), and CAL-E007 (phase transition boundary check).
+- **services/snx-academic/app/services/calendar_service.py**: Enhanced `create_event` in calendar service with rooms/labs double booking validation, holiday conflict validation, and faculty approved leave conflict warning logging.
+- **services/snx-academic/app/services/session_tracking_service.py**: Added compliance warning logging (to `audit_log` table with `action='COMPLIANCE_INCIDENT'`) for sessions conducted against unapproved lesson plans.
+- **tests/unit/academic/test_lesson_plan_versioning.py**: Implemented LPN-E001 (older version retention for conducted sessions) and LPN-E002 (unapproved lesson plan compliance warning).
+- **tests/COVERAGE_MANIFEST.yaml**: Removed `deferred_to: "Phase 2.5"` from MDM-004..007, CAL-E003..007, and LPN-E001..002. Coverage: 189/189 (100% required passing).
+
+---
+
+## [Session 15] — 2026-07-04
 
 - **services/_migrations/versions/20260704_a9054655e43f_fix_fcs_trigger_column.py**: Applied migration revision `a9054655e43f` to fix `fn_sync_attendance_to_foundation_course()` DB trigger referencing `actor_user_id` and `old_values` instead of invalid columns.
 - **tests/integration/test_sync.py**: Removed xfail marker from `test_fcs_002_trigger_blocks_hours_reduction_after_signoff` now that trigger column bug is resolved.

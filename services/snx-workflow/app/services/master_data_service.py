@@ -124,3 +124,61 @@ class MasterDataService:
 
         entity.deleted_at = datetime.now(UTC)
         await self.db.commit()
+
+    async def import_csv(self, tenant_id: uuid.UUID, csv_content: str) -> dict[str, Any]:
+        """Bulk import entities from CSV content. Returns {imported: X, errors: [{line: Y, error: Z}]}.
+        
+        CSV format: category,code,name,sort_order
+        """
+        import csv
+        from io import StringIO
+
+        reader = csv.reader(StringIO(csv_content.strip()))
+        imported_count = 0
+        errors = []
+        
+        # Skip header if present
+        header = next(reader, None)
+        has_header = True
+        if header and len(header) >= 3 and header[0].lower() not in ["category", "category_code"]:
+            # No header, it is a data row, reset reader or parse it
+            has_header = False
+            reader = csv.reader(StringIO(csv_content.strip()))
+
+        line_num = 1 if has_header else 0
+        for row in reader:
+            line_num += 1
+            if not row:
+                continue
+            if len(row) < 3:
+                errors.append({"line": line_num, "error": "Insufficient columns, need category, code, name"})
+                continue
+            
+            category, code, name = row[0].strip(), row[1].strip(), row[2].strip()
+            sort_order = 0
+            if len(row) >= 4:
+                try:
+                    sort_order = int(row[3].strip())
+                except ValueError:
+                    pass
+            
+            if not category or not code or not name:
+                errors.append({"line": line_num, "error": "category, code, and name are required"})
+                continue
+            
+            try:
+                # Use create_entity to validate duplicates and save
+                await self.create_entity(
+                    tenant_id,
+                    MasterDataEntityCreate(
+                        category=category,
+                        code=code,
+                        name=name,
+                        sort_order=sort_order,
+                    )
+                )
+                imported_count += 1
+            except Exception as e:
+                errors.append({"line": line_num, "error": str(e)})
+                
+        return {"imported": imported_count, "errors": errors}

@@ -187,7 +187,7 @@ async def test_db_session() -> AsyncGenerator[AsyncSession, None]:
             "timetable_entries", "timetable_slots", "students", "faculty", "user_roles",
             "workflow_transitions", "workflow_instances", "digital_assets", "users",
             "sections", "batches", "courses", "departments", "curricula", "programs",
-            "academic_years", "workflow_definitions", "master_data_entities", "audit_log"
+            "academic_years", "workflow_definitions", "master_data_entities", "audit_log", "mdm_configs"
         ]
 
         # Truncate tables to ensure a clean state for every test
@@ -204,7 +204,7 @@ async def test_db_session() -> AsyncGenerator[AsyncSession, None]:
                 "timetable_entries, timetable_slots, students, faculty, user_roles, "
                 "workflow_transitions, workflow_instances, digital_assets, users, "
                 "sections, batches, courses, departments, curricula, programs, "
-                "academic_years, workflow_definitions, master_data_entities, audit_log "
+                "academic_years, workflow_definitions, master_data_entities, audit_log, mdm_configs "
                 "CASCADE"
             )
         )
@@ -243,6 +243,7 @@ def seed_deps() -> Any:
         from sqlalchemy import text
         import uuid as uuid_mod
         
+        import json
         # 1. Tenant
         await db.execute(
             text("""
@@ -251,6 +252,59 @@ def seed_deps() -> Any:
                 ON CONFLICT (id) DO NOTHING
             """),
             {"id": tenant_id, "code": f"T_{str(tenant_id)[:8]}"},
+        )
+        
+        # Seed default prefix mapping
+        prefix_map = {
+            "AN": "ANAT", "PY": "PHYS", "BI": "BIOC", "MI": "MICR",
+            "PA": "PATH", "PH": "PHAR", "FM": "FMED", "CM": "CMED",
+        }
+        await db.execute(
+            text("""
+                INSERT INTO mdm_configs (tenant_id, config_key, config_value, description)
+                VALUES (:tenant_id, 'competency.prefix_to_subject_code', CAST(:config_value AS jsonb), 'Prefix mapping')
+                ON CONFLICT (tenant_id, config_key) DO NOTHING
+            """),
+            {
+                "tenant_id": tenant_id,
+                "config_value": json.dumps(prefix_map)
+            }
+        )
+
+        # Seed onboarding templates
+        med_template = {
+            "institution_type": "medical",
+            "regulatory_body": "NMC",
+            "departments": ["Anatomy", "Physiology"],
+            "documents_required": ["NMC_Registration"]
+        }
+        nursing_template = {
+            "institution_type": "nursing",
+            "regulatory_body": "INC",
+            "departments": ["Fundamentals of Nursing"],
+            "documents_required": ["INC_Registration"]
+        }
+        await db.execute(
+            text("""
+                INSERT INTO mdm_configs (tenant_id, config_key, config_value, description)
+                VALUES (:tenant_id, 'onboarding.template.medical', CAST(:med_value AS jsonb), 'Med onboarding')
+                ON CONFLICT (tenant_id, config_key) DO NOTHING
+            """),
+            {
+                "tenant_id": tenant_id,
+                "med_value": json.dumps(med_template)
+            }
+        )
+        await db.execute(
+            text("""
+                INSERT INTO mdm_configs (tenant_id, config_key, config_value, description)
+                VALUES (:tenant_id, 'onboarding.template.nursing', CAST(:nursing_value AS jsonb), 'Nursing onboarding')
+                ON CONFLICT (tenant_id, config_key) DO NOTHING
+            """),
+            {
+                "tenant_id": tenant_id,
+                "nursing_value": json.dumps(nursing_template)
+            }
         )
         
         # 2. Faculty

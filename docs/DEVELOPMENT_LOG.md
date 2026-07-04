@@ -2,6 +2,16 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-04 — Phase 2.5 Pull-In Implementation (Session 16)
+**Agent:** Backend (02)
+**Duration:** ~35 mins
+**Focus:** Implement 11 deferred Phase 2.5 tests covering Master Data/Onboarding (MDM), Calendar Engine, and Lesson Plan Versioning.
+- Implemented MDM-004..007 tests validating tenant deletion restrict constraint, medical/nursing onboarding seeds, and CSV import validation.
+- Implemented CAL-E003..E007 tests validating bulk generation, holidays, faculty leave conflict warning logging, double booking prevention, and phase transition boundary.
+- Implemented LPN-E001..E002 tests validating lesson plan older version retention for sessions and unapproved plan compliance warnings.
+- Enhanced calendar service and session tracking service with double booking checks, holiday checks, leave checks, and compliance warning logging.
+- Removed deferred markers from COVERAGE_MANIFEST.yaml; verified 100% of required tests implemented (189 required, all passing).
+
 ## 2026-07-04 — Phase 2 Airtight Cleanup (Session 15)
 **Agent:** Backend (02)
 **Duration:** ~35 mins

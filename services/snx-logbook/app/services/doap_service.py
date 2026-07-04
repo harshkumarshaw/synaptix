@@ -23,6 +23,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from packages.shared.db.session import get_db
+from packages.shared.mdm.config_service import MdmConfigService
 
 
 class DoapServiceError(Exception):
@@ -105,7 +106,7 @@ class DoapService:
             tenant_id=tenant_id,
             student_id=data.student_id,
             elective_id=None,
-            subject_code=self._infer_subject_code(data.competency_code),
+            subject_code=await self._infer_subject_code(tenant_id, data.competency_code),
             competency_code=data.competency_code,
             professional_phase="Phase I",  # Safe default since DOAP table lacks professional_phase
             nmc_level=data.nmc_level,
@@ -231,8 +232,11 @@ class DoapService:
             last_record_at=records_responses[-1].signed_off_at if records_responses else None,
         )
 
-    def _infer_subject_code(self, competency_code: str) -> str:
+    async def _infer_subject_code(self, tenant_id: UUID, competency_code: str) -> str:
         """Extract subject prefix from competency_code (e.g., AN1.1 -> ANAT)."""
+        mdm = MdmConfigService(self.db)
+        mapping = await mdm.get_subject_code_mapping(tenant_id)
+        
         # Extract letters at start of competency_code
         prefix_chars = []
         for char in competency_code:
@@ -242,25 +246,8 @@ class DoapService:
                 break
         prefix = "".join(prefix_chars).upper()
 
-        subject_map = {
-            "AN": "ANAT",
-            "PY": "PHYS",
-            "BI": "BIOC",
-            "MI": "MICR",
-            "PA": "PATH",
-            "PH": "PHAR",
-            "FM": "FMED",
-            "CM": "CMED",
-            "GM": "GMED",
-            "GS": "GSUR",
-            "OG": "OBGY",
-            "PE": "PEDI",
-            "OR": "ORTH",
-            "OP": "OPHT",
-            "EN": "ENT",
-            "DE": "DERM",
-            "PS": "PSYC",
-            "RD": "RADI",
-            "ANESTH": "ANES",
-        }
-        return subject_map.get(prefix, "UNKN")
+        subject_code = mapping.get(prefix)
+        if not subject_code:
+            import logging
+            logging.warning("No subject_code mapping for prefix '%s'. Using 'UNKN'.", prefix)
+        return subject_code or "UNKN"

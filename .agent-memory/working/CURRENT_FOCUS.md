@@ -4,22 +4,22 @@
 
 ## Current Phase
 
-**PHASE 2 COMPLETE AND AIRTIGHT (Session 15 done — 2026-07-04).**
-**Next:** Session 16 — Phase 2.5 (DOAP + Logbook NMC compliance) or Phase 3.
+**PHASE 2.5 PULL-IN COMPLETE (Session 16 done — 2026-07-04).**
+**Next:** Proceed with rest of Phase 2.5 (DOAP + Logbook NMC compliance) or Phase 3.
 
-## Phase 2 Final State (as of 2026-07-04 Session 15)
+## Phase 2 Final State (as of 2026-07-04 Session 16)
 
 | Metric | Value |
 |--------|-------|
-| Required tests | 178 |
-| Implemented | **178** |
+| Required tests | 189 |
+| Implemented | **189** |
 | Missing | **0** |
-| Deferred Phase 2.5 | 28 |
+| Deferred Phase 2.5 | 17 |
 | Deferred Phase 3 | 41 |
 | Deferred Phase 4 | 20 |
 | **Total registered** | **267** |
 
-**Final test run: 122 passed, 7 skipped, 13 xfailed, 0 xpassed — 0 FAILED**
+**Final test run: 133 passed, 7 skipped, 13 xfailed, 0 xpassed — 0 FAILED**
 
 ## Active Modules
 
@@ -36,6 +36,11 @@
 
 ## Recently Completed
 
+- **2026-07-04 Session 16 (Backend Agent 02 — Phase 2.5 Pull-In):**
+  - Implemented 11 deferred tests: MDM-004..007, CAL-E003..007, LPN-E001..E002.
+  - Enhanced calendar service and session tracking service with validation logic.
+  - Session log: `docs/sessions/2026-07-04-session-2.md`
+
 - **2026-07-04 Session 15 (Backend Agent 02 — Phase 2 Airtight Cleanup):**
   - Applied migration `a9054655e43f` to fix trigger `fn_sync_attendance_to_foundation_course()` column name mapping issues.
   - Converted `test_db_session` from SQLite to PostgreSQL, bypassing FK validation by disabling triggers in the test container for unit tests.
@@ -51,16 +56,13 @@
   - Created docs/verification/phase2_scorecard.md with Phase 2 declaration.
   - Session log: `docs/sessions/2026-07-01-session-14.md`
 
-## Known Issues (Resolved in Session 15)
+## Known Issues (Resolved in Session 16)
 
-1. **FCS-002 trigger bug**: Fixed via migration `a9054655e43f` (Resolved)
-2. **12 xpassed stubs**: xfail markers removed (Resolved)
-3. **LEV-002/003**: Resolved via flush/refresh pattern (Resolved)
-4. **ELEC SQLite**: Switched to PostgreSQL test database with trigger disabling (Resolved)
+1. **11 deferred tests**: Fully implemented and passing (Resolved)
 
-## Up Next (Session 16 Priority Order)
+## Up Next (Session 17 Priority Order)
 
-1. Begin Phase 2.5: DOAP + Logbook NMC compliance (28 deferred tests)
+1. Complete the rest of Phase 2.5 (DOAP + Logbook NMC compliance) or Phase 3.
 
 ## Blockers
 
