@@ -92,6 +92,7 @@ async def set_tenant_context(session: AsyncSession, tenant_id: uuid.UUID) -> Non
         tenant_id: UUID of the current tenant.
     """
     import os
+
     is_local = os.environ.get("SNX_ENV") != "test"
     local_str = "true" if is_local else "false"
     await session.execute(

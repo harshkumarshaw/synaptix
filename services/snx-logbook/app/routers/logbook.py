@@ -10,11 +10,11 @@ from app.schemas import (
     FoundationCourseHoursLog,
     FoundationCourseRecordResponse,
     FoundationCourseSignoffPayload,
+    LogbookAssessmentResponse,
     LogbookEntryCreate,
     LogbookEntryResponse,
-    LogbookSignoffRequest,
     LogbookEntrySubmitRequest,
-    LogbookAssessmentResponse,
+    LogbookSignoffRequest,
 )
 from app.services.logbook_service import LogbookService, LogbookServiceError
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -22,7 +22,6 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from packages.shared.auth.dependencies import get_current_user
 from packages.shared.auth.jwt import TokenPayload
 from packages.shared.errors import DuplicateRecordError, ValidationError
-
 
 router = APIRouter(prefix="/logbook", tags=["logbook"])
 
@@ -255,8 +254,8 @@ async def list_logbook_entries(
     entry_status: str | None = Query(None, alias="status"),
     competency_code: str | None = None,
     is_core: bool | None = None,
-    current_user: Annotated[TokenPayload, Depends(get_current_user)],
-    service: Annotated[LogbookService, Depends(LogbookService)],
+    current_user: Annotated[TokenPayload, Depends(get_current_user)] = Depends(get_current_user),
+    service: Annotated[LogbookService, Depends(LogbookService)] = Depends(LogbookService),
 ) -> list[LogbookEntryResponse]:
     # Authorization check: student can only list their own entries
     # Admin / Faculty / HOD can list any
@@ -298,4 +297,3 @@ async def get_ia_assessment(
         professional_phase=professional_phase,
     )
     return LogbookAssessmentResponse.model_validate(result)
-

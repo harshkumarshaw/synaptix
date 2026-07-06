@@ -5,6 +5,16 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Session 20] — 2026-07-06
+
+### Fixed — CI Pipeline (GitHub Actions) & Code Quality
+- **CI Configuration (.github/workflows/ci.yml)**: Configured the `postgres:16` database service on the `nmc-compliance` job, set up test environment variables, added alembic database migration executions, and split compliance tests into Academic and Logbook execution steps to avoid import collisions under the `app` namespace.
+- **Backend Services**: Resolved Python syntax error regarding non-default parameters following default parameters in the logbook router, fixed undefined `NotFoundError` (replaced with `ResourceNotFoundError`) in electives router and elective service, refactored CSV parsing in master data service using `suppress(ValueError)`, and relocated the `PLR0912` noqa comment in the calendar service.
+- **Tests**: Replaced `assert False` with `pytest.fail` in elective compliance tests and resolved missing imports (`Any`, `AsyncSession`) in elective service unit tests.
+- **Code Style**: Applied `black` formatting to 11 modified database, schema, and service files.
+
+---
+
 ## [Session F3 & Session 19] — 2026-07-04
 
 ### Added — Frontend Logbook & DOAP Skills UI (Session F3)

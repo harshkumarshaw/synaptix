@@ -25,9 +25,9 @@ class CalendarService:
     def __init__(self, db: Annotated[AsyncSession, Depends(get_db)]) -> None:
         self.db = db
 
-    async def create_event(
+    async def create_event(  # noqa: PLR0912
         self, tenant_id: uuid.UUID, event_in: EventCreate, actor_id: uuid.UUID | None = None
-    ) -> Event:  # noqa: PLR0912
+    ) -> Event:
         # Determine the primary course from event_in.courses to fetch default_attendance_category
         primary_course_id = None
         for course_item in event_in.courses:

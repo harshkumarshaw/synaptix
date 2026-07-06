@@ -1,7 +1,9 @@
 """MDM Configuration Service — reads tenant-scoped config from mdm_configs table."""
+
 from decimal import Decimal
 from typing import Any, TypeVar
 from uuid import UUID
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,9 +14,7 @@ class MdmConfigService:
     def __init__(self, session: AsyncSession):
         self.session = session
 
-    async def get(
-        self, tenant_id: UUID, key: str, default: Any = None
-    ) -> Any:
+    async def get(self, tenant_id: UUID, key: str, default: Any = None) -> Any:
         """Get a config value by key. Returns default if not found."""
         from packages.shared.db.models import MdmConfig  # avoid circular
 
@@ -73,9 +73,7 @@ class MdmConfigService:
         # Global default
         return Decimal("10.0"), Decimal("40.0")
 
-    async def get_attendance_thresholds(
-        self, tenant_id: UUID, attendance_category: str
-    ) -> Decimal:
+    async def get_attendance_thresholds(self, tenant_id: UUID, attendance_category: str) -> Decimal:
         """Get attendance threshold for a category."""
         defaults = {
             "theory": Decimal("75.00"),
@@ -100,9 +98,23 @@ class MdmConfigService:
     def _default_subject_mapping() -> dict[str, str]:
         """NMC CBME 2019 standard prefix mapping."""
         return {
-            "AN": "ANAT", "PY": "PHYS", "BI": "BIOC", "MI": "MICR",
-            "PA": "PATH", "PH": "PHAR", "FM": "FMED", "CM": "CMED",
-            "GM": "GMED", "GS": "GSUR", "OG": "OBGY", "PE": "PEDI",
-            "OR": "ORTH", "OP": "OPHT", "EN": "ENT",  "DE": "DERM",
-            "PS": "PSYC", "RD": "RADI", "AS": "ANES",
+            "AN": "ANAT",
+            "PY": "PHYS",
+            "BI": "BIOC",
+            "MI": "MICR",
+            "PA": "PATH",
+            "PH": "PHAR",
+            "FM": "FMED",
+            "CM": "CMED",
+            "GM": "GMED",
+            "GS": "GSUR",
+            "OG": "OBGY",
+            "PE": "PEDI",
+            "OR": "ORTH",
+            "OP": "OPHT",
+            "EN": "ENT",
+            "DE": "DERM",
+            "PS": "PSYC",
+            "RD": "RADI",
+            "AS": "ANES",
         }

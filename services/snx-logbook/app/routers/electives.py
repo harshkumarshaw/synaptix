@@ -229,5 +229,5 @@ async def withdraw_allocation(
             allocation_id=allocation_id,
             actor_id=current_user.user_uuid,
         )
-    except NotFoundError as e:
+    except ResourceNotFoundError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)

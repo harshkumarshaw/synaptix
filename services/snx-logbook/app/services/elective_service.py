@@ -706,7 +706,9 @@ class ElectiveService:
         )
         alloc = result.scalar_one_or_none()
         if alloc is None:
-            raise NotFoundError(f"Allocation {allocation_id} not found or already withdrawn")
+            raise ResourceNotFoundError(
+                f"Allocation {allocation_id} not found or already withdrawn"
+            )
 
         # Soft-delete the allocation
         alloc.deleted_at = datetime.now(UTC)

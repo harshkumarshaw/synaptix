@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import uuid
+from contextlib import suppress
 from datetime import UTC
-from typing import Annotated
+from typing import Annotated, Any
 
 from app.models.master_data import MasterDataEntity
 from app.schemas.master_data import MasterDataEntityCreate, MasterDataEntityUpdate
@@ -127,7 +128,7 @@ class MasterDataService:
 
     async def import_csv(self, tenant_id: uuid.UUID, csv_content: str) -> dict[str, Any]:
         """Bulk import entities from CSV content. Returns {imported: X, errors: [{line: Y, error: Z}]}.
-        
+
         CSV format: category,code,name,sort_order
         """
         import csv
@@ -136,7 +137,7 @@ class MasterDataService:
         reader = csv.reader(StringIO(csv_content.strip()))
         imported_count = 0
         errors = []
-        
+
         # Skip header if present
         header = next(reader, None)
         has_header = True
@@ -151,21 +152,21 @@ class MasterDataService:
             if not row:
                 continue
             if len(row) < 3:
-                errors.append({"line": line_num, "error": "Insufficient columns, need category, code, name"})
+                errors.append(
+                    {"line": line_num, "error": "Insufficient columns, need category, code, name"}
+                )
                 continue
-            
+
             category, code, name = row[0].strip(), row[1].strip(), row[2].strip()
             sort_order = 0
             if len(row) >= 4:
-                try:
+                with suppress(ValueError):
                     sort_order = int(row[3].strip())
-                except ValueError:
-                    pass
-            
+
             if not category or not code or not name:
                 errors.append({"line": line_num, "error": "category, code, and name are required"})
                 continue
-            
+
             try:
                 # Use create_entity to validate duplicates and save
                 await self.create_entity(
@@ -175,10 +176,10 @@ class MasterDataService:
                         code=code,
                         name=name,
                         sort_order=sort_order,
-                    )
+                    ),
                 )
                 imported_count += 1
             except Exception as e:
                 errors.append({"line": line_num, "error": str(e)})
-                
+
         return {"imported": imported_count, "errors": errors}

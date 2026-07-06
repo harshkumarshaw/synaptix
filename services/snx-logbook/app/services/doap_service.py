@@ -236,7 +236,7 @@ class DoapService:
         """Extract subject prefix from competency_code (e.g., AN1.1 -> ANAT)."""
         mdm = MdmConfigService(self.db)
         mapping = await mdm.get_subject_code_mapping(tenant_id)
-        
+
         # Extract letters at start of competency_code
         prefix_chars = []
         for char in competency_code:
@@ -249,5 +249,6 @@ class DoapService:
         subject_code = mapping.get(prefix)
         if not subject_code:
             import logging
+
             logging.warning("No subject_code mapping for prefix '%s'. Using 'UNKN'.", prefix)
         return subject_code or "UNKN"

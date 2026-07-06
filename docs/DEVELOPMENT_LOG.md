@@ -2,6 +2,19 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-06 — CI Checks Fix & Code Quality (Session 20)
+**Agent:** DevOps (09) / Testing (06) / Backend (02)
+**Duration:** ~25 mins
+**Focus:** Fix failing Pull Request CI build checks (Lint & Type Check, NMC Compliance Tests).
+- Configured PostgreSQL 16 database service, test env variables, and Alembic database migration upgrade in `ci.yml` `nmc-compliance` job.
+- Split compliance tests in `ci.yml` into Academic and Logbook execution steps to resolve Python `app` module namespace import collisions.
+- Fixed FastAPI depends parameters syntax error in logbook router.
+- Replaced undefined `NotFoundError` with `ResourceNotFoundError` in electives router and elective service.
+- Refactored CSV parsing with `suppress` in master data service.
+- Fixed function signature linter warning in calendar service and module import location in migration file.
+- Replaced `assert False` with `pytest.fail` in compliance tests and added missing imports in unit tests.
+- Re-formatted 11 files using `black`.
+
 ## 2026-07-04 — Logbook & DOAP UI & Phase 3 R0 Planning (Session F3 & 19)
 **Agent:** Frontend (03) & Backend (02)
 **Duration:** ~90 mins

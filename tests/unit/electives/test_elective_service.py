@@ -12,9 +12,11 @@ DOAP is NOT in this file — see Session 10.
 from __future__ import annotations
 
 import uuid
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from sqlalchemy.ext.asyncio import AsyncSession
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -340,7 +342,7 @@ async def test_elec_e004_dry_run_does_not_write(mock_db: AsyncMock, tenant_id: u
         result.scalars = MagicMock(return_value=MagicMock(all=MagicMock(return_value=[])))
         return result
 
-    mock_db.execute = AsyncMock(side_effect=lambda *a, **kw: side_effect_execute(*a, **kw))
+    mock_db.execute = AsyncMock(side_effect=side_effect_execute)
 
     payload = AllocationRunRequest(
         curriculum_id=uuid.uuid4(),

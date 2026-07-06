@@ -48,7 +48,7 @@ async def test_elec_nmc_001_elective_duration_four_weeks() -> None:
         block_duration_weeks=1,  # violates NMC CBME 2019 Reg 7
     )
     # TODO (11-nmc-compliance): assert compliance validator raises NMC-ELEC-001
-    assert False, "NMC compliance check not yet implemented"
+    pytest.fail("NMC compliance check not yet implemented")
 
 
 # ---------------------------------------------------------------------------
@@ -68,7 +68,7 @@ async def test_elec_nmc_002_at_least_one_clinical_elective() -> None:
     """
     # TODO (11-nmc-compliance): create student with two non-clinical elective allocations,
     # call eligibility checker, assert SNX-NMC-ELEC-002 raised.
-    assert False, "NMC compliance check not yet implemented"
+    pytest.fail("NMC compliance check not yet implemented")
 
 
 # ---------------------------------------------------------------------------
@@ -88,7 +88,7 @@ async def test_elec_nmc_003_reflection_required_per_block() -> None:
     """
     # TODO (11-nmc-compliance): create allocation with no logbook_entry (elective_id set),
     # call NExT eligibility check, assert blocked with reason ELEC-NMC-003.
-    assert False, "NMC compliance check not yet implemented"
+    pytest.fail("NMC compliance check not yet implemented")
 
 
 # ---------------------------------------------------------------------------
@@ -108,4 +108,4 @@ async def test_elec_nmc_004_faculty_supervisor_required() -> None:
     """
     # TODO (11-nmc-compliance): create allocation with supervisor_id=None,
     # call elective_certification_check, assert SNX-NMC-ELEC-004 raised.
-    assert False, "NMC compliance check not yet implemented"
+    pytest.fail("NMC compliance check not yet implemented")

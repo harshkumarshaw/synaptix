@@ -3,7 +3,7 @@ from __future__ import annotations
 from app.models.electives import Elective, ElectiveAllocation, StudentElectivePreference
 from app.models.logbook import AetcomRecord, FoundationCourseRecord
 from app.models.logbook_phase2 import DoapSessionRecord, LogbookAssessment, LogbookEntry
-from app.models.stubs import Faculty, Student, Tenant, WorkflowInstance, WorkflowDefinition
+from app.models.stubs import Faculty, Student, Tenant, WorkflowDefinition, WorkflowInstance
 from app.models.user import User
 
 __all__ = [
@@ -23,5 +23,3 @@ __all__ = [
     "LogbookAssessment",
     "DoapSessionRecord",
 ]
-
-
