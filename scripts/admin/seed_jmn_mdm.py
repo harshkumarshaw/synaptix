@@ -1,4 +1,5 @@
 """Seed MDM configuration for JMN Medical College."""
+
 import asyncio
 import os
 import json
@@ -18,11 +19,25 @@ MDM_CONFIGS = [
     {
         "config_key": "competency.prefix_to_subject_code",
         "config_value": {
-            "AN": "ANAT", "PY": "PHYS", "BI": "BIOC", "MI": "MICR",
-            "PA": "PATH", "PH": "PHAR", "FM": "FMED", "CM": "CMED",
-            "GM": "GMED", "GS": "GSUR", "OG": "OBGY", "PE": "PEDI",
-            "OR": "ORTH", "OP": "OPHT", "EN": "ENT",  "DE": "DERM",
-            "PS": "PSYC", "RD": "RADI", "AS": "ANES",
+            "AN": "ANAT",
+            "PY": "PHYS",
+            "BI": "BIOC",
+            "MI": "MICR",
+            "PA": "PATH",
+            "PH": "PHAR",
+            "FM": "FMED",
+            "CM": "CMED",
+            "GM": "GMED",
+            "GS": "GSUR",
+            "OG": "OBGY",
+            "PE": "PEDI",
+            "OR": "ORTH",
+            "OP": "OPHT",
+            "EN": "ENT",
+            "DE": "DERM",
+            "PS": "PSYC",
+            "RD": "RADI",
+            "AS": "ANES",
         },
         "description": "NMC CBME 2019 competency prefix → subject code mapping",
     },
@@ -32,8 +47,17 @@ MDM_CONFIGS = [
         "config_value": {
             "institution_type": "medical",
             "regulatory_body": "NMC",
-            "departments": ["Anatomy", "Physiology", "Biochemistry", "Pathology", "Pharmacology", "Microbiology", "Forensic Medicine", "Community Medicine"],
-            "documents_required": ["NMC_Registration", "MBBS_Degree", "MD_MS_Degree"]
+            "departments": [
+                "Anatomy",
+                "Physiology",
+                "Biochemistry",
+                "Pathology",
+                "Pharmacology",
+                "Microbiology",
+                "Forensic Medicine",
+                "Community Medicine",
+            ],
+            "documents_required": ["NMC_Registration", "MBBS_Degree", "MD_MS_Degree"],
         },
         "description": "Default onboarding configuration template for medical colleges",
     },
@@ -43,13 +67,18 @@ MDM_CONFIGS = [
         "config_value": {
             "institution_type": "nursing",
             "regulatory_body": "INC",
-            "departments": ["Fundamentals of Nursing", "Community Health Nursing", "Medical Surgical Nursing", "Pediatric Nursing", "Obstetric and Gynecological Nursing", "Psychiatric Nursing"],
-            "documents_required": ["INC_Registration", "BSc_Nursing_Degree", "MSc_Nursing_Degree"]
+            "departments": [
+                "Fundamentals of Nursing",
+                "Community Health Nursing",
+                "Medical Surgical Nursing",
+                "Pediatric Nursing",
+                "Obstetric and Gynecological Nursing",
+                "Psychiatric Nursing",
+            ],
+            "documents_required": ["INC_Registration", "BSc_Nursing_Degree", "MSc_Nursing_Degree"],
         },
         "description": "Default onboarding configuration template for nursing colleges",
     },
-
-
     # IA configs per subject (Phase I subjects)
     *[
         {
@@ -59,7 +88,6 @@ MDM_CONFIGS = [
         }
         for subj in ["ANAT", "PHYS", "BIOC"]
     ],
-
     # IA configs (Phase II subjects — higher IA max for clinical)
     *[
         {
@@ -69,7 +97,6 @@ MDM_CONFIGS = [
         }
         for subj in ["PATH", "PHAR", "MICR", "FMED"]
     ],
-
     # Attendance thresholds (NMC defaults)
     *[
         {
@@ -78,19 +105,22 @@ MDM_CONFIGS = [
             "description": f"Attendance threshold for {cat} ({threshold}%)",
         }
         for cat, threshold in [
-            ("theory", 75.00), ("practical", 80.00), ("clinical", 80.00),
-            ("doap", 80.00), ("ece", 80.00), ("aetcom", 75.00),
-            ("foundation_course", 75.00), ("elective", 75.00),
+            ("theory", 75.00),
+            ("practical", 80.00),
+            ("clinical", 80.00),
+            ("doap", 80.00),
+            ("ece", 80.00),
+            ("aetcom", 75.00),
+            ("foundation_course", 75.00),
+            ("elective", 75.00),
         ]
     ],
-
     # Elective allocation algorithm
     {
         "config_key": "elective.allocation_algorithm",
         "config_value": "ranked",
         "description": "Elective allocation algorithm: fcfs or ranked",
     },
-
     # Backdating thresholds
     {
         "config_key": "logbook.backdating.review_threshold_days",
@@ -102,7 +132,6 @@ MDM_CONFIGS = [
         "config_value": 30,
         "description": "Logbook entries backdated more than N days route to HOD",
     },
-
     # Late attendance
     {
         "config_key": "attendance.late_threshold_minutes",
@@ -114,7 +143,6 @@ MDM_CONFIGS = [
         "config_value": False,
         "description": "Whether late arrival counts as 0.5 attendance",
     },
-
     # Correction window
     {
         "config_key": "attendance.correction_window_hours",
@@ -146,7 +174,7 @@ async def main():
                     "config_key": config["config_key"],
                     "config_value": val_str,
                     "description": config["description"],
-                }
+                },
             )
         await session.commit()
         print(f"Seeded {len(MDM_CONFIGS)} MDM configs for JMN Medical College")

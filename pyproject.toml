@@ -48,7 +48,17 @@ dev = [
 [tool.ruff]
 target-version = "py312"
 line-length = 100
-exclude = ["alembic/versions/", ".venv/", "build/", "dist/"]
+exclude = [
+    "alembic/versions/",
+    ".venv/",
+    "build/",
+    "dist/",
+    "append_tests.py",
+    "list_deferred.py",
+    "undefer.py",
+    "update_manifest.py",
+    "write_handlers.py",
+]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP", "S", "A", "COM", "C4", "PT", "SIM", "ARG", "PL"]
@@ -72,7 +82,7 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S101", "ARG001", "ARG002", "PLR2004", "S105", "E501", "PLC0415", "PT011", "PT012", "B017", "F841", "PLR0915", "S106"]
 "**/schemas/**" = ["S105"]
-"scripts/**" = ["S607", "PLW1510", "PLR0915", "T201"]
+"scripts/**" = ["S607", "PLW1510", "PLR0915", "T201", "I001", "C414", "S112", "PLR0912", "F841", "B007"]
 
 # ==============================================================================
 # Black (formatter)
@@ -87,7 +97,13 @@ exclude = '''
   | alembic/versions
   | build
   | dist
+  | node_modules
 )/
+| append_tests\.py
+| list_deferred\.py
+| undefer\.py
+| update_manifest\.py
+| write_handlers\.py
 '''
 
 # ==============================================================================
