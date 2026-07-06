@@ -10,7 +10,6 @@ Manifest IDs: AUTH-003, AUTH-004
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
 
 import pytest
 from freezegun import freeze_time
@@ -182,9 +181,8 @@ class TestDecodeToken:
             expires_in_minutes=1,  # expires in 1 minute
         )
         # Travel 2 minutes into the future
-        with freeze_time("2026-06-20 00:02:00"):
-            with pytest.raises(TokenExpiredError):
-                decode_token(token, TEST_SECRET)
+        with freeze_time("2026-06-20 00:02:00"), pytest.raises(TokenExpiredError):
+            decode_token(token, TEST_SECRET)
 
     @pytest.mark.unit
     def test_empty_string_raises_token_invalid_error(self) -> None:

@@ -1,20 +1,23 @@
 import pytest
-import uuid
-from app.services.master_data_service import MasterDataService
 from app.schemas.master_data import MasterDataEntityCreate, MasterDataEntityUpdate
-from packages.shared.errors import ResourceNotFoundError, DuplicateRecordError
+from app.services.master_data_service import MasterDataService
+
+from packages.shared.errors import DuplicateRecordError, ResourceNotFoundError
 
 
 @pytest.mark.anyio
 async def test_mdm_lifecycle(db_session, tenant_id):
     """Test creation, retrieval, listing, updating, and soft deletion of master data entities.
-    
+
     Manifest IDs: MDM-001, MDM-002, MDM-003, MDM-008
     """
     # Clean up old data to ensure idempotency
-    from sqlalchemy import delete
     from app.models.master_data import MasterDataEntity
-    await db_session.execute(delete(MasterDataEntity).where(MasterDataEntity.tenant_id == tenant_id))
+    from sqlalchemy import delete
+
+    await db_session.execute(
+        delete(MasterDataEntity).where(MasterDataEntity.tenant_id == tenant_id)
+    )
     await db_session.commit()
 
     service = MasterDataService(db_session)
@@ -28,7 +31,7 @@ async def test_mdm_lifecycle(db_session, tenant_id):
             name="Casual Leave",
             sort_order=2,
             extra_attributes={"max_days": 15},
-        )
+        ),
     )
     assert entity1.category == "leave_type"
     assert entity1.code == "CL"
@@ -44,7 +47,7 @@ async def test_mdm_lifecycle(db_session, tenant_id):
             code="SL",
             name="Sick Leave",
             sort_order=1,
-        )
+        ),
     )
 
     # 2. Prevent Duplicate Code in the Same Category
@@ -55,7 +58,7 @@ async def test_mdm_lifecycle(db_session, tenant_id):
                 category="leave_type",
                 code="CL",
                 name="Duplicate Casual Leave",
-            )
+            ),
         )
 
     # 3. Retrieve Single Entity
@@ -76,7 +79,7 @@ async def test_mdm_lifecycle(db_session, tenant_id):
             name="Casual Leave Updated",
             sort_order=0,
             extra_attributes={"max_days": 20},
-        )
+        ),
     )
     assert updated.name == "Casual Leave Updated"
     assert updated.sort_order == 0

@@ -15,12 +15,7 @@ from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Request, status
-from fastapi.responses import JSONResponse
-
-from packages.shared.auth.dependencies import get_current_user
-from packages.shared.auth.jwt import TokenPayload
-from packages.shared.logging import get_logger
+from fastapi import APIRouter, Depends, status
 
 from app.schemas.auth import (
     LoginRequest,
@@ -33,6 +28,9 @@ from app.schemas.auth import (
     UserProfileResponse,
 )
 from app.services.auth_service import AuthService
+from packages.shared.auth.dependencies import get_current_user
+from packages.shared.auth.jwt import TokenPayload
+from packages.shared.logging import get_logger
 
 logger = get_logger(__name__)
 

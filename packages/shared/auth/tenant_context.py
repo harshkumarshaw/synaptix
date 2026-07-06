@@ -68,9 +68,7 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
         super().__init__(app)
         self.exempt_paths = exempt_paths or TENANT_EXEMPT_PATHS
 
-    async def dispatch(
-        self, request: Request, call_next: RequestResponseEndpoint
-    ) -> Response:
+    async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         """Process the request, extracting and validating tenant context.
 
         Args:

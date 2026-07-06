@@ -1,10 +1,11 @@
-import pytest
 import datetime
 import uuid
-from app.services.calendar_service import CalendarService
+
+import pytest
 from app.models.course import Course
 from app.models.tenant import Tenant
-from app.schemas.calendar import EventCreate, EventCourseBase, EventFacultyBase
+from app.schemas.calendar import EventCourseBase, EventCreate
+from app.services.calendar_service import CalendarService
 
 
 @pytest.mark.anyio
@@ -26,23 +27,30 @@ async def test_calendar_event_validations(db_session, tenant_id):
     dept_id = uuid.uuid4()
     # Insert a department using raw sql to avoid missing imports/dependencies
     from sqlalchemy import text
+
     await db_session.execute(
-        text("INSERT INTO departments (id, tenant_id, name, code) VALUES (:id, :t_id, 'Anat', 'AN')"),
-        {"id": dept_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO departments (id, tenant_id, name, code) VALUES (:id, :t_id, 'Anat', 'AN')"
+        ),
+        {"id": dept_id, "t_id": tenant_id},
     )
 
     # Seed program
     prog_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO programs (id, tenant_id, name, code, type, duration_years) VALUES (:id, :t_id, 'MBBS', 'MBBS-CBME', 'professional_phase', 5)"),
-        {"id": prog_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO programs (id, tenant_id, name, code, type, duration_years) VALUES (:id, :t_id, 'MBBS', 'MBBS-CBME', 'professional_phase', 5)"
+        ),
+        {"id": prog_id, "t_id": tenant_id},
     )
 
     # Seed curriculum
     curr_id = uuid.uuid4()
     await db_session.execute(
-        text("INSERT INTO curricula (id, tenant_id, program_id, name, version_code) VALUES (:id, :t_id, :p_id, 'CBME 2023', 'CBME-2023')"),
-        {"id": curr_id, "t_id": tenant_id, "p_id": prog_id}
+        text(
+            "INSERT INTO curricula (id, tenant_id, program_id, name, version_code) VALUES (:id, :t_id, :p_id, 'CBME 2023', 'CBME-2023')"
+        ),
+        {"id": curr_id, "t_id": tenant_id, "p_id": prog_id},
     )
 
     course_id = uuid.uuid4()
@@ -54,7 +62,7 @@ async def test_calendar_event_validations(db_session, tenant_id):
         department_id=dept_id,
         name="Anatomy Course",
         code="ANAT-TEST",
-        default_attendance_category="practical"
+        default_attendance_category="practical",
     )
     db_session.add(course)
 
@@ -62,13 +70,17 @@ async def test_calendar_event_validations(db_session, tenant_id):
     ay_id = uuid.uuid4()
     # Seed academic year
     await db_session.execute(
-        text("INSERT INTO academic_years (id, tenant_id, name, start_date, end_date, is_current) VALUES (:id, :t_id, '2026-2027', '2026-08-01', '2027-07-31', true)"),
-        {"id": ay_id, "t_id": tenant_id}
+        text(
+            "INSERT INTO academic_years (id, tenant_id, name, start_date, end_date, is_current) VALUES (:id, :t_id, '2026-2027', '2026-08-01', '2027-07-31', true)"
+        ),
+        {"id": ay_id, "t_id": tenant_id},
     )
     # Seed batch
     await db_session.execute(
-        text("INSERT INTO batches (id, tenant_id, academic_year_id, program_id, name, code) VALUES (:id, :t_id, :ay_id, :prog_id, 'MBBS 2026', 'MBBS2026')"),
-        {"id": batch_id, "t_id": tenant_id, "ay_id": ay_id, "prog_id": prog_id}
+        text(
+            "INSERT INTO batches (id, tenant_id, academic_year_id, program_id, name, code) VALUES (:id, :t_id, :ay_id, :prog_id, 'MBBS 2026', 'MBBS2026')"
+        ),
+        {"id": batch_id, "t_id": tenant_id, "ay_id": ay_id, "prog_id": prog_id},
     )
     await db_session.commit()
 
@@ -86,7 +98,7 @@ async def test_calendar_event_validations(db_session, tenant_id):
         start_time=datetime.time(9, 0),
         end_time=datetime.time(10, 0),
         courses=[EventCourseBase(course_id=course_id, is_primary=True)],
-        assigned_faculty=[]
+        assigned_faculty=[],
     )
     with pytest.raises(ValueError, match="ECE event type allowed only in Phase I"):
         await calendar_service.create_event(tenant_id, event_in_ece_fail)
@@ -102,7 +114,7 @@ async def test_calendar_event_validations(db_session, tenant_id):
         start_time=datetime.time(9, 0),
         end_time=datetime.time(10, 0),
         courses=[EventCourseBase(course_id=course_id, is_primary=True)],
-        assigned_faculty=[]
+        assigned_faculty=[],
     )
     ece_event = await calendar_service.create_event(tenant_id, event_in_ece_ok)
     assert ece_event.id is not None
@@ -120,7 +132,7 @@ async def test_calendar_event_validations(db_session, tenant_id):
         start_time=datetime.time(10, 0),
         end_time=datetime.time(12, 0),
         courses=[EventCourseBase(course_id=course_id, is_primary=True)],
-        assigned_faculty=[]
+        assigned_faculty=[],
     )
     with pytest.raises(ValueError, match="Clinical postings event type NOT allowed in Phase I"):
         await calendar_service.create_event(tenant_id, event_in_clin_fail)

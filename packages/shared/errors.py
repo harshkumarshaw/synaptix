@@ -177,6 +177,25 @@ class AttendanceAlreadyMarkedError(SynaptixError):
     code = "SNX-ATT-003"
 
 
+class AttendanceConflictError(SynaptixError):
+    """Raised when an offline sync creates an irreconcilable conflict.
+
+    Under normal circumstances the latest-wins rule resolves conflicts.
+    This error is raised only when both parties claim the same timestamp
+    and produce different statuses.
+    """
+
+    code = "SNX-ATT-006"
+
+
+class AttendanceCorrectionWindowExpiredError(SynaptixError):
+    """Raised when trying to correct attendance after the 24h window has passed
+    without HOD approval.
+    """
+
+    code = "SNX-ATT-008"
+
+
 class QRCodeExpiredError(SynaptixError):
     """Raised when a student scans an expired QR code for attendance."""
 

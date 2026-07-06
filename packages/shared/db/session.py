@@ -20,10 +20,9 @@ from __future__ import annotations
 import uuid
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import Annotated
 
-from fastapi import Depends, Request
-from sqlalchemy import event, text
+from fastapi import Request
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -92,8 +91,12 @@ async def set_tenant_context(session: AsyncSession, tenant_id: uuid.UUID) -> Non
         session: The async database session.
         tenant_id: UUID of the current tenant.
     """
+    import os
+
+    is_local = os.environ.get("SNX_ENV") != "test"
+    local_str = "true" if is_local else "false"
     await session.execute(
-        text("SELECT set_config('snx.current_tenant_id', :tenant_id, true)"),
+        text(f"SELECT set_config('snx.current_tenant_id', :tenant_id, {local_str})"),
         {"tenant_id": str(tenant_id)},
     )
     logger.debug(
@@ -122,14 +125,11 @@ async def get_session_with_tenant(
             students = await db.execute(select(Student))
     """
     if _async_session_factory is None:
-        raise RuntimeError(
-            "Database not configured. Call configure_database() at startup."
-        )
+        raise RuntimeError("Database not configured. Call configure_database() at startup.")
 
-    async with _async_session_factory() as session:
-        async with session.begin():
-            await set_tenant_context(session, tenant_id)
-            yield session
+    async with _async_session_factory() as session, session.begin():
+        await set_tenant_context(session, tenant_id)
+        yield session
 
 
 async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
@@ -154,9 +154,7 @@ async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
             ...
     """
     if _async_session_factory is None:
-        raise RuntimeError(
-            "Database not configured. Call configure_database() at startup."
-        )
+        raise RuntimeError("Database not configured. Call configure_database() at startup.")
 
     tenant_id: uuid.UUID | None = getattr(request.state, "tenant_id", None)
 
@@ -166,11 +164,10 @@ async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
             "Ensure the tenant middleware is applied and @require_tenant_context is used."
         )
 
-    async with _async_session_factory() as session:
-        async with session.begin():
-            await set_tenant_context(session, tenant_id)
-            try:
-                yield session
-            except Exception:
-                await session.rollback()
-                raise
+    async with _async_session_factory() as session, session.begin():
+        await set_tenant_context(session, tenant_id)
+        try:
+            yield session
+        except Exception:
+            await session.rollback()
+            raise

@@ -2,12 +2,16 @@ from __future__ import annotations
 
 import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.schemas.curriculum_migration import (
+    CurriculumMigrationAuditCreate,
+    CurriculumMigrationAuditResponse,
+)
+from app.services.curriculum_migration_service import CurriculumMigrationService
 from packages.shared.auth.dependencies import get_current_user
 from packages.shared.auth.jwt import TokenPayload
-from app.schemas.curriculum_migration import CurriculumMigrationAuditCreate, CurriculumMigrationAuditResponse
-from app.services.curriculum_migration_service import CurriculumMigrationService
 
 router = APIRouter(prefix="/curriculum-migrations", tags=["curriculum-migrations"])
 
@@ -27,7 +31,7 @@ async def record_migration(
         audit = await service.record_migration(
             tenant_id=current_user.tenant_uuid,
             migration_in=migration_in,
-            actor_id=current_user.user_uuid
+            actor_id=current_user.user_uuid,
         )
         return audit
     except ValueError as e:
@@ -46,7 +50,6 @@ async def get_migration_history(
     service: Annotated[CurriculumMigrationService, Depends(CurriculumMigrationService)],
 ) -> list[CurriculumMigrationAuditResponse]:
     history = await service.get_migration_history(
-        tenant_id=current_user.tenant_uuid,
-        student_id=student_id
+        tenant_id=current_user.tenant_uuid, student_id=student_id
     )
     return history

@@ -2,11 +2,6 @@ from __future__ import annotations
 
 import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, Request, status
-
-from packages.shared.auth.dependencies import get_current_user, require_roles
-from packages.shared.auth.jwt import TokenPayload
-from packages.shared.auth.tenant_context import require_tenant_context
 
 from app.schemas.workflow import (
     WorkflowDefinitionCreate,
@@ -16,6 +11,11 @@ from app.schemas.workflow import (
     WorkflowTransitionCreate,
 )
 from app.services.workflow_service import WorkflowService
+from fastapi import APIRouter, Depends, Request, status
+
+from packages.shared.auth.dependencies import get_current_user, require_roles
+from packages.shared.auth.jwt import TokenPayload
+from packages.shared.auth.tenant_context import require_tenant_context
 
 router = APIRouter(prefix="/workflow", tags=["workflow"])
 

@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone
-from typing import Optional, Any
-from sqlalchemy import ForeignKey, ForeignKeyConstraint, DateTime, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID as PGUUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from packages.shared.db.base import TenantScopedBase
-from app.models.user import User
+from datetime import UTC, datetime
+from typing import Any
 
+from app.models.user import User
+from sqlalchemy import DateTime, ForeignKeyConstraint, func
+from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import UUID as PGUUID
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from packages.shared.db.base import TenantScopedBase
 
 
 class WorkflowDefinition(TenantScopedBase):
@@ -16,7 +18,7 @@ class WorkflowDefinition(TenantScopedBase):
 
     name: Mapped[str] = mapped_column(nullable=False)
     code: Mapped[str] = mapped_column(nullable=False)
-    description: Mapped[Optional[str]] = mapped_column(nullable=True)
+    description: Mapped[str | None] = mapped_column(nullable=True)
     version: Mapped[int] = mapped_column(default=1, server_default="1", nullable=False)
     is_current: Mapped[bool] = mapped_column(default=True, server_default="true", nullable=False)
     steps: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
@@ -31,11 +33,15 @@ class WorkflowInstance(TenantScopedBase):
     entity_id: Mapped[uuid.UUID] = mapped_column(PGUUID(as_uuid=True), nullable=False)
     current_step: Mapped[str] = mapped_column(nullable=False)
     status: Mapped[str] = mapped_column(nullable=False)
-    current_assignee_id: Mapped[Optional[uuid.UUID]] = mapped_column(nullable=True)
-    current_assignee_role: Mapped[Optional[str]] = mapped_column(nullable=True)
-    due_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
-    history: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, default=list, server_default="[]", nullable=False)
-    context: Mapped[dict[str, Any]] = mapped_column(JSONB, default=dict, server_default="{}", nullable=False)
+    current_assignee_id: Mapped[uuid.UUID | None] = mapped_column(nullable=True)
+    current_assignee_role: Mapped[str | None] = mapped_column(nullable=True)
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    history: Mapped[list[dict[str, Any]]] = mapped_column(
+        JSONB, default=list, server_default="[]", nullable=False
+    )
+    context: Mapped[dict[str, Any]] = mapped_column(
+        JSONB, default=dict, server_default="{}", nullable=False
+    )
 
     # Composite Foreign Key Constraints
     __table_args__ = (
@@ -52,9 +58,12 @@ class WorkflowInstance(TenantScopedBase):
     )
 
     # Relationships
-    definition: Mapped[WorkflowDefinition] = relationship("WorkflowDefinition", lazy="raise", overlaps="current_assignee")
-    current_assignee: Mapped[Optional[User]] = relationship("User", lazy="raise", overlaps="definition")
-
+    definition: Mapped[WorkflowDefinition] = relationship(
+        "WorkflowDefinition", lazy="raise", overlaps="current_assignee"
+    )
+    current_assignee: Mapped[User | None] = relationship(
+        "User", lazy="raise", overlaps="definition"
+    )
 
 
 class WorkflowTransition(TenantScopedBase):
@@ -64,14 +73,13 @@ class WorkflowTransition(TenantScopedBase):
     from_step: Mapped[str] = mapped_column(nullable=False)
     to_step: Mapped[str] = mapped_column(nullable=False)
     actor_id: Mapped[uuid.UUID] = mapped_column(nullable=False)
-    comment: Mapped[Optional[str]] = mapped_column(nullable=True)
+    comment: Mapped[str | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,
         server_default=func.now(),
-        default=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
     )
-
 
     # Override base classes to omit updated_at and deleted_at (this table is strictly append-only)
     updated_at = None
@@ -92,6 +100,7 @@ class WorkflowTransition(TenantScopedBase):
     )
 
     # Relationships
-    instance: Mapped[WorkflowInstance] = relationship("WorkflowInstance", lazy="raise", overlaps="actor")
+    instance: Mapped[WorkflowInstance] = relationship(
+        "WorkflowInstance", lazy="raise", overlaps="actor"
+    )
     actor: Mapped[User] = relationship("User", lazy="raise", overlaps="instance")
-

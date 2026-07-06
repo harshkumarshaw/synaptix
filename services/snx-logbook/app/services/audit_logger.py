@@ -1,7 +1,9 @@
 import uuid
-from typing import Any, Optional
+from typing import Any
+
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from packages.shared.logging import get_logger
 
 logger = get_logger(__name__)
@@ -10,28 +12,26 @@ logger = get_logger(__name__)
 async def write_audit_log(
     db: AsyncSession,
     tenant_id: uuid.UUID,
-    actor_user_id: Optional[uuid.UUID],
+    actor_user_id: uuid.UUID | None,
     action: str,
     resource_type: str,
     resource_id: uuid.UUID,
-    old_values: Optional[dict[str, Any]] = None,
-    new_values: Optional[dict[str, Any]] = None,
-    metadata_attrs: Optional[dict[str, Any]] = None,
+    old_values: dict[str, Any] | None = None,
+    new_values: dict[str, Any] | None = None,
+    metadata_attrs: dict[str, Any] | None = None,
 ) -> None:
     import json
-    
-    stmt = text(
-        """
+
+    stmt = text("""
         INSERT INTO audit_log (
-            tenant_id, actor_user_id, action, resource_type, resource_id, 
+            tenant_id, actor_user_id, action, resource_type, resource_id,
             old_values, new_values, metadata
         ) VALUES (
             :tenant_id, :actor_user_id, :action, :resource_type, :resource_id,
             :old_values, :new_values, :metadata
         )
-        """
-    )
-    
+        """)
+
     try:
         await db.execute(
             stmt,

@@ -38,7 +38,7 @@ class Settings(BaseSettings):
     )
 
     tenant_header: str = Field(default="X-Tenant-ID", alias="SNX_TENANT_HEADER")
-    
+
     # Asset storage configurations
     storage_dir: str = Field(default="storage/assets", alias="SNX_STORAGE_DIR")
 

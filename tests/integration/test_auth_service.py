@@ -2,27 +2,28 @@
 Integration Tests — Authentication flows.
 Test IDs: AUTH-001, AUTH-002, AUTH-005, AUTH-006, AUTH-007, AUTH-008, AUTH-009, AUTH-010, AUTH-011, AUTH-012, AUTH-013, AUTH-014, AUTH-015, AUTH-016, AUTH-017, AUTH-018, AUTH-019, AUTH-020, AUTH-E001, AUTH-E002, AUTH-E003, AUTH-E004, AUTH-E005
 """
-import uuid
-from datetime import datetime, timezone, timedelta
-import pytest
-import pyotp
-import bcrypt
-from sqlalchemy import select
 
-from packages.shared.errors import AuthenticationError, MFACodeInvalidError
-from packages.shared.auth.jwt import decode_token, TokenPayload
-from app.services.auth_service import AuthService
-from app.models.user import User
-from app.models.tenant import Tenant
+from datetime import UTC, datetime
+
+import bcrypt
+import pyotp
+import pytest
 from app.models.role import Role
+from app.models.tenant import Tenant
+from app.models.user import User
 from app.models.user_role import UserRole
 from app.schemas.auth import (
     LoginRequest,
+    MFAVerifyRequest,
     OTPRequestBody,
     OTPVerifyRequest,
-    MFAVerifyRequest,
-    RefreshRequest,
 )
+from app.services.auth_service import AuthService
+from sqlalchemy import select
+
+from packages.shared.auth.jwt import decode_token
+from packages.shared.errors import AuthenticationError
+
 
 @pytest.mark.anyio
 async def test_auth_service_flows(db_session, app_settings, tenant_id):
@@ -61,7 +62,7 @@ async def test_auth_service_flows(db_session, app_settings, tenant_id):
     user_email = "test_faculty@jmn.edu"
     user_mobile = "+919876543210"
     user_password = "securepassword123"
-    
+
     # Clean up existing user if any
     cleanup_stmt = select(User).where(User.email == user_email, User.tenant_id == tenant_id)
     cleanup_res = await db_session.execute(cleanup_stmt)
@@ -76,7 +77,9 @@ async def test_auth_service_flows(db_session, app_settings, tenant_id):
         email=user_email,
         mobile=user_mobile,
         full_name="Dr. Test Faculty",
-        password_hash=bcrypt.hashpw(user_password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8"),
+        password_hash=bcrypt.hashpw(user_password.encode("utf-8"), bcrypt.gensalt()).decode(
+            "utf-8"
+        ),
         mfa_secret=mfa_secret,
         mfa_enabled=True,
         is_active=True,
@@ -135,7 +138,7 @@ async def test_auth_service_flows(db_session, app_settings, tenant_id):
     # Reload user from DB to check OTP
     await db_session.refresh(user)
     assert user.otp_code is not None
-    assert user.otp_expires_at > datetime.now(timezone.utc)
+    assert user.otp_expires_at > datetime.now(UTC)
 
     # ── Test D: Verify OTP ──
     otp_response = await auth_service.verify_otp(

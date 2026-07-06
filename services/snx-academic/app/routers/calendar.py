@@ -1,15 +1,15 @@
 from __future__ import annotations
 
-import uuid
 import datetime
+import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, status, HTTPException
 
+from fastapi import APIRouter, Depends, HTTPException, status
+
+from app.schemas.calendar import EventCreate, EventResponse
+from app.services.calendar_service import CalendarService
 from packages.shared.auth.dependencies import get_current_user
 from packages.shared.auth.jwt import TokenPayload
-from packages.shared.errors import ResourceNotFoundError
-from app.schemas.calendar import EventCreate, EventResponse, EventUpdate
-from app.services.calendar_service import CalendarService
 
 router = APIRouter(prefix="/events", tags=["events"])
 
@@ -27,9 +27,7 @@ async def create_event(
 ) -> EventResponse:
     try:
         event = await service.create_event(
-            tenant_id=current_user.tenant_uuid,
-            event_in=event_in,
-            actor_id=current_user.user_uuid
+            tenant_id=current_user.tenant_uuid, event_in=event_in, actor_id=current_user.user_uuid
         )
         # Fetch event with populated relations
         full_event = await service.get_event(current_user.tenant_uuid, event.id)
@@ -52,8 +50,7 @@ async def get_event(
     event = await service.get_event(current_user.tenant_uuid, event_id)
     if not event:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Event {event_id} not found."
+            status_code=status.HTTP_404_NOT_FOUND, detail=f"Event {event_id} not found."
         )
     return event
 
@@ -73,16 +70,16 @@ async def cancel_event(
     reason = payload.get("reason")
     if not reason:
         raise HTTPException(status_code=400, detail="reason is required to cancel an event.")
-    
+
     event = await service.cancel_event(
         tenant_id=current_user.tenant_uuid,
         event_id=event_id,
         reason=reason,
-        actor_id=current_user.user_uuid
+        actor_id=current_user.user_uuid,
     )
     if not event:
         raise HTTPException(status_code=404, detail=f"Event {event_id} not found.")
-    
+
     # Reload with relations
     return await service.get_event(current_user.tenant_uuid, event.id)
 
@@ -101,12 +98,16 @@ async def reschedule_event(
 ) -> EventResponse:
     try:
         new_date = datetime.datetime.strptime(payload["date"], "%Y-%m-%d").date()
-        new_start = datetime.datetime.strptime(payload["start_time"], "%H:%M:%S" if len(payload["start_time"]) > 5 else "%H:%M").time()
-        new_end = datetime.datetime.strptime(payload["end_time"], "%H:%M:%S" if len(payload["end_time"]) > 5 else "%H:%M").time()
-    except (KeyError, ValueError) as e:
+        new_start = datetime.datetime.strptime(
+            payload["start_time"], "%H:%M:%S" if len(payload["start_time"]) > 5 else "%H:%M"
+        ).time()
+        new_end = datetime.datetime.strptime(
+            payload["end_time"], "%H:%M:%S" if len(payload["end_time"]) > 5 else "%H:%M"
+        ).time()
+    except (KeyError, ValueError):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid date or time formats. Required format: date: YYYY-MM-DD, start_time: HH:MM, end_time: HH:MM"
+            detail="Invalid date or time formats. Required format: date: YYYY-MM-DD, start_time: HH:MM, end_time: HH:MM",
         )
 
     try:
@@ -116,7 +117,7 @@ async def reschedule_event(
             new_date=new_date,
             new_start=new_start,
             new_end=new_end,
-            actor_id=current_user.user_uuid
+            actor_id=current_user.user_uuid,
         )
         return await service.get_event(current_user.tenant_uuid, new_event.id)
     except ValueError as e:

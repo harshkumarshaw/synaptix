@@ -1,26 +1,26 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime, timezone, timedelta
-from typing import Annotated, List, Optional
-from fastapi import Depends
-from sqlalchemy import select, update, and_
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.exc import IntegrityError
+from datetime import UTC, datetime, timedelta
+from typing import Annotated
 
-from packages.shared.db.session import get_db
-from packages.shared.errors import (
-    ResourceNotFoundError,
-    ValidationError,
-    DuplicateRecordError,
-)
-from packages.shared.logging import get_logger
+from fastapi import Depends
+
+# Stub imports or raw table queries to interact with snx-workflow tables
+from sqlalchemy import select, text
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models.lesson_plan import LessonPlan
 from app.schemas.lesson_plan import LessonPlanCreate, LessonPlanUpdate
 from app.services.audit_logger import write_audit_log
-
-# Stub imports or raw table queries to interact with snx-workflow tables
-from sqlalchemy import text
+from packages.shared.db.session import get_db
+from packages.shared.errors import (
+    DuplicateRecordError,
+    ResourceNotFoundError,
+    ValidationError,
+)
+from packages.shared.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -30,7 +30,7 @@ class LessonPlanService:
         self.db = db
 
     async def create_lesson_plan(
-        self, tenant_id: uuid.UUID, lp_in: LessonPlanCreate, actor_id: Optional[uuid.UUID] = None
+        self, tenant_id: uuid.UUID, lp_in: LessonPlanCreate, actor_id: uuid.UUID | None = None
     ) -> LessonPlan:
         # Check if a current lesson plan with this code already exists for the course/curriculum
         stmt = select(LessonPlan).where(
@@ -38,8 +38,8 @@ class LessonPlanService:
             LessonPlan.course_id == lp_in.course_id,
             LessonPlan.curriculum_id == lp_in.curriculum_id,
             LessonPlan.code == lp_in.code,
-            LessonPlan.is_current == True,
-            LessonPlan.deleted_at.is_(None)
+            LessonPlan.is_current,
+            LessonPlan.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         existing = res.scalar_one_or_none()
@@ -63,7 +63,7 @@ class LessonPlanService:
             is_core=lp_in.is_core,
             status="draft",
             created_by=actor_id,
-            updated_by=actor_id
+            updated_by=actor_id,
         )
         self.db.add(lp)
         try:
@@ -82,8 +82,8 @@ class LessonPlanService:
                 "code": lp.code,
                 "course_id": str(lp.course_id),
                 "curriculum_id": str(lp.curriculum_id),
-                "version": lp.version
-            }
+                "version": lp.version,
+            },
         )
 
         return lp
@@ -92,7 +92,7 @@ class LessonPlanService:
         stmt = select(LessonPlan).where(
             LessonPlan.tenant_id == tenant_id,
             LessonPlan.id == lp_id,
-            LessonPlan.deleted_at.is_(None)
+            LessonPlan.deleted_at.is_(None),
         )
         res = await self.db.execute(stmt)
         lp = res.scalar_one_or_none()
@@ -101,7 +101,11 @@ class LessonPlanService:
         return lp
 
     async def update_lesson_plan(
-        self, tenant_id: uuid.UUID, lp_id: uuid.UUID, lp_in: LessonPlanUpdate, actor_id: Optional[uuid.UUID] = None
+        self,
+        tenant_id: uuid.UUID,
+        lp_id: uuid.UUID,
+        lp_in: LessonPlanUpdate,
+        actor_id: uuid.UUID | None = None,
     ) -> LessonPlan:
         lp = await self.get_lesson_plan(tenant_id, lp_id)
 
@@ -120,7 +124,7 @@ class LessonPlanService:
                 action="UPDATE",
                 resource_type="lesson_plan",
                 resource_id=lp.id,
-                new_values=update_data
+                new_values=update_data,
             )
             return lp
 
@@ -132,7 +136,7 @@ class LessonPlanService:
 
         # Step 2: Create new version record
         new_version = lp.version + 1
-        
+
         # Merge old values with new updates
         lp_dict = {
             "topic": lp.topic,
@@ -140,7 +144,7 @@ class LessonPlanService:
             "estimated_hours": lp.estimated_hours,
             "competency_code": lp.competency_code,
             "nmc_competency_level": lp.nmc_competency_level,
-            "is_core": lp.is_core
+            "is_core": lp.is_core,
         }
         update_data = lp_in.model_dump(exclude_unset=True)
         lp_dict.update(update_data)
@@ -160,14 +164,16 @@ class LessonPlanService:
             is_core=lp_dict["is_core"],
             status="draft",  # Newly created version starts as draft
             created_by=actor_id,
-            updated_by=actor_id
+            updated_by=actor_id,
         )
-        
+
         self.db.add(new_lp)
         try:
             await self.db.flush()
         except IntegrityError as e:
-            raise DuplicateRecordError("Unique constraint violation during lesson plan versioning") from e
+            raise DuplicateRecordError(
+                "Unique constraint violation during lesson plan versioning"
+            ) from e
 
         await write_audit_log(
             db=self.db,
@@ -176,34 +182,36 @@ class LessonPlanService:
             action="CREATE_VERSION",
             resource_type="lesson_plan",
             resource_id=new_lp.id,
-            new_values={
-                "code": new_lp.code,
-                "version": new_lp.version,
-                "parent_id": str(lp.id)
-            }
+            new_values={"code": new_lp.code, "version": new_lp.version, "parent_id": str(lp.id)},
         )
 
         return new_lp
 
     async def submit_for_approval(
-        self, tenant_id: uuid.UUID, lp_id: uuid.UUID, actor_id: Optional[uuid.UUID] = None
+        self, tenant_id: uuid.UUID, lp_id: uuid.UUID, actor_id: uuid.UUID | None = None
     ) -> LessonPlan:
         lp = await self.get_lesson_plan(tenant_id, lp_id)
         if not lp.is_current:
             raise ValidationError("Cannot submit a non-current lesson plan version for approval.")
 
         if lp.status not in ("draft", "rejected"):
-            raise ValidationError(f"Cannot submit lesson plan for approval from status '{lp.status}'.")
+            raise ValidationError(
+                f"Cannot submit lesson plan for approval from status '{lp.status}'."
+            )
 
         # Query the workflow_definitions table to find the active "lesson_plan_approval" workflow
         wfd_stmt = text(
             "SELECT id, steps FROM workflow_definitions "
             "WHERE tenant_id = :tenant_id AND code = :code AND is_current = TRUE AND deleted_at IS NULL"
         )
-        wfd_res = await self.db.execute(wfd_stmt, {"tenant_id": tenant_id, "code": "lesson_plan_approval"})
+        wfd_res = await self.db.execute(
+            wfd_stmt, {"tenant_id": tenant_id, "code": "lesson_plan_approval"}
+        )
         wfd = wfd_res.first()
         if not wfd:
-            raise ResourceNotFoundError("Active workflow definition 'lesson_plan_approval' not found.")
+            raise ResourceNotFoundError(
+                "Active workflow definition 'lesson_plan_approval' not found."
+            )
 
         definition_id, steps = wfd
         initial_step = "hod_review"  # Fallback standard initial step
@@ -227,15 +235,17 @@ class LessonPlanService:
         )
         wfi_check_res = await self.db.execute(
             wfi_check_stmt,
-            {"tenant_id": tenant_id, "entity_type": "lesson_plan_approval", "entity_id": lp_id}
+            {"tenant_id": tenant_id, "entity_type": "lesson_plan_approval", "entity_id": lp_id},
         )
         existing_wfi = wfi_check_res.first()
         if existing_wfi:
-            raise ValidationError("An active workflow instance already exists for this lesson plan.")
+            raise ValidationError(
+                "An active workflow instance already exists for this lesson plan."
+            )
 
         # Create a new workflow instance row directly in workflow_instances table
         wfi_id = uuid.uuid4()
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         due_at = now + timedelta(days=2)  # Default SLA: 2 days
 
         wfi_insert_stmt = text(
@@ -244,7 +254,7 @@ class LessonPlanService:
             "VALUES (:id, :tenant_id, :definition_id, :entity_type, :entity_id, "
             ":current_step, :status, :current_assignee_role, :due_at, '[]'::jsonb, :context, :now, :now)"
         )
-        
+
         # Populate context snapshot with static lesson plan data for approval
         context_data = {
             "topic": lp.topic,
@@ -254,10 +264,11 @@ class LessonPlanService:
             "nmc_competency_level": lp.nmc_competency_level,
             "is_core": lp.is_core,
             "code": lp.code,
-            "version": lp.version
+            "version": lp.version,
         }
 
         import json
+
         await self.db.execute(
             wfi_insert_stmt,
             {
@@ -271,8 +282,8 @@ class LessonPlanService:
                 "current_assignee_role": required_role,
                 "due_at": due_at,
                 "context": json.dumps(context_data),
-                "now": now
-            }
+                "now": now,
+            },
         )
 
         # Update lesson plan status and link workflow_instance_id
@@ -288,10 +299,7 @@ class LessonPlanService:
             action="SUBMIT_APPROVAL",
             resource_type="lesson_plan",
             resource_id=lp.id,
-            new_values={
-                "status": lp.status,
-                "workflow_instance_id": str(wfi_id)
-            }
+            new_values={"status": lp.status, "workflow_instance_id": str(wfi_id)},
         )
 
         return lp

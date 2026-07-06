@@ -5,15 +5,15 @@ from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import select
-from sqlalchemy.orm import joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
-from packages.shared.db.session import get_db
-from packages.shared.errors import StudentNotFoundError
-from packages.shared.logging import get_logger
 from app.models.department import Department
 from app.models.faculty import Faculty
 from app.models.student import Student
+from packages.shared.db.session import get_db
+from packages.shared.errors import StudentNotFoundError
+from packages.shared.logging import get_logger
 
 logger = get_logger(__name__)
 
@@ -24,8 +24,7 @@ class InstitutionService:
 
     async def get_departments(self, tenant_id: uuid.UUID) -> list[Department]:
         stmt = select(Department).where(
-            Department.tenant_id == tenant_id,
-            Department.deleted_at.is_(None)
+            Department.tenant_id == tenant_id, Department.deleted_at.is_(None)
         )
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
@@ -34,10 +33,7 @@ class InstitutionService:
         stmt = (
             select(Faculty)
             .options(joinedload(Faculty.user))
-            .where(
-                Faculty.tenant_id == tenant_id,
-                Faculty.deleted_at.is_(None)
-            )
+            .where(Faculty.tenant_id == tenant_id, Faculty.deleted_at.is_(None))
         )
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
@@ -46,10 +42,7 @@ class InstitutionService:
         stmt = (
             select(Student)
             .options(joinedload(Student.user))
-            .where(
-                Student.tenant_id == tenant_id,
-                Student.deleted_at.is_(None)
-            )
+            .where(Student.tenant_id == tenant_id, Student.deleted_at.is_(None))
         )
         res = await self.db.execute(stmt)
         return list(res.scalars().all())
@@ -63,7 +56,7 @@ class InstitutionService:
             .where(
                 Student.tenant_id == tenant_id,
                 Student.id == student_id,
-                Student.deleted_at.is_(None)
+                Student.deleted_at.is_(None),
             )
         )
         res = await self.db.execute(stmt)
@@ -72,7 +65,7 @@ class InstitutionService:
         if not student:
             raise StudentNotFoundError(
                 f"Student with ID {student_id} not found under this tenant.",
-                details={"student_id": str(student_id)}
+                details={"student_id": str(student_id)},
             )
 
         student.status = status
@@ -84,6 +77,6 @@ class InstitutionService:
                 "student_id": str(student_id),
                 "tenant_id": str(tenant_id),
                 "new_status": status,
-            }
+            },
         )
         return student

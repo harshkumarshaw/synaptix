@@ -1,9 +1,7 @@
 from __future__ import annotations
 
-import uuid
-from typing import Optional
-
 from sqlalchemy.orm import Mapped, mapped_column
+
 from packages.shared.db.base import GlobalBase
 
 
@@ -21,8 +19,6 @@ class Tenant(GlobalBase):
     institution_type: Mapped[str] = mapped_column(nullable=False)
     regulatory_body: Mapped[str] = mapped_column(nullable=False)
     is_active: Mapped[bool] = mapped_column(default=True, server_default="true")
-    logo_url: Mapped[Optional[str]] = mapped_column(nullable=True)
-    primary_color: Mapped[Optional[str]] = mapped_column(nullable=True)
-    timezone: Mapped[str] = mapped_column(
-        default="Asia/Kolkata", server_default="'Asia/Kolkata'"
-    )
+    logo_url: Mapped[str | None] = mapped_column(nullable=True)
+    primary_color: Mapped[str | None] = mapped_column(nullable=True)
+    timezone: Mapped[str] = mapped_column(default="Asia/Kolkata", server_default="'Asia/Kolkata'")

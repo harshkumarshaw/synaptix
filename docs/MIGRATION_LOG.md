@@ -249,6 +249,89 @@ Scaffold and implement Foundation Course and AETCOM logbook records tracking.
 **Verification:**
 - Run logbook service tests (`pytest.exe tests/unit/logbook/...`) and verify they pass.
 
+---
 
+### Migration: 20260630_0014_add_elective_allocation_runs
+**Created:** 2026-06-30
+**Agent:** Backend Agent (02)
+**Revision ID:** 20260630_0014
+**Depends on:** 20260620_0013
+
+**Purpose:**
+Add the `elective_allocation_runs` table to act as an audit trail for automated elective allocations (ADR-034), extend `elective_allocations` with run tracking and allocation methods, and add `submitted_at` to preferences for FCFS sorting.
+
+**Changes:**
+- Created table `elective_allocation_runs` with composite foreign keys, RLS enabled, and updated_at triggers.
+- Altered table `elective_allocations`: dropped composite primary key, added surrogate `id` UUID primary key with `gen_random_uuid()` default, and added a unique constraint on `(tenant_id, id)` to align with the repository framework.
+- Added column `allocation_run_id` (foreign key to `elective_allocation_runs`) and `allocation_method` (check constraint for ranks/fcfs/manual) to table `elective_allocations`.
+- Added column `submitted_at` (TIMESTAMP WITH TIME ZONE) to table `student_elective_preferences`.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Unit tests pass, schema structure validated, and ADR-034 trace verified.
+
+---
+
+### Migration: 20260630_bf787ada4ee4_add_doap_evidence_and_notes
+**Created:** 2026-06-30
+**Agent:** Backend Agent (02)
+**Revision ID:** bf787ada4ee4
+**Depends on:** 20260630_0014
+
+**Purpose:**
+Add `evidence_asset_ids` (JSONB) and `notes` (TEXT) columns to the `doap_session_records` table to support procedural attachments and faculty comments (ADR-035).
+
+**Changes:**
+- Altered table `doap_session_records` to add `evidence_asset_ids` column of type `JSONB` with a default of `'[]'::jsonb`.
+- Altered table `doap_session_records` to add `notes` column of type `TEXT` (nullable).
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run DOAP unit and integration tests (`pytest tests/unit/doap/ tests/integration/doap/`) and verify they pass.
+---
+
+### Migration: 20260701_d7ce0e58cbc0_resolve_schema_gaps
+**Created:** 2026-07-01
+**Agent:** Backend Agent (02)
+**Revision ID:** d7ce0e58cbc0
+**Depends on:** bf787ada4ee4
+
+**Purpose:**
+Address three database schema gaps from `PHASE2_SCHEMA.md` to ensure constraints and defaults conform to the system design:
+- Add primary key and composite foreign keys on `attendance_summary`.
+- Add RLS policy and unique triggers on `attendance_exemptions` to prevent double exemptions.
+- Add default values (`started_at`, `ended_at`, `deleted_at`) for columns on `internship_rotations`.
+
+**Changes:**
+- Altered `attendance_summary` to add a primary key constraint on `(tenant_id, student_id, course_id, professional_phase, attendance_category)` and a foreign key constraint referencing `users` on `(tenant_id, student_id)`.
+- Altered `attendance_exemptions` to enforce foreign keys referencing `users` on `(tenant_id, approved_by)` and `(tenant_id, student_id)`.
+- Created trigger function `fn_attendance_exemption_conflict_check` and trigger `trg_enforce_attendance_exemption_conflict` on `attendance_exemptions` to prevent overlapping exemptions.
+- Altered `internship_rotations` to add defaults for `started_at`, `ended_at`, and `deleted_at`.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Connect to database, run alembic migrations (`alembic upgrade head`), and execute pytest integration tests on attendance engine (`pytest tests/integration/test_attendance_engine.py`).
+
+---
+
+### Migration: 20260704_a9054655e43f_fix_fcs_trigger_column
+**Created:** 2026-07-04
+**Agent:** Backend Agent (02)
+**Revision ID:** a9054655e43f
+**Depends on:** d7ce0e58cbc0
+
+**Purpose:**
+Fix the foundation course synchronization trigger (`fn_sync_attendance_to_foundation_course`) which incorrectly referenced the non-existent column `actor_id` and non-existent `original_values` column in the partitioned append-only `audit_log` table. Redefines the trigger function to insert using `actor_user_id` and `old_values` columns.
+
+**Changes:**
+- Redefined PL/pgSQL function `fn_sync_attendance_to_foundation_course()` to write to `actor_user_id` and `old_values` instead of `actor_id` and `original_values`.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run `pytest tests/integration/test_sync.py::test_fcs_002_trigger_blocks_hours_reduction_after_signoff -v` and check that the audit log insertion executes successfully on trigger firing.
 
 

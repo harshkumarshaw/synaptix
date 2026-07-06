@@ -1,21 +1,23 @@
-import pytest
-import uuid
 import os
+
+import pytest
+from app.models.user import User
 from app.services.asset_service import AssetService
 from app.services.storage import LocalStorageProvider
-from app.models.user import User
+
 from packages.shared.errors import ResourceNotFoundError
 
 
 @pytest.mark.anyio
 async def test_asset_lifecycle(db_session, tenant_id, test_user_id, tmp_path):
     """Test asset uploading, download, retrieving, audit logging, and deletion.
-    
+
     Manifest IDs: AST-001, AST-002, AST-003, AST-004, EC-114
     """
     # Clean up old data to ensure idempotency
-    from sqlalchemy import delete
     from app.models.digital_asset import DigitalAsset
+    from sqlalchemy import delete
+
     await db_session.execute(delete(DigitalAsset).where(DigitalAsset.tenant_id == tenant_id))
     await db_session.commit()
 

@@ -4,9 +4,11 @@ snx-workflow — Synaptix Workflow Engine, MDM & Digital Asset Repository Servic
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
+from app.config import get_settings
+from app.routers import assets, master_data, workflow
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -21,9 +23,6 @@ from packages.shared.errors import (
     TokenInvalidError,
 )
 from packages.shared.logging import configure_logging, get_logger
-
-from app.config import get_settings
-from app.routers import master_data, workflow, assets
 
 logger = get_logger(__name__)
 
@@ -48,6 +47,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     # Ensure local storage directory exists
     import os
+
     os.makedirs(settings.storage_dir, exist_ok=True)
 
     logger.info(
@@ -83,9 +83,7 @@ def create_app() -> FastAPI:
     app.add_middleware(TenantContextMiddleware)
 
     @app.exception_handler(SynaptixError)
-    async def synaptix_error_handler(
-        request: Request, exc: SynaptixError
-    ) -> JSONResponse:
+    async def synaptix_error_handler(request: Request, exc: SynaptixError) -> JSONResponse:
         status_map: dict[type[SynaptixError], int] = {
             AuthenticationError: 401,
             TokenExpiredError: 401,
@@ -97,9 +95,8 @@ def create_app() -> FastAPI:
 
         # For resource not found, let's map it to 404
         from packages.shared.errors import ResourceNotFoundError
-        if isinstance(exc, ResourceNotFoundError) or exc.code == "SNX-RES-001":
-            status_code = 404
-        elif exc.code == "SNX-WFL-002":  # WorkflowNotFoundError
+
+        if isinstance(exc, ResourceNotFoundError) or exc.code in {"SNX-RES-001", "SNX-WFL-002"}:
             status_code = 404
 
         return JSONResponse(
@@ -108,9 +105,7 @@ def create_app() -> FastAPI:
                 "success": False,
                 "data": None,
                 "meta": {
-                    "request_id": str(
-                        getattr(request.state, "request_id", "unknown")
-                    ),
+                    "request_id": str(getattr(request.state, "request_id", "unknown")),
                     "api_version": "v1",
                 },
                 "errors": [exc.to_dict()],

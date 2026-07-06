@@ -6,17 +6,18 @@ All tests are stubbed and marked with xfail or skip until the engines are implem
 """
 
 from __future__ import annotations
+
 import datetime
-import pytest
 import uuid
 
+import pytest
 
 # ============================================================================
 # Attendance Pools (75% Theory, 80% Practical) Tests
 # ============================================================================
 
+
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Attendance engine not implemented until Phase 2")
 def test_att_nmc_007_clinical_posting_counts_toward_practical_pool() -> None:
     """ATT-NMC-007: Clinical posting attendance counts toward 80% practical pool.
 
@@ -35,7 +36,6 @@ def test_att_nmc_007_clinical_posting_counts_toward_practical_pool() -> None:
 
 
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Attendance engine not implemented until Phase 2")
 def test_att_nmc_008_doap_counts_toward_practical_pool() -> None:
     """ATT-NMC-008: DOAP attendance counts toward 80% practical pool.
 
@@ -51,7 +51,6 @@ def test_att_nmc_008_doap_counts_toward_practical_pool() -> None:
 
 
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Attendance engine not implemented until Phase 2")
 def test_att_nmc_009_ece_counts_toward_practical_pool() -> None:
     """ATT-NMC-009: ECE attendance counts toward 80% practical pool.
 
@@ -67,7 +66,6 @@ def test_att_nmc_009_ece_counts_toward_practical_pool() -> None:
 
 
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Attendance engine not implemented until Phase 2")
 def test_att_nmc_010_theory_lecture_counts_toward_theory_pool() -> None:
     """ATT-NMC-010: Theory lecture attendance counts toward 75% theory pool.
 
@@ -83,7 +81,6 @@ def test_att_nmc_010_theory_lecture_counts_toward_theory_pool() -> None:
 
 
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Attendance engine not implemented until Phase 2")
 def test_att_nmc_013_aetcom_tracked_separately() -> None:
     """ATT-NMC-013: AETCOM attendance tracked separately from theory/practical.
 
@@ -100,7 +97,6 @@ def test_att_nmc_013_aetcom_tracked_separately() -> None:
 
 
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Attendance engine not implemented until Phase 2")
 def test_att_nmc_014_foundation_course_tracked_separately() -> None:
     """ATT-NMC-014: Foundation Course attendance tracked separately.
 
@@ -116,7 +112,6 @@ def test_att_nmc_014_foundation_course_tracked_separately() -> None:
 
 
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Attendance engine not implemented until Phase 2")
 def test_att_nmc_015_multi_phase_subject_aggregates() -> None:
     """ATT-NMC-015: Multi-phase subject aggregates attendance across phases.
 
@@ -138,7 +133,6 @@ def test_att_nmc_015_multi_phase_subject_aggregates() -> None:
 
 
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Attendance engine not implemented until Phase 2")
 def test_att_nmc_019_cancelled_session_not_in_denominator() -> None:
     """ATT-NMC-019: Cancelled session does NOT count toward denominator.
 
@@ -156,8 +150,8 @@ def test_att_nmc_019_cancelled_session_not_in_denominator() -> None:
 # Foundation Course & ECE & Clinical Posting Scheduling Tests
 # ============================================================================
 
+
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Calendar scheduler validations not implemented until Phase 1B execution")
 def test_fc_nmc_001_foundation_course_scheduled_block() -> None:
     """FC-NMC-001: Foundation Course scheduled as 1-month block at Phase I start.
 
@@ -167,7 +161,7 @@ def test_fc_nmc_001_foundation_course_scheduled_block() -> None:
     phase_i_start = datetime.date(2026, 8, 1)
     event_date = datetime.date(2026, 8, 15)
     event_type = "foundation_course"
-    
+
     assert event_type == "foundation_course"
     assert (event_date - phase_i_start).days <= 31
 
@@ -207,8 +201,8 @@ def test_ece_nmc_002_clinical_posting_not_allowed_in_phase_i() -> None:
 # AETCOM Scheduling & Progression Tests
 # ============================================================================
 
+
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Logbook service not implemented until Phase 1B execution")
 def test_aet_nmc_001_aetcom_session_supported() -> None:
     """AET-NMC-001: AETCOM session event type supported.
 
@@ -221,7 +215,6 @@ def test_aet_nmc_001_aetcom_session_supported() -> None:
 
 
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Progression engine not implemented until Phase 2")
 def test_aet_nmc_005_aetcom_completion_required_per_phase() -> None:
     """AET-NMC-005: AETCOM completion required per phase before progression.
 
@@ -242,8 +235,8 @@ def test_aet_nmc_005_aetcom_completion_required_per_phase() -> None:
 # Curriculum Scoping Tests
 # ============================================================================
 
+
 @pytest.mark.compliance
-@pytest.mark.xfail(reason="Lesson plan validations not implemented until Phase 1B execution")
 def test_cur_004_competency_code_scoped_per_curriculum() -> None:
     """CUR-004: Competency code uniqueness scoped per curriculum_id.
 

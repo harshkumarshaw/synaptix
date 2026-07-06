@@ -4,9 +4,11 @@ snx-logbook — Synaptix Logbook, AETCOM & Foundation Course Tracking Service.
 
 from __future__ import annotations
 
-from contextlib import asynccontextmanager
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
+from app.config import get_settings
+from app.routers import doap, electives, logbook
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -21,9 +23,6 @@ from packages.shared.errors import (
     TokenInvalidError,
 )
 from packages.shared.logging import configure_logging, get_logger
-
-from app.config import get_settings
-from app.routers import logbook
 
 logger = get_logger(__name__)
 
@@ -79,9 +78,7 @@ def create_app() -> FastAPI:
     app.add_middleware(TenantContextMiddleware)
 
     @app.exception_handler(SynaptixError)
-    async def synaptix_error_handler(
-        request: Request, exc: SynaptixError
-    ) -> JSONResponse:
+    async def synaptix_error_handler(request: Request, exc: SynaptixError) -> JSONResponse:
         status_map: dict[type[SynaptixError], int] = {
             AuthenticationError: 401,
             TokenExpiredError: 401,
@@ -97,9 +94,7 @@ def create_app() -> FastAPI:
                 "success": False,
                 "data": None,
                 "meta": {
-                    "request_id": str(
-                        getattr(request.state, "request_id", "unknown")
-                    ),
+                    "request_id": str(getattr(request.state, "request_id", "unknown")),
                     "api_version": "v1",
                 },
                 "errors": [exc.to_dict()],
@@ -107,6 +102,8 @@ def create_app() -> FastAPI:
         )
 
     app.include_router(logbook.router, prefix="/api/v1")
+    app.include_router(electives.router, prefix="/api/v1")
+    app.include_router(doap.router, prefix="/api/v1")
 
     @app.get("/health", tags=["infrastructure"])
     async def health() -> dict[str, str]:

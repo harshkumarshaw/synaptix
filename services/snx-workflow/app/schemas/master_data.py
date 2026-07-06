@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import uuid
-from typing import Any, Optional
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -9,8 +10,8 @@ class MasterDataEntityBase(BaseModel):
     category: str
     code: str
     name: str
-    curriculum_id: Optional[uuid.UUID] = None
-    extra_attributes: Optional[dict[str, Any]] = None
+    curriculum_id: uuid.UUID | None = None
+    extra_attributes: dict[str, Any] | None = None
     sort_order: int = 0
     is_active: bool = True
 
@@ -20,11 +21,11 @@ class MasterDataEntityCreate(MasterDataEntityBase):
 
 
 class MasterDataEntityUpdate(BaseModel):
-    name: Optional[str] = None
-    curriculum_id: Optional[uuid.UUID] = None
-    extra_attributes: Optional[dict[str, Any]] = None
-    sort_order: Optional[int] = None
-    is_active: Optional[bool] = None
+    name: str | None = None
+    curriculum_id: uuid.UUID | None = None
+    extra_attributes: dict[str, Any] | None = None
+    sort_order: int | None = None
+    is_active: bool | None = None
 
 
 class MasterDataEntityResponse(MasterDataEntityBase):

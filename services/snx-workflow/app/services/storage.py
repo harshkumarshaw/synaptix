@@ -1,6 +1,7 @@
 import os
 import uuid
 from abc import ABC, abstractmethod
+
 from app.config import get_settings
 
 
@@ -30,14 +31,14 @@ class LocalStorageProvider(StorageProvider):
         # Create tenant-specific directory
         tenant_dir = os.path.join(self.base_dir, str(tenant_id))
         os.makedirs(tenant_dir, exist_ok=True)
-        
+
         # Generate a unique path to avoid collisions
         unique_name = f"{uuid.uuid4()}_{file_name}"
         full_path = os.path.join(tenant_dir, unique_name)
-        
+
         with open(full_path, "wb") as f:
             f.write(content)
-            
+
         return full_path
 
     async def read(self, storage_path: str) -> bytes:

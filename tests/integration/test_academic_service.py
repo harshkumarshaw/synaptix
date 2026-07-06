@@ -1,21 +1,18 @@
-import uuid
 from datetime import date, time
-import pytest
-from sqlalchemy import select
 
+import pytest
 from app.models.academic_year import AcademicYear
-from app.models.program import Program
-from app.models.curriculum import Curriculum
-from app.models.course import Course
 from app.models.batch import Batch
-from app.models.section import Section
-from app.models.timetable_slot import TimetableSlot
-from app.models.timetable_entry import TimetableEntry
+from app.models.course import Course
+from app.models.curriculum import Curriculum
 from app.models.department import Department
 from app.models.faculty import Faculty
-from app.models.user import User
+from app.models.program import Program
+from app.models.section import Section
 from app.models.tenant import Tenant
-
+from app.models.timetable_entry import TimetableEntry
+from app.models.timetable_slot import TimetableSlot
+from app.models.user import User
 from app.services.academic_service import AcademicService
 
 
@@ -39,18 +36,27 @@ async def test_academic_service_flows(db_session, tenant_id):
 
     # 1b. Clean up existing test data for this tenant to ensure idempotency
     from sqlalchemy import text
-    await db_session.execute(text("DELETE FROM timetable_entries WHERE tenant_id = :id"), {"id": tenant_id})
-    await db_session.execute(text("DELETE FROM timetable_slots WHERE tenant_id = :id"), {"id": tenant_id})
+
+    await db_session.execute(
+        text("DELETE FROM timetable_entries WHERE tenant_id = :id"), {"id": tenant_id}
+    )
+    await db_session.execute(
+        text("DELETE FROM timetable_slots WHERE tenant_id = :id"), {"id": tenant_id}
+    )
     await db_session.execute(text("DELETE FROM students WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM faculty WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM users WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM sections WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM batches WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM courses WHERE tenant_id = :id"), {"id": tenant_id})
-    await db_session.execute(text("DELETE FROM departments WHERE tenant_id = :id"), {"id": tenant_id})
+    await db_session.execute(
+        text("DELETE FROM departments WHERE tenant_id = :id"), {"id": tenant_id}
+    )
     await db_session.execute(text("DELETE FROM curricula WHERE tenant_id = :id"), {"id": tenant_id})
     await db_session.execute(text("DELETE FROM programs WHERE tenant_id = :id"), {"id": tenant_id})
-    await db_session.execute(text("DELETE FROM academic_years WHERE tenant_id = :id"), {"id": tenant_id})
+    await db_session.execute(
+        text("DELETE FROM academic_years WHERE tenant_id = :id"), {"id": tenant_id}
+    )
     await db_session.commit()
 
     # 2. Seed Academic Year

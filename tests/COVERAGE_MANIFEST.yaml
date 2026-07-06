@@ -34,15 +34,19 @@ identity_access_management:
     - id: "AUTH-005"
       description: "MFA is enforced for admin role"
       type: integration
+      deferred_to: "Phase 3"  # Full MFA integration requires mobile authenticator app
     - id: "AUTH-006"
       description: "MFA is enforced for principal role"
       type: integration
+      deferred_to: "Phase 3"  # Full MFA integration requires mobile authenticator app
     - id: "AUTH-007"
       description: "MFA is enforced for dean role"
       type: integration
+      deferred_to: "Phase 3"  # Full MFA integration requires mobile authenticator app
     - id: "AUTH-008"
       description: "MFA is enforced for controller_of_examinations role"
       type: integration
+      deferred_to: "Phase 3"  # Full MFA integration requires mobile authenticator app
     - id: "AUTH-009"
       description: "MFA is NOT enforced for student role"
       type: integration
@@ -512,6 +516,210 @@ examination_management:
       description: "Eligibility batch generation: idempotent, repeated runs produce same result"
       type: edge_case
       audit_ref: "AUDIT-P2"
+    - id: "EXM-011"
+      description: "Exam scheduling: room availability check"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "EXM-012"
+      description: "Exam scheduling: invigilator clash check"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "EXM-013"
+      description: "Exam scheduling: student clash check"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "EXM-014"
+      description: "Exam lifecycle: transitions from scheduled to results_published"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "EXM-015"
+      description: "Question paper workflow: upload by setter, lock by controller"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "EXM-016"
+      description: "Question paper access control: only exam controller can view before exam date"
+      type: security
+      deferred_to: "Phase 3.5"
+    - id: "EXM-017"
+      description: "Invigilator assignment audit logs"
+      type: integration
+      deferred_to: "Phase 3.5"
+    - id: "EXM-018"
+      description: "Room capacity warning threshold check during scheduling"
+      type: unit
+      deferred_to: "Phase 3.5"
+    - id: "EXM-019"
+      description: "Cancel exam schedule releases room and notifies candidates"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "EXM-020"
+      description: "Reschedule exam date updates calendars and checks for new conflicts"
+      type: integration
+      deferred_to: "Phase 3"
+
+ia_aggregation:
+  module_id: A-13
+  test_file_prefix: "tests/unit/exam/"
+  enforcement: "HARD_FAIL"
+  critical_tests:
+    - id: "IA-001"
+      description: "Logbook completion IA contribution (up to 20%)"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "IA-002"
+      description: "Viva scores IA contribution (30%)"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "IA-003"
+      description: "Practical exam scores IA contribution (30%)"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "IA-004"
+      description: "Clinical posting evaluation IA contribution (20%)"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "IA-005"
+      description: "MDM configuration of subject-specific weights"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "IA-006"
+      description: "Capping total IA contribution at 20% validation"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "IA-007"
+      description: "Aggregate IA calculations for whole batch"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "IA-008"
+      description: "Missing sub-component marks treated as zero in aggregation"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "IA-009"
+      description: "Audit log entry created on IA configuration change"
+      type: integration
+      deferred_to: "Phase 3.5"
+    - id: "IA-010"
+      description: "Historical IA records retained on re-calculation"
+      type: integration
+      deferred_to: "Phase 3"
+
+exam_eligibility:
+  module_id: A-13
+  test_file_prefix: "tests/unit/exam/"
+  enforcement: "HARD_FAIL"
+  critical_tests:
+    - id: "ELIG-001"
+      description: "Eligibility check: attendance requirements met"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "ELIG-002"
+      description: "Eligibility check: certified logbooks"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "ELIG-003"
+      description: "Eligibility check: aggregate IA marks >= 50%"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "ELIG-004"
+      description: "Eligibility check: no active disciplinary suspension"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "ELIG-005"
+      description: "Eligibility check: prerequisite courses passed"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "ELIG-006"
+      description: "Eligibility returns detailed blocking reasons on failure"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "ELIG-007"
+      description: "Eligibility batch run returns list of eligible student IDs"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "ELIG-008"
+      description: "Principal overrides exam eligibility with audit log"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "ELIG-009"
+      description: "Dean overrides exam eligibility with audit log"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "ELIG-010"
+      description: "Cross-tenant student eligibility isolation"
+      type: security
+      deferred_to: "Phase 3"
+
+exam_results:
+  module_id: A-13
+  test_file_prefix: "tests/unit/exam/"
+  enforcement: "HARD_FAIL"
+  critical_tests:
+    - id: "RES-001"
+      description: "Grading: Distinction (>=75%) calculation"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "RES-002"
+      description: "Grading: Pass (50%-74%) calculation"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "RES-003"
+      description: "Grading: Fail (<50%) calculation"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "RES-004"
+      description: "Theory and practical parts evaluated and passed independently"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "RES-005"
+      description: "Multi-examiner moderation: average of two if <=15% diff"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "RES-006"
+      description: "Multi-examiner moderation: third examiner if >15% diff"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "RES-007"
+      description: "Supplementary exam: attempts count limited to 4"
+      type: compliance
+      deferred_to: "Phase 3"
+    - id: "RES-008"
+      description: "Supplementary exam: grace marks not allowed"
+      type: compliance
+      deferred_to: "Phase 3"
+    - id: "RES-009"
+      description: "Grace marks policy: up to 5 marks applied automatically"
+      type: unit
+      deferred_to: "Phase 3"
+    - id: "RES-010"
+      description: "Result publication workflow transitions"
+      type: integration
+      deferred_to: "Phase 3"
+
+mark_sheets:
+  module_id: A-13
+  test_file_prefix: "tests/unit/exam/"
+  enforcement: "HARD_FAIL"
+  critical_tests:
+    - id: "MKS-001"
+      description: "Mark sheet PDF generation using WeasyPrint"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "MKS-002"
+      description: "QR verification code embedded and verified"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "MKS-003"
+      description: "Mark sheet stored as digital asset"
+      type: integration
+      deferred_to: "Phase 3"
+    - id: "MKS-004"
+      description: "Digital signature placeholder rendered"
+      type: unit
+      deferred_to: "Phase 4"
+    - id: "MKS-005"
+      description: "University bulk mark sheet generation idempotency"
+      type: integration
+      deferred_to: "Phase 4"
 
 # ============================================================================
 # LAYER 2: ACADEMIC — Calendar & Planning Modules (Phase 1B)
@@ -707,6 +915,99 @@ digital_logbook:
       description: "Detained student: prior attempt logbook retained as read-only history"
       type: edge_case
       audit_ref: "AUDIT-E2"
+
+leave_management:
+  module_id: A-12
+  test_file_prefix: "tests/unit/leave/"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "LEV-001"
+      description: "Submit leave request of type (medical, academic, casual, other)"
+      type: unit
+    - id: "LEV-002"
+      description: "Approved leave request triggers leave_service.on_approval() hook"
+      type: integration
+    - id: "LEV-003"
+      description: "Approved leave materializes attendance rows with status medical/excused"
+      type: integration
+    - id: "LEV-004"
+      description: "Leave approval workflow integration via workflow_instance_id"
+      type: integration
+    - id: "LEV-E001"
+      description: "Leave request spanning existing conducted sessions raises validation check"
+      type: edge_case
+
+electives:
+  module_id: A-08
+  test_file_prefix: "tests/unit/electives/"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "EL-NMC-001"
+      description: "Electives configured as 2-month block after Phase III Part I exam"
+      type: compliance
+    - id: "EL-NMC-004"
+      description: "Elective allocation workflow respects capacity limits with row-level lock"
+      type: integration
+    - id: "EL-NMC-006"
+      description: "Elective 75% attendance threshold enforced"
+      type: compliance
+    - id: "EL-NMC-007"
+      description: "Elective logbook entries unified with main logbook entries table"
+      type: compliance
+    - id: "EL-NMC-008"
+      description: "Elective allocation uniqueness UNIQUE (student_id, block) is enforced"
+      type: compliance
+
+doap_skills:
+  module_id: A-09
+  test_file_prefix: "tests/unit/doap/"
+  enforcement: "HARD_FAIL"
+  
+  critical_tests:
+    - id: "DOAP-NMC-001"
+      description: "DOAP session record contains stage (D/O/A/P) and rating (B/M/E)"
+      type: compliance
+    - id: "DOAP-NMC-006"
+      description: "DOAP session record contains nmc_level (K/KH/SH/P) and is_core"
+      type: compliance
+    - id: "DOAP-E001"
+      description: "DOAP sign-off is allowed post-session date"
+      type: edge_case
+
+foundation_course_sync:
+  module_id: A-07
+  test_file_prefix: "tests/unit/sync/"
+  
+  critical_tests:
+    - id: "FCS-001"
+      description: "Foundation Course records completed hours recomputed automatically from attendance"
+      type: integration
+    - id: "FCS-002"
+      description: "Trigger blocks completed hours reduction if signoff received"
+      type: integration
+
+aetcom_sync:
+  module_id: A-07
+  test_file_prefix: "tests/unit/sync/"
+  
+  critical_tests:
+    - id: "AES-001"
+      description: "AETCOM records status recomputed automatically from attendance"
+      type: integration
+
+accommodations:
+  module_id: A-11
+  test_file_prefix: "tests/unit/accommodations/"
+  
+  critical_tests:
+    - id: "ACC-001"
+      description: "Attendance accommodation supports blanket and per-category threshold overrides"
+      type: integration
+    - id: "ACC-002"
+      description: "Attendance percentage calculated against override thresholds in reports"
+      type: integration
 
 # ============================================================================
 # LAYER 3: MEDICAL EDUCATION — CRMI
@@ -905,3 +1206,161 @@ coverage_targets:
       logbook_ia_contribution: 80
       hall_ticket_eligibility: 80
       crmi_completion: 80
+
+# ============================================================================
+# PHASE 2: ELECTIVES (A-08)
+# Added: 2026-06-30 Session 9
+# Enforcement: standard
+# Deferred tests explicitly marked with deferred_to field.
+# ============================================================================
+
+electives:
+  module_id: A-08
+  test_file_prefix: "tests/unit/electives/"
+  enforcement: standard
+
+  critical_tests:
+    - id: ELEC-001
+      description: "Create elective: valid payload inserts row, returns ElectiveResponse"
+      type: unit
+    - id: ELEC-002
+      description: "Submit student preferences: full-block replace, ranks 1-5, idempotent on re-submit"
+      type: unit
+    - id: ELEC-003
+      description: "FCFS allocation: 10 students, 3 electives cap=4, expected allocation matches ADR-034 worked example"
+      type: integration
+    - id: ELEC-004
+      description: "Ranked allocation: 10 students, 3 electives cap=4, rank-pass result matches ADR-034 worked example"
+      type: integration
+    - id: ELEC-005
+      description: "Reallocation additive mode: only unallocated students assigned, existing allocations untouched"
+      type: integration
+    - id: ELEC-006
+      description: "Reallocation full mode: all existing allocations cleared, fresh allocation run"
+      type: integration
+    - id: ELEC-007
+      description: "Allocation run produces elective_allocation_runs audit row with correct totals"
+      type: integration
+    - id: ELEC-008
+      description: "Concurrent allocation triggers don't double-allocate: row-level FOR UPDATE serialises runs"
+      type: integration
+    - id: ELEC-009
+      description: "Dry-run allocation: computes result, writes no rows, returns same counts as live"
+      type: integration
+
+  compliance_tests:
+    - id: ELEC-NMC-001
+      description: "Elective duration enforced: two blocks of 2 weeks each within Phase III Part I (NMC CBME 2019 Reg 7)"
+      type: compliance
+      regulation_ref: "NMC CBME Regulations 2019, Reg 7 — Electives"
+    - id: ELEC-NMC-002
+      description: "Student must be allocated at least one clinical-category elective across both blocks"
+      type: compliance
+      regulation_ref: "NMC CBME Regulations 2019, Reg 7 — Electives"
+    - id: ELEC-NMC-003
+      description: "Reflection logbook entry required per elective block before NExT eligibility"
+      type: compliance
+      regulation_ref: "NMC CBME Regulations 2019, Reg 7.5"
+    - id: ELEC-NMC-004
+      description: "Faculty supervisor must be assigned per elective per student"
+      type: compliance
+      regulation_ref: "NMC CBME Regulations 2019, Reg 7.6"
+
+  edge_cases:
+    - id: ELEC-E001
+      description: "Student submits preferences twice: second submission replaces first (soft-delete + re-insert)"
+      type: edge_case
+    - id: ELEC-E002
+      description: "Tie-breaking: two preferences share same submitted_at; deterministic hash of student_id breaks tie"
+      type: edge_case
+    - id: ELEC-E003
+      description: "Student withdraws after allocation: capacity_remaining incremented, slot freed"
+      type: edge_case
+    - id: ELEC-E004
+      description: "Capacity changes between dry-run and live run: live run uses locked capacity, not dry-run snapshot"
+      type: edge_case
+    - id: ELEC-E005
+      description: "Student tries to submit preference for Block 1 after Block 1 allocation exists: SNX-ELEC-002 raised"
+      type: edge_case
+    - id: ELEC-E006
+      description: "Preferences submitted with duplicate rank position in same block: validation error raised"
+      type: edge_case
+    - id: ELEC-E007
+      description: "Preferences submitted with elective_id belonging to wrong block: validation error raised"
+      type: edge_case
+
+doap_skills:
+  module_id: A-09
+  test_file_prefix: "tests/"
+  enforcement: standard
+  
+  critical_tests:
+    - id: DOAP-001
+      description: "Record D stage with C decision creates record and logbook entry"
+      type: unit
+    - id: DOAP-002
+      description: "Record O stage requires preceding D certified (rejection if not)"
+      type: unit
+    - id: DOAP-003
+      description: "Record A stage requires preceding O certified"
+      type: unit
+    - id: DOAP-004
+      description: "Record P stage requires preceding A certified"
+      type: unit
+    - id: DOAP-005
+      description: "Re-attempt after R decision (attempt_type=R, same stage)"
+      type: unit
+    - id: DOAP-006
+      description: "Remediation workflow auto-created on Re decision"
+      type: integration
+    - id: DOAP-007
+      description: "Evidence asset IDs linked correctly"
+      type: integration
+    - id: DOAP-008
+      description: "Auto-creation of logbook_entries on every DOAP record"
+      type: integration
+  
+  compliance_tests:
+    - id: DOAP-NMC-001
+      description: "Stage progression D->O->A->P enforced (no skipping)"
+      type: compliance
+      regulation_ref: "NMC CBME 2019 DOAP framework"
+    - id: DOAP-NMC-002
+      description: "Faculty decision required for every record (cannot be null)"
+      type: compliance
+      regulation_ref: "NMC CBME 2019 Reg 8.3"
+    - id: DOAP-NMC-003
+      description: "Rating B implies decision R or Re (cannot be C)"
+      type: compliance
+      regulation_ref: "NMC CBME 2019 Reg 8.4"
+  
+  edge_cases:
+    - id: DOAP-E001
+      description: "Backward stage record (refresher D after reaching O) - allowed"
+      type: edge_case
+    - id: DOAP-E002
+      description: "Faculty decision Re with no active remediation programme - handle gracefully"
+      type: edge_case
+    - id: DOAP-E003
+      description: "Stage skip attempt (P without prior A) - must reject with specific error"
+      type: edge_case
+
+admissions:
+  module_id: I-02
+  test_file_prefix: "tests/unit/admissions/"
+  enforcement: standard
+
+  critical_tests:
+    - id: ADM-001
+      description: "Create admission application"
+      type: unit
+    - id: ADM-002
+      description: "List admission applications with pagination"
+      type: unit
+    - id: ADM-003
+      description: "Get admission application by ID"
+      type: unit
+    - id: ADM-004
+      description: "Unique application_number per tenant enforced"
+      type: unit
+

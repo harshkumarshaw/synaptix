@@ -61,9 +61,75 @@ Format: `[YYYY-MM-DD HH:MM:SS] [agent-id] command`
 [2026-06-20 17:12:00] [00-orchestrator] $env:PYTHONPATH="f:\Synaptix;f:\Synaptix\services\snx-workflow"; .\.venv\Scripts\pytest.exe tests/unit/workflow/ tests/integration/workflow/ tests/security/workflow/ tests/unit/mdm/ tests/unit/assets/
 ```
 
+## 2026-06-20 — Session 6
+
+```
+[2026-06-20 18:00:00] [00-orchestrator] uv run black .
+[2026-06-20 18:05:00] [00-orchestrator] uv run ruff check --fix .
+[2026-06-20 18:15:00] [00-orchestrator] $env:PYTHONPATH=".;services/snx-auth"; uv run pytest tests/unit/test_jwt_utils.py tests/integration/test_auth_service.py
+[2026-06-20 18:18:00] [00-orchestrator] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/unit/academic/ tests/integration/test_academic_service.py tests/integration/test_calendar_engine.py tests/integration/test_lesson_plan_service.py
+```
+
+## 2026-06-27 — Session 7
+
+```
+[2026-06-27 11:30:00] [09-devops] uv run ruff check .
+[2026-06-27 11:32:00] [09-devops] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/integration/test_leave.py
+[2026-06-27 11:35:00] [09-devops] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/integration/test_attendance.py
+[2026-06-27 11:42:00] [09-devops] uv run black tests/integration/test_attendance.py tests/integration/test_leave.py; uv run ruff check --fix tests/integration/test_attendance.py tests/integration/test_leave.py
+[2026-06-27 11:43:00] [09-devops] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/unit/academic/ tests/integration/test_academic_service.py tests/integration/test_calendar_engine.py tests/integration/test_lesson_plan_service.py tests/integration/test_attendance.py tests/integration/test_leave.py tests/compliance/test_attendance_thresholds.py
+[2026-06-27 11:45:00] [09-devops] powershell.exe -ExecutionPolicy Bypass -File scripts/pre-commit-hook.ps1
+```
+
+## 2026-06-30 — Session 9
+
+```
+[2026-06-30 16:50:00] [02-backend] f:\Synaptix\.venv\Scripts\ruff.exe check services/snx-logbook/
+[2026-06-30 17:00:00] [02-backend] $env:PYTHONPATH = "f:\Synaptix\services\snx-logbook;f:\Synaptix" ; f:\Synaptix\.venv\Scripts\python.exe -m pytest tests/unit/electives/ -v
+```
+
 ## 2026-06-18
 
 ```
 [2026-06-18 10:00:00] [human] mkdir -p synaptix
 [2026-06-18 10:01:00] [human] cd synaptix && git init
+```
+
+## 2026-07-04 — Session 15
+
+```
+[2026-07-04 13:10:00] [02-backend] $env:PYTHONPATH=".;services/snx-logbook"; uv run pytest tests/unit/doap/ -v
+[2026-07-04 13:15:00] [02-backend] $env:PYTHONPATH=".;services/snx-logbook"; uv run pytest tests/unit/electives/ -v
+[2026-07-04 13:24:00] [02-backend] uv run python scripts/verify_adr_sequence.py
+[2026-07-04 13:25:00] [02-backend] uv run python scripts/verify_coverage_manifest.py
+[2026-07-04 13:26:00] [02-backend] uv run python scripts/verify_edge_case_coverage.py
+[2026-07-04 13:27:00] [02-backend] uv run python scripts/verify_compliance_coverage.py
+[2026-07-04 13:28:00] [02-backend] uv run python scripts/check_secrets.py
+[2026-07-04 13:30:00] [02-backend] $env:PYTHONPATH=".;services/snx-auth"; uv run pytest tests/unit/test_jwt_utils.py tests/integration/test_auth_service.py -v
+[2026-07-04 13:31:00] [02-backend] $env:PYTHONPATH=".;services/snx-institution"; uv run pytest tests/integration/test_institution_service.py -v
+[2026-07-04 13:32:00] [02-backend] $env:PYTHONPATH=".;services/snx-workflow"; uv run pytest tests/unit/workflow tests/unit/mdm tests/unit/assets tests/integration/workflow tests/security/workflow -v
+[2026-07-04 13:33:00] [02-backend] $env:PYTHONPATH=".;services/snx-logbook"; uv run pytest tests/unit/logbook tests/unit/doap tests/unit/electives tests/integration/test_logbook_service.py tests/integration/test_electives.py tests/integration/doap tests/compliance/test_elective_compliance.py tests/compliance/doap -v
+[2026-07-04 13:34:00] [02-backend] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/unit/academic tests/integration/test_academic_service.py tests/integration/test_calendar_engine.py tests/integration/test_lesson_plan_service.py tests/integration/test_attendance.py tests/integration/test_leave.py tests/compliance/test_attendance_thresholds.py tests/compliance/test_nmc_compliance_stubs.py tests/security/academic -v
+```
+
+## 2026-07-04 — Session 16
+
+```
+[2026-07-04 14:05:00] [02-backend] uv run python scripts/verify_coverage_manifest.py
+[2026-07-04 14:10:00] [02-backend] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/integration/test_calendar_engine.py -v
+[2026-07-04 14:15:00] [02-backend] $env:PYTHONPATH=".;services/snx-academic"; uv run pytest tests/unit/academic/test_lesson_plan_versioning.py -v
+[2026-07-04 14:20:00] [02-backend] $env:PYTHONPATH=".;services/snx-workflow"; uv run pytest tests/unit/workflow/ tests/unit/assets/ tests/integration/workflow/ tests/security/workflow/ tests/unit/mdm/ -v
+[2026-07-04 14:25:00] [02-backend] $env:PYTHONPATH=".;services/snx-logbook"; uv run pytest tests/unit/electives/ -v
+```
+
+## 2026-07-04 — Session F1
+
+```
+[2026-07-04 15:35:00] [03-frontend] npx shadcn@latest init --defaults --yes
+[2026-07-04 15:40:00] [03-frontend] npx shadcn@latest add --yes sonner sidebar navigation-menu dropdown-menu avatar badge table dialog sheet separator skeleton
+[2026-07-04 15:42:00] [03-frontend] npx shadcn@latest add --yes form
+[2026-07-04 15:46:00] [03-frontend] npm install axios zustand @tanstack/react-query jose react-hook-form zod @hookform/resolvers
+[2026-07-04 15:47:00] [03-frontend] npm install tailwindcss-animate
+[2026-07-04 15:52:00] [03-frontend] npm run build
+[2026-07-04 16:12:00] [03-frontend] npm run dev
 ```
