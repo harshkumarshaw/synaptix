@@ -334,4 +334,87 @@ Fix the foundation course synchronization trigger (`fn_sync_attendance_to_founda
 **Verification:**
 - Run `pytest tests/integration/test_sync.py::test_fcs_002_trigger_blocks_hours_reduction_after_signoff -v` and check that the audit log insertion executes successfully on trigger firing.
 
+---
+
+### Migration: 20260704_756453b2326d_create_mdm_configs
+**Created:** 2026-07-04
+**Agent:** Database Agent (05)
+**Revision ID:** 756453b2326d
+**Depends on:** a9054655e43f
+
+**Purpose:**
+Create the `mdm_configs` table for system metadata and configurations, including Row Level Security and update triggers.
+
+**Changes:**
+- Added `mdm_configs` table with standard columns and unique constraint on `(tenant_id, config_key)`.
+- Configured RLS policy `tenant_isolation_mdm_configs`.
+- Created trigger `trg_mdm_configs_update`.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Connect to database, run alembic migrations (`alembic upgrade head`).
+
+---
+
+### Migration: 20260706_b3e3a9c7b418_core_exam_tables
+**Created:** 2026-07-06
+**Agent:** Database Agent (05)
+**Revision ID:** b3e3a9c7b418
+**Depends on:** 756453b2326d
+
+**Purpose:**
+Create core examination tables: `examinations`, `exam_schedules`, `viva_scores`, `practical_assessments`, `clinical_evaluations`, and `question_papers`.
+
+**Changes:**
+- Created tables `examinations`, `exam_schedules`, `viva_scores`, `practical_assessments`, `clinical_evaluations`, `question_papers`.
+- Enforced composite unique and foreign key constraints on `(tenant_id, user_id)` for faculty, and standard tenant-scoped keys.
+- Enforced RLS policies on all tables.
+- Added updated_at triggers on all tables.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run alembic upgrade head and test constraints.
+
+---
+
+### Migration: 20260706_b3e3a9c7b419_ia_aggregation_eligibility
+**Created:** 2026-07-06
+**Agent:** Database Agent (05)
+**Revision ID:** b3e3a9c7b419
+**Depends on:** b3e3a9c7b418
+
+**Purpose:**
+Create internal assessment aggregation and examination eligibility tables: `ia_aggregations` and `exam_eligibility`.
+
+**Changes:**
+- Created tables `ia_aggregations`, `exam_eligibility`.
+- Added RLS policies and update triggers.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run alembic upgrade head and test constraints.
+
+---
+
+### Migration: 20260706_b3e3a9c7b420_results_mark_sheets
+**Created:** 2026-07-06
+**Agent:** Database Agent (05)
+**Revision ID:** b3e3a9c7b420
+**Depends on:** b3e3a9c7b419
+
+**Purpose:**
+Create examination results, moderation, and mark sheet tables: `exam_results`, `exam_moderation`, and `mark_sheets`.
+
+**Changes:**
+- Created tables `exam_results`, `exam_moderation`, `mark_sheets`.
+- Enforced RLS policies and update triggers.
+
+**Rollback Tested:** Yes
+
+**Verification:**
+- Run alembic upgrade head and test constraints.
+
 

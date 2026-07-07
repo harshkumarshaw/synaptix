@@ -149,15 +149,17 @@ async def seed() -> None:
                 # Insert with default_attendance_category
                 await session.execute(
                     text("""
-                        INSERT INTO courses (id, tenant_id, department_id, name, code, default_attendance_category)
-                        VALUES (:id, :tenant_id, :dept_id, :name, :code, :category)
+                        INSERT INTO courses (id, tenant_id, curriculum_id, department_id, name, code, subject_code, default_attendance_category)
+                        VALUES (:id, :tenant_id, :curr_id, :dept_id, :name, :code, :subject_code, :category)
                         """),
                     {
                         "id": c_id,
                         "tenant_id": TENANT_ID,
+                        "curr_id": curr_2023_id,
                         "dept_id": dept_id,
                         "name": name,
                         "code": code,
+                        "subject_code": code.split("-")[0],
                         "category": default_category,
                     },
                 )
@@ -262,7 +264,7 @@ async def seed() -> None:
                                                   topic, description, estimated_hours, competency_code, nmc_competency_level,
                                                   is_core, status)
                         VALUES (:id, :tenant_id, :course_id, :curriculum_id, :code, 1, true,
-                                :topic, 'Description for ' || :topic, 1.0, :code, :comp_level, :is_core, :status)
+                                :topic, :description, 1.0, :code, :comp_level, :is_core, :status)
                         """),
                     {
                         "id": lp_id,
@@ -271,6 +273,7 @@ async def seed() -> None:
                         "curriculum_id": curriculum_id,
                         "code": code,
                         "topic": topic,
+                        "description": f"Description for {topic}",
                         "comp_level": comp_level,
                         "is_core": is_core,
                         "status": status,

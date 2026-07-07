@@ -169,6 +169,30 @@ class ElectiveService:
         return ElectiveResponse.model_validate(elective)
 
     # -----------------------------------------------------------------------
+    # List available electives
+    # -----------------------------------------------------------------------
+
+    async def list_electives(
+        self,
+        tenant_id: uuid.UUID,
+        block: str | None = None,
+        curriculum_id: uuid.UUID | None = None,
+    ) -> list[ElectiveResponse]:
+        """List active electives, optionally filtered by block or curriculum."""
+        stmt = select(Elective).where(
+            Elective.tenant_id == tenant_id,
+            Elective.deleted_at.is_(None),
+        )
+        if block is not None:
+            stmt = stmt.where(Elective.block == block)
+        if curriculum_id is not None:
+            stmt = stmt.where(Elective.curriculum_id == curriculum_id)
+        stmt = stmt.order_by(Elective.block, Elective.code)
+
+        result = await self.db.execute(stmt)
+        return [ElectiveResponse.model_validate(e) for e in result.scalars().all()]
+
+    # -----------------------------------------------------------------------
     # ELEC-002: Submit student preferences (full-block replace)
     # -----------------------------------------------------------------------
 

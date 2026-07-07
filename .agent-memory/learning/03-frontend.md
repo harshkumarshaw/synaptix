@@ -29,3 +29,8 @@ Accumulated learnings, patterns, and discoveries.
 ## Cross-Agent Insights
 
 - None.
+
+## Session 22 Learnings (2026-07-06)
+
+- **Tailwind CSS v4 variables syntax inside Tailwind CSS v3 workspaces:** When using Shadcn copy-pasted files from v4 environments inside a v3 workspace, variables like `gap-(--variable)` or `p-(--variable)` are unrecognized and will collapse layout boundaries. Map them to standard CSS variable notation like `gap-[var(--variable)]` or standard Tailwind sizing units (e.g. `p-4`) to ensure proper padding, borders, and margins across all elements.
+

@@ -74,6 +74,30 @@ async def create_elective(
 
 
 # ---------------------------------------------------------------------------
+# GET /electives/ — list available electives
+# ---------------------------------------------------------------------------
+
+
+@router.get(
+    "/",
+    response_model=list[ElectiveResponse],
+    status_code=status.HTTP_200_OK,
+    summary="Get all available electives, optionally filtered by block or curriculum",
+)
+async def list_electives(
+    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    service: Annotated[ElectiveService, Depends(ElectiveService)],
+    block: str | None = Query(default=None, description="Filter by block: 'Block 1' or 'Block 2'"),
+    curriculum_id: uuid.UUID | None = Query(default=None, description="Filter by curriculum ID"),
+) -> list[ElectiveResponse]:
+    return await service.list_electives(
+        tenant_id=current_user.tenant_uuid,
+        block=block,
+        curriculum_id=curriculum_id,
+    )
+
+
+# ---------------------------------------------------------------------------
 # POST /electives/preferences — submit/replace student preferences
 # ---------------------------------------------------------------------------
 

@@ -130,6 +130,15 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix="/api/v1")
 
     # ── Health & Ready endpoints ─────────────────────────────────────────────
+    @app.get("/")
+    async def root() -> dict[str, str]:
+        return {
+            "message": "Welcome to Synaptix Auth Service",
+            "docs": "/docs",
+            "health": "/health",
+            "status": "running",
+        }
+
     @app.get("/health", tags=["infrastructure"])
     async def health() -> dict[str, str]:
         """Health check endpoint. Returns 200 if the service is running."""

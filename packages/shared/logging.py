@@ -12,7 +12,6 @@ Usage:
 """
 
 import logging
-import sys
 from typing import Any
 
 import structlog
@@ -45,7 +44,7 @@ def configure_logging(log_level: str = "INFO", json_output: bool = False) -> Non
     structlog.configure(
         processors=processors,
         wrapper_class=structlog.make_filtering_bound_logger(logging.getLevelName(log_level)),
-        logger_factory=structlog.PrintLoggerFactory(file=sys.stdout),
+        logger_factory=structlog.stdlib.LoggerFactory(),
         cache_logger_on_first_use=True,
     )
 

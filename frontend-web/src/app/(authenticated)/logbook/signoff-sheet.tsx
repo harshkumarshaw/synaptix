@@ -74,6 +74,7 @@ export function SignoffSheet({ entry, isOpen, onClose, onSuccess }: SignoffSheet
   if (!entry) return null;
 
   async function onSubmit(values: SignoffValues) {
+    if (!entry) return;
     try {
       await signoffMutation.mutateAsync({
         entryId: entry.id,

@@ -119,6 +119,15 @@ def create_app() -> FastAPI:
     app.include_router(leave.router, prefix="/api/v1")
     app.include_router(admissions.router, prefix="/api/v1")
 
+    @app.get("/")
+    async def root() -> dict[str, str]:
+        return {
+            "message": "Welcome to Synaptix Academic Service",
+            "docs": "/docs",
+            "health": "/health",
+            "status": "running",
+        }
+
     @app.get("/health", tags=["infrastructure"])
     async def health() -> dict[str, str]:
         return {"status": "ok", "service": "snx-academic", "version": "0.1.0"}

@@ -5,6 +5,30 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Session 22] — 2026-07-06
+
+### Fixed — Backend Container Startup Crashes & Index Paths
+- **services/snx-workflow**: Resolved APIRouter AttributeError (`'APIRouter' object has no attribute 'router'`) in `app/main.py` by registering the imported router objects (`master_data`, `workflow`, `assets`) directly without calling `.router`.
+- **services/snx-logbook**: Resolved SyntaxError (`parameter without a default follows parameter with a default`) in `app/routers/logbook.py` signature of `list_logbook_entries` by rearranging the `current_user` and `service` parameters to be preceding parameters with defaults. Also removed redundant default values from `Annotated` dependencies.
+- **Friendly Root Routes**: Added friendly index route `/` on all 5 backend services (`snx-auth`, `snx-academic`, `snx-logbook`, `snx-institution`, `snx-workflow`) returning a informative status JSON instead of default FastAPI `{"detail": "Not Found"}`.
+- **Database Seeding**: Updated `scripts/seed_student_dashboard_data.py` to resolve student, faculty, and course IDs dynamically from the database and seed DOAP events/sessions beforehand, populating all dashboard UI panels.
+
+## [Session F4 & Session 21] — 2026-07-06
+
+### Added — Frontend Electives & Leave Management UI (Session F4)
+- **src/types/**: Created TypeScript types for `Elective`, `ElectivePreference`, `ElectiveAllocation`, `AllocationRunRequest`, `AllocationRunResult`, `LeaveRequest`, and `LeaveRequestCreate` inside `src/types/electives.ts` and `src/types/leave.ts`.
+- **src/hooks/**: Developed React Query hooks for available electives list, student preference submission, running admin allocation algorithm, leave requests list, leave creation/cancellation/approval/rejection, and leave attendance impact preview.
+- **src/app/(authenticated)/electives/**: Built drag-and-drop preference ranking page for students and allocation dashboard for admins with FCFS/ranked selection, dry run preview, and capacity progress bar.
+- **src/app/(authenticated)/leave/**: Built student leave request form (validating dates and medical certificate upload trigger for >3 days), leave history table, and faculty leave approval queue with sheet details and attendance impact warning warning alert.
+
+### Added — Backend Phase 3 R1-R3 Schema, Migrations, and Test Stubs (Session 21)
+- **SQLAlchemy Models**: Implemented 11 declarative models in `services/snx-academic/app/models/exam.py` (`Examination`, `ExamSchedule`, `VivaScore`, `PracticalAssessment`, `ClinicalEvaluation`, `IAAggregation`, `ExamEligibility`, `ExamResult`, `ExamModeration`, `MarkSheet`, `QuestionPaper`) and registered them in `__init__.py`.
+- **Alembic Migrations**: Authored 3 Alembic migration scripts (`0018_core_exam_tables`, `0019_ia_aggregation_eligibility`, `0020_results_mark_sheets`) with RLS policies, update triggers, composite foreign keys, and drop operations.
+- **Test Stubs**: Undeferred all Phase 3 tests from `tests/COVERAGE_MANIFEST.yaml` and created 71 test stubs in `tests/unit/exam/`, `tests/integration/exam/`, and `tests/compliance/exam/` matching the required manifest IDs.
+- **Constraint Test Script**: Developed validation script `scripts/test_phase3_constraints.sql` to verify database constraints.
+
+---
+
 ## [Session 20] — 2026-07-06
 
 ### Fixed — CI Pipeline (GitHub Actions) & Code Quality

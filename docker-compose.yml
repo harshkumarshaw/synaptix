@@ -109,6 +109,7 @@ services:
       - SNX_ENV=dev
       - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
       - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
+      - PYTHONPATH=/app:/app/services/snx-auth
     depends_on:
       postgres:
         condition: service_healthy
@@ -128,6 +129,7 @@ services:
       - SNX_ENV=dev
       - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
       - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
+      - PYTHONPATH=/app:/app/services/snx-academic
     depends_on:
       postgres:
         condition: service_healthy
@@ -147,6 +149,7 @@ services:
       - SNX_ENV=dev
       - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
       - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
+      - PYTHONPATH=/app:/app/services/snx-institution
     depends_on:
       postgres:
         condition: service_healthy
@@ -167,6 +170,7 @@ services:
       - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
       - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
       - SNX_STORAGE_DIR=/app/storage/assets
+      - PYTHONPATH=/app:/app/services/snx-workflow
     volumes:
       - ./storage/assets:/app/storage/assets
     depends_on:
@@ -188,6 +192,7 @@ services:
       - SNX_ENV=dev
       - SNX_DATABASE_URL=postgresql+asyncpg://snx:snx_dev_pass@postgres:5432/synaptix_dev
       - SNX_JWT_SECRET=test_jwt_secret_that_is_long_enough_for_hs256_at_least_32_chars
+      - PYTHONPATH=/app:/app/services/snx-logbook
     depends_on:
       postgres:
         condition: service_healthy
