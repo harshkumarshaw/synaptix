@@ -362,5 +362,16 @@ Any implementation notes or known limitations.
 - [x] Tested
 - [x] Verified
 **Notes:** Updated student seeding script to align populated DOAP levels and logbook entries with NMC CBME standards.
- 
- 
+
+### NMC-COMP-20260707-UAT: UAT Smoke Test Verification of two-threshold attendance
+**Source:** NMC CBME 2019/2023 Guidelines
+**Effective Date:** 2026-07-07
+**Applies To:** MBBS all phases
+**Implementing Module:** scripts/smoke-test.py & services/snx-academic/app/routers/attendance.py
+**Test IDs:** None
+**Test File:** None
+**Compliance Status:**
+- [x] Implemented
+- [x] Tested (console smoke test script)
+- [x] Verified
+**Notes:** Verified that student attendance percentages correctly evaluate eligibility per NMC theory (75%) and practical (80%) thresholds.

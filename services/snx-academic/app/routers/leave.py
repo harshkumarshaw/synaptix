@@ -25,7 +25,7 @@ from app.schemas.leave import (
 from app.services.leave_service import LeaveService
 from packages.shared.auth.dependencies import get_current_user, require_roles
 from packages.shared.auth.jwt import TokenPayload
-from packages.shared.db.session import get_session_with_tenant
+from packages.shared.db.session import get_db
 from packages.shared.errors import InvalidStateTransitionError, ResourceNotFoundError
 
 router = APIRouter(prefix="/leave", tags=["leave"])
@@ -33,7 +33,7 @@ router = APIRouter(prefix="/leave", tags=["leave"])
 
 def _get_leave_service(
     current_user: Annotated[TokenPayload, Depends(get_current_user)],
-    db=Depends(get_session_with_tenant),
+    db=Depends(get_db),
 ) -> LeaveService:
     """FastAPI dependency: construct LeaveService."""
     return LeaveService(

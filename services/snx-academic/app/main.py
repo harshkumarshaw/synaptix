@@ -21,6 +21,7 @@ from app.routers import (
     leave,
     lesson_plan,
     session,
+    dashboard,
 )
 from packages.shared.auth.tenant_context import TenantContextMiddleware
 from packages.shared.errors import (
@@ -118,6 +119,7 @@ def create_app() -> FastAPI:
     app.include_router(attendance.router, prefix="/api/v1")
     app.include_router(leave.router, prefix="/api/v1")
     app.include_router(admissions.router, prefix="/api/v1")
+    app.include_router(dashboard.router, prefix="/api/v1")
 
     @app.get("/")
     async def root() -> dict[str, str]:

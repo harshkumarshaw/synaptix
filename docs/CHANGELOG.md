@@ -5,6 +5,17 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Session 23] — 2026-07-07
+
+### Fixed — Frontend Client Prefixing, Real Login, and Attendance Summary Endpoints
+- **frontend-web/src/lib/api.ts**: Added dynamic `/api/v1` prefix prepending for all outgoing API requests.
+- **frontend-web/src/lib/auth.ts**: Added default `tenant_id` payload to login requests.
+- **packages/shared/auth/tenant_context.py**: Allowed extracting `tenant_id` from the `X-Tenant-ID` header even on exempt paths like login, avoiding 403 Forbidden crashes on DB access.
+- **services/snx-academic/app/routers/attendance.py**: Replaced `get_session_with_tenant` dependency with standard `get_db` to avoid query parameter inference, added `/student/{student_id}/summary` endpoint, and mapped `user_id` to student primary key `id`.
+- **services/snx-academic/app/routers/dashboard.py**: Created new dashboard stats endpoint `/dashboard/stats`.
+- **services/snx-academic/app/main.py**: Registered the dashboard router.
+- **scripts/smoke-test.py**: Created E2E backend smoke test script verifying health checks, login, and stats/summaries.
+
 ## [Session 22] — 2026-07-06
 
 ### Fixed — Backend Container Startup Crashes & Index Paths

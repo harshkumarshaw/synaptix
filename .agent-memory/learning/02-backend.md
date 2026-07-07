@@ -53,5 +53,7 @@ await session.commit()
 - **FastAPI double dependency definition:** Never specify `Depends(...)` both inside `Annotated[..., Depends(...)]` and as a default value `= Depends(...)` in the same parameter. Doing so raises an `AssertionError` in FastAPI. Use `Annotated[..., Depends(...)]` without the default value assignment.
 - **APIRouter registration error:** When registering routers in main app using `include_router`, check if the router is imported directly as the APIRouter instance from the module's `__init__.py`. Trying to access `.router` on an already-imported APIRouter object throws an `AttributeError`.
 
+## Session 23 Learnings (2026-07-07)
 
-
+- **FastAPI Dependency Query Parameter Inference:** If a dependency function (such as `get_session_with_tenant`) has parameter variables without default values or explicit dependency injection (like `tenant_id: uuid.UUID`), FastAPI will automatically infer those parameters as required HTTP query parameters. To prevent query parameters from being forced on every endpoint depending on that service, use parameter-less dependencies (like standard `get_db`) that extract parameters from the request state dynamically set by the middleware.
+- **Tenant Context and Exempt Paths:** Authentication endpoints (like `/login`) are typically placed on `exempt_paths` to allow unauthenticated access. However, if those endpoints still access the database via a tenant-scoped session helper, they will crash if the middleware bypasses tenant ID extraction entirely. Update the middleware to always try to extract the tenant context (e.g. from custom header `X-Tenant-ID` or request payload) even for exempt paths, and skip early exit if the context is successfully found.

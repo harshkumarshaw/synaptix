@@ -1,13 +1,13 @@
 # HANDOFF_NOTES.md
 
 ## Current State
-- **Session 22:** Fixed container startup crashes in `snx-workflow` and `snx-logbook`, defined friendly root paths (`/`) for all 5 FastAPI services, and successfully seeded mock student metrics (attendance, DOAP, logbook). All 5 backend containers are active and `healthy`.
+- **Session 23:** Fixed frontend-backend routing prefixes via dynamic Axios client interceptor. Allowed login requests to run under correct tenant context by extracting headers on exempt paths. Added `/student/{id}/summary` and `/dashboard/stats` endpoints to Academic Service. Recalculated database summaries, and verified E2E smoke tests successfully via `smoke-test.py`.
 
 ## Tasks Pending — Explicit Recipients
 
-### [TO: Session F5 / Session 23]
+### [TO: Session F5 / Session 24]
+- Implement Playwright E2E tests for automated student and admin dashboard flows.
 - Implement Phase 3 R4 Exam Management engines/services and API endpoints.
-- Student: visual dashboard for exam calendar and results.
 
 ## Debt List — Honest Assessment
-- All migrations have been successfully executed and all constraints verified. No technical debt remains for container startup.
+- All backend services are healthy and tested. No technical debt remains for dashboard and login UAT verification.

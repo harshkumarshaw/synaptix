@@ -1,1 +1,1 @@
-Session 22 completed. Fixed container startup crashes in snx-workflow and snx-logbook, added friendly root paths for all FastAPI apps, and seeded student dashboard data.
+Session 23 completed. Fixed frontend API prefixing and login payloads, resolved database summaries mapping mismatch, implemented student summaries and dashboard statistics endpoints, and validated E2E smoke tests successfully.

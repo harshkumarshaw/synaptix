@@ -2,6 +2,19 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-07 — Frontend Client Prefixing, Real Login & UAT Verification (Session 23)
+**Agent:** solo-dev-agent
+**Duration:** ~39 mins
+**Focus:** Fix frontend API request prefixing, login payloads, and resolve missing endpoints/UAT summary mismatches.
+- Added dynamic `/api/v1` prefix prepending for all outgoing API requests from the frontend client.
+- Added default `tenant_id` payload to login form requests.
+- Allowed extracting tenant ID from `X-Tenant-ID` header even on exempt paths like login.
+- Replaced `get_session_with_tenant` dependency with standard `get_db` to avoid query parameter inference.
+- Added `/student/{student_id}/summary` endpoint to retrieve a list of attendance summaries for a student.
+- Created and registered the `/dashboard/stats` router in `snx-academic`.
+- Bulk recalculated and populated the `attendance_summary` table from raw records.
+- Created `scripts/smoke-test.py` to verify UAT flow and verified all backend services.
+
 ## 2026-07-06 — Backend Container Startup & Route Index Fixes (Session 22)
 **Agent:** solo-dev-agent
 **Duration:** ~25 mins
