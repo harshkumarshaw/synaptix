@@ -50,7 +50,7 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
   const createMutation = useCreateEntry();
   const [backdatedWarning, setBackdatedWarning] = useState(false);
 
-  const form = useForm<CreateEntryValues>({
+  const form = useForm<any>({
     resolver: zodResolver(createEntrySchema),
     defaultValues: {
       subject_code: "",
@@ -129,7 +129,7 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
         </div>
       </div>
       {form.formState.errors.subject_code && (
-        <p className="text-xs text-destructive">{form.formState.errors.subject_code.message}</p>
+        <p className="text-xs text-destructive">{(form.formState.errors.subject_code.message as string)}</p>
       )}
 
       <div className="grid grid-cols-3 gap-4">
@@ -155,7 +155,7 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
             {...form.register("competency_code")}
           />
           {form.formState.errors.competency_code && (
-            <p className="text-xs text-destructive">{form.formState.errors.competency_code.message}</p>
+            <p className="text-xs text-destructive">{(form.formState.errors.competency_code.message as string)}</p>
           )}
         </div>
 
@@ -184,7 +184,7 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
             onChange={handleDateChange}
           />
           {form.formState.errors.activity_date && (
-            <p className="text-xs text-destructive">{form.formState.errors.activity_date.message}</p>
+            <p className="text-xs text-destructive">{(form.formState.errors.activity_date.message as string)}</p>
           )}
           {backdatedWarning && (
             <div className="text-xs text-amber-500 font-semibold bg-amber-500/10 p-2 rounded">
@@ -201,7 +201,7 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
             {...form.register("activity_name")}
           />
           {form.formState.errors.activity_name && (
-            <p className="text-xs text-destructive">{form.formState.errors.activity_name.message}</p>
+            <p className="text-xs text-destructive">{(form.formState.errors.activity_name.message as string)}</p>
           )}
         </div>
       </div>

@@ -47,4 +47,11 @@ await session.commit()
 
 - **PostgreSQL test triggers override for unit tests:** When migrating unit tests from SQLite to PostgreSQL, constraint checks can be bypassed by dynamically running `ALTER TABLE <table_name> DISABLE TRIGGER ALL` inside the test session and re-enabling them upon teardown. This isolates unit tests from parent table seeding requirements without changing the database schema.
 
+## Session 22 Learnings (2026-07-06)
+
+- **FastAPI parameter default ordering constraint:** All function parameters in FastAPI endpoints must adhere to Python's syntax rules where non-default parameters cannot follow default parameters. When using `Annotated` dependencies (which lack a default value specification in Python syntax), place them *before* any parameters with default values (such as `subject_code: str | None = None` or `Query(...)`).
+- **FastAPI double dependency definition:** Never specify `Depends(...)` both inside `Annotated[..., Depends(...)]` and as a default value `= Depends(...)` in the same parameter. Doing so raises an `AssertionError` in FastAPI. Use `Annotated[..., Depends(...)]` without the default value assignment.
+- **APIRouter registration error:** When registering routers in main app using `include_router`, check if the router is imported directly as the APIRouter instance from the module's `__init__.py`. Trying to access `.router` on an already-imported APIRouter object throws an `AttributeError`.
+
+
 

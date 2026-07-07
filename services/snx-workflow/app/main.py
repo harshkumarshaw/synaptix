@@ -112,9 +112,18 @@ def create_app() -> FastAPI:
             },
         )
 
-    app.include_router(master_data.router, prefix="/api/v1")
-    app.include_router(workflow.router, prefix="/api/v1")
-    app.include_router(assets.router, prefix="/api/v1")
+    app.include_router(master_data, prefix="/api/v1")
+    app.include_router(workflow, prefix="/api/v1")
+    app.include_router(assets, prefix="/api/v1")
+
+    @app.get("/")
+    async def root() -> dict[str, str]:
+        return {
+            "message": "Welcome to Synaptix Workflow Service",
+            "docs": "/docs",
+            "health": "/health",
+            "status": "running",
+        }
 
     @app.get("/health", tags=["infrastructure"])
     async def health() -> dict[str, str]:

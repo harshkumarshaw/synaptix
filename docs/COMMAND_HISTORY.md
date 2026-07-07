@@ -130,6 +130,30 @@ Format: `[YYYY-MM-DD HH:MM:SS] [agent-id] command`
 [2026-07-04 15:42:00] [03-frontend] npx shadcn@latest add --yes form
 [2026-07-04 15:46:00] [03-frontend] npm install axios zustand @tanstack/react-query jose react-hook-form zod @hookform/resolvers
 [2026-07-04 15:47:00] [03-frontend] npm install tailwindcss-animate
-[2026-07-04 15:52:00] [03-frontend] npm run build
-[2026-07-04 16:12:00] [03-frontend] npm run dev
+[2026-07-06 16:12:00] [03-frontend] npm run build
+[2026-07-06 16:12:00] [03-frontend] npm run dev
 ```
+
+## 2026-07-06 — Session 21
+
+```
+[2026-07-06 18:05:00] [01-orchestrator] .venv\Scripts\ruff check services/snx-logbook/
+[2026-07-06 18:10:00] [01-orchestrator] npx tsc --noEmit
+[2026-07-06 18:12:00] [01-orchestrator] .venv\Scripts\ruff check --fix services/snx-academic/
+[2026-07-06 18:13:00] [01-orchestrator] .venv\Scripts\ruff check services/snx-academic/
+[2026-07-06 18:15:00] [01-orchestrator] python scripts/verify_coverage_manifest.py examination_management ia_aggregation exam_eligibility exam_results mark_sheets
+[2026-07-06 18:20:00] [01-orchestrator] .venv\Scripts\pytest tests/unit/exam/ tests/integration/exam/ tests/compliance/exam/ --co -q
+```
+
+## 2026-07-06 — Session 22
+
+```
+[2026-07-06 22:15:00] [solo-dev-agent] .venv\Scripts\python scripts/seed_student_dashboard_data.py
+[2026-07-06 22:20:00] [solo-dev-agent] docker compose --profile services up -d --build
+[2026-07-06 22:30:00] [solo-dev-agent] Invoke-WebRequest -UseBasicParsing http://localhost:8001/
+[2026-07-06 22:30:05] [solo-dev-agent] Invoke-WebRequest -UseBasicParsing http://localhost:8002/
+[2026-07-06 22:30:10] [solo-dev-agent] Invoke-WebRequest -UseBasicParsing http://localhost:8006/
+[2026-07-06 22:30:15] [solo-dev-agent] Invoke-WebRequest -UseBasicParsing http://localhost:8007/
+[2026-07-06 22:30:20] [solo-dev-agent] Invoke-WebRequest -UseBasicParsing http://localhost:8010/
+```
+

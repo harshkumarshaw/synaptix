@@ -2,6 +2,15 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-06 — Backend Container Startup & Route Index Fixes (Session 22)
+**Agent:** solo-dev-agent
+**Duration:** ~25 mins
+**Focus:** Fix container startup crashes in logbook and workflow services, add root `/` endpoints, and seed student dashboard data.
+- Added friendly `/` root routes returning status metadata for all 5 FastAPI services.
+- Fixed APIRouter inclusion AttributeError in `snx-workflow`.
+- Fixed parameter ordering SyntaxError in `snx-logbook`'s `list_logbook_entries` endpoint.
+- Updated database seeding script to dynamically query entity IDs and seed prerequisite DOAP events and sessions, fully populating John Doe's student dashboard.
+
 ## 2026-07-06 — CI Checks Fix & Code Quality (Session 20)
 **Agent:** DevOps (09) / Testing (06) / Backend (02)
 **Duration:** ~25 mins

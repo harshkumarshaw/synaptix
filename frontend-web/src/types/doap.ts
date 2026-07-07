@@ -8,6 +8,7 @@ export interface DoapRecord {
   faculty_decision: "C" | "R" | "Re";
   faculty_id: string;
   signed_off_at: string;
+  notes?: string;
 }
 
 export interface DoapState {

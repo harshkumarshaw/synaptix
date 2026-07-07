@@ -12,6 +12,19 @@ from app.models.course import Course
 from app.models.curriculum import Curriculum
 from app.models.curriculum_migration import CurriculumMigrationAudit
 from app.models.department import Department
+from app.models.exam import (
+    ClinicalEvaluation,
+    ExamEligibility,
+    Examination,
+    ExamModeration,
+    ExamResult,
+    ExamSchedule,
+    IAAggregation,
+    MarkSheet,
+    PracticalAssessment,
+    QuestionPaper,
+    VivaScore,
+)
 from app.models.faculty import Faculty
 from app.models.leave_request import InternshipRotation, LeaveRequest
 from app.models.lesson_plan import LessonPlan
@@ -54,4 +67,16 @@ __all__ = [
     "LeaveRequest",
     "InternshipRotation",
     "AdmissionApplication",
+    # Phase 3
+    "Examination",
+    "ExamSchedule",
+    "VivaScore",
+    "PracticalAssessment",
+    "ClinicalEvaluation",
+    "IAAggregation",
+    "ExamEligibility",
+    "ExamResult",
+    "ExamModeration",
+    "MarkSheet",
+    "QuestionPaper",
 ]

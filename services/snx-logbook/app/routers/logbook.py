@@ -249,13 +249,13 @@ async def signoff_logbook_entry(
 )
 async def list_logbook_entries(
     student_id: uuid.UUID,
+    current_user: Annotated[TokenPayload, Depends(get_current_user)],
+    service: Annotated[LogbookService, Depends(LogbookService)],
     subject_code: str | None = None,
     professional_phase: str | None = None,
     entry_status: str | None = Query(None, alias="status"),
     competency_code: str | None = None,
     is_core: bool | None = None,
-    current_user: Annotated[TokenPayload, Depends(get_current_user)] = Depends(get_current_user),
-    service: Annotated[LogbookService, Depends(LogbookService)] = Depends(LogbookService),
 ) -> list[LogbookEntryResponse]:
     # Authorization check: student can only list their own entries
     # Admin / Faculty / HOD can list any

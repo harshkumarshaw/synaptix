@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DoapPipeline } from "./doap-pipeline";
 import { Calendar, User, Stethoscope, FileText, ArrowLeftRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const PRESET_COMPETENCIES = [
   { code: "AN-1.1", name: "Dissection of upper limb" },

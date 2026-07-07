@@ -72,9 +72,8 @@ export function MarkAttendanceSheet({ eventId, onClose }: Props) {
           // Toast omitted for brevity, or we can use normal window.alert
           onClose();
         },
-        onError: (error: unknown) => {
+        onError: (error: any) => {
           console.error("Failed to save attendance:", error);
-          // @ts-expect-error axios response type
           alert(
             error.response?.data?.detail?.message ||
               "Failed to save attendance",
