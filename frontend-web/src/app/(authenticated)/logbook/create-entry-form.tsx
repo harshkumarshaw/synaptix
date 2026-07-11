@@ -16,8 +16,15 @@ const createEntrySchema = z
   .object({
     subject_code: z.string().optional(),
     elective_id: z.string().optional(),
-    professional_phase: z.enum(["Phase I", "Phase II", "Phase III Part I", "Phase III Part II"]),
-    competency_code: z.string().min(2, "Competency code must be at least 2 characters"),
+    professional_phase: z.enum([
+      "Phase I",
+      "Phase II",
+      "Phase III Part I",
+      "Phase III Part II",
+    ]),
+    competency_code: z
+      .string()
+      .min(2, "Competency code must be at least 2 characters"),
     nmc_level: z.enum(["K", "KH", "SH", "P"]),
     is_core: z.boolean().default(false),
     activity_date: z.string().refine((val) => {
@@ -29,14 +36,17 @@ const createEntrySchema = z
     activity_name: z.string().min(1, "Activity name is required").max(150),
     reflection: z.string().optional(),
   })
-  .refine((data) => {
-    const hasSubject = !!data.subject_code;
-    const hasElective = !!data.elective_id;
-    return hasSubject !== hasElective;
-  }, {
-    message: "Specify either Subject Code or Elective ID, but not both",
-    path: ["subject_code"],
-  });
+  .refine(
+    (data) => {
+      const hasSubject = !!data.subject_code;
+      const hasElective = !!data.elective_id;
+      return hasSubject !== hasElective;
+    },
+    {
+      message: "Specify either Subject Code or Elective ID, but not both",
+      path: ["subject_code"],
+    },
+  );
 
 type CreateEntryValues = z.infer<typeof createEntrySchema>;
 
@@ -46,7 +56,11 @@ interface CreateEntryFormProps {
   onCancel: () => void;
 }
 
-export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryFormProps) {
+export function CreateEntryForm({
+  studentId,
+  onSuccess,
+  onCancel,
+}: CreateEntryFormProps) {
   const createMutation = useCreateEntry();
   const [backdatedWarning, setBackdatedWarning] = useState(false);
 
@@ -101,7 +115,8 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
       toast.success("Logbook entry created successfully");
       onSuccess();
     } catch (err: any) {
-      const msg = err.response?.data?.detail?.message || "Failed to create logbook entry";
+      const msg =
+        err.response?.data?.detail?.message || "Failed to create logbook entry";
       toast.error(msg);
     }
   }
@@ -129,7 +144,9 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
         </div>
       </div>
       {form.formState.errors.subject_code && (
-        <p className="text-xs text-destructive">{(form.formState.errors.subject_code.message as string)}</p>
+        <p className="text-xs text-destructive">
+          {form.formState.errors.subject_code.message as string}
+        </p>
       )}
 
       <div className="grid grid-cols-3 gap-4">
@@ -155,7 +172,9 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
             {...form.register("competency_code")}
           />
           {form.formState.errors.competency_code && (
-            <p className="text-xs text-destructive">{(form.formState.errors.competency_code.message as string)}</p>
+            <p className="text-xs text-destructive">
+              {form.formState.errors.competency_code.message as string}
+            </p>
           )}
         </div>
 
@@ -184,7 +203,9 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
             onChange={handleDateChange}
           />
           {form.formState.errors.activity_date && (
-            <p className="text-xs text-destructive">{(form.formState.errors.activity_date.message as string)}</p>
+            <p className="text-xs text-destructive">
+              {form.formState.errors.activity_date.message as string}
+            </p>
           )}
           {backdatedWarning && (
             <div className="text-xs text-amber-500 font-semibold bg-amber-500/10 p-2 rounded">
@@ -201,7 +222,9 @@ export function CreateEntryForm({ studentId, onSuccess, onCancel }: CreateEntryF
             {...form.register("activity_name")}
           />
           {form.formState.errors.activity_name && (
-            <p className="text-xs text-destructive">{(form.formState.errors.activity_name.message as string)}</p>
+            <p className="text-xs text-destructive">
+              {form.formState.errors.activity_name.message as string}
+            </p>
           )}
         </div>
       </div>

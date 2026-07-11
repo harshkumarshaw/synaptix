@@ -4,13 +4,32 @@ import { useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
 import { useStudents } from "@/hooks/use-logbook";
 import { useDoapRecords, useDoapState } from "@/hooks/use-doap";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { DoapPipeline } from "./doap-pipeline";
-import { Calendar, User, Stethoscope, FileText, ArrowLeftRight } from "lucide-react";
+import {
+  Calendar,
+  User,
+  Stethoscope,
+  FileText,
+  ArrowLeftRight,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const PRESET_COMPETENCIES = [
@@ -26,16 +45,27 @@ export default function DoapPage() {
 
   const { data: students, isLoading: loadingStudents } = useStudents();
   const [selectedStudentId, setSelectedStudentId] = useState<string>("");
-  const [selectedCompetency, setSelectedCompetency] = useState<string>("AN-1.1");
+  const [selectedCompetency, setSelectedCompetency] =
+    useState<string>("AN-1.1");
   const [activeStage, setActiveStage] = useState<string | null>("D");
 
-  const studentId = isStudent ? (user?.student_id || user?.id || "") : selectedStudentId;
+  const studentId = isStudent
+    ? user?.student_id || user?.id || ""
+    : selectedStudentId;
 
-  const { data: doapState, isLoading: loadingState } = useDoapState(studentId, selectedCompetency);
-  const { data: records, isLoading: loadingRecords } = useDoapRecords(studentId, selectedCompetency);
+  const { data: doapState, isLoading: loadingState } = useDoapState(
+    studentId,
+    selectedCompetency,
+  );
+  const { data: records, isLoading: loadingRecords } = useDoapRecords(
+    studentId,
+    selectedCompetency,
+  );
 
   const selectedStudentObj = students?.find((s) => s.id === studentId);
-  const selectedCompetencyObj = PRESET_COMPETENCIES.find((c) => c.code === selectedCompetency);
+  const selectedCompetencyObj = PRESET_COMPETENCIES.find(
+    (c) => c.code === selectedCompetency,
+  );
 
   // Filter records by clicked active stage
   const stageRecords = records?.filter((r) => r.stage === activeStage) || [];
@@ -50,7 +80,8 @@ export default function DoapPage() {
       <div>
         <h1 className="text-2xl font-bold">DOAP Skills Tracker</h1>
         <p className="text-sm text-muted-foreground">
-          Track clinical and practical skills progression (Demonstrate → Observe → Assist → Perform)
+          Track clinical and practical skills progression (Demonstrate → Observe
+          → Assist → Perform)
         </p>
       </div>
 
@@ -58,7 +89,9 @@ export default function DoapPage() {
       <Card>
         <CardHeader>
           <CardTitle>DOAP Selection</CardTitle>
-          <CardDescription>Select competency and student context to view progress pipeline</CardDescription>
+          <CardDescription>
+            Select competency and student context to view progress pipeline
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
@@ -114,10 +147,13 @@ export default function DoapPage() {
             <CardHeader className="border-b pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
                 <Stethoscope className="h-5 w-5 text-primary" />
-                Pipeline for {selectedCompetencyObj?.code}: {selectedCompetencyObj?.name}
+                Pipeline for {selectedCompetencyObj?.code}:{" "}
+                {selectedCompetencyObj?.name}
               </CardTitle>
               {!isStudent && selectedStudentObj && (
-                <CardDescription>Viewing DOAP progress for {selectedStudentObj.full_name}</CardDescription>
+                <CardDescription>
+                  Viewing DOAP progress for {selectedStudentObj.full_name}
+                </CardDescription>
               )}
             </CardHeader>
             <CardContent className="pt-6">
@@ -147,12 +183,15 @@ export default function DoapPage() {
                 Stage {activeStage} Attempt History
               </CardTitle>
               <CardDescription>
-                Click stage nodes above to see detailed feedback, ratings, and certifications.
+                Click stage nodes above to see detailed feedback, ratings, and
+                certifications.
               </CardDescription>
             </CardHeader>
             <CardContent>
               {loadingRecords ? (
-                <div className="text-center py-6 text-muted-foreground">Loading stage history...</div>
+                <div className="text-center py-6 text-muted-foreground">
+                  Loading stage history...
+                </div>
               ) : stageRecords.length === 0 ? (
                 <div className="py-10 text-center border border-dashed rounded-lg text-muted-foreground">
                   No records logged for stage {activeStage}.
@@ -183,8 +222,8 @@ export default function DoapPage() {
                             {rec.attempt_type === "F"
                               ? "First (F)"
                               : rec.attempt_type === "R"
-                              ? "Repeat (R)"
-                              : "Remediation (Re)"}
+                                ? "Repeat (R)"
+                                : "Remediation (Re)"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -193,15 +232,15 @@ export default function DoapPage() {
                               rec.rating === "E"
                                 ? "default"
                                 : rec.rating === "M"
-                                ? "secondary"
-                                : "destructive"
+                                  ? "secondary"
+                                  : "destructive"
                             }
                           >
                             {rec.rating === "E"
                               ? "Exceeds (E)"
                               : rec.rating === "M"
-                              ? "Meets (M)"
-                              : "Below (B)"}
+                                ? "Meets (M)"
+                                : "Below (B)"}
                           </Badge>
                         </TableCell>
                         <TableCell>
@@ -210,22 +249,22 @@ export default function DoapPage() {
                               rec.faculty_decision === "C"
                                 ? "default"
                                 : rec.faculty_decision === "R"
-                                ? "secondary"
-                                : "destructive"
+                                  ? "secondary"
+                                  : "destructive"
                             }
                             className={cn(
                               rec.faculty_decision === "C"
                                 ? "bg-green-600 hover:bg-green-700 text-white"
                                 : rec.faculty_decision === "R"
-                                ? "bg-amber-500 hover:bg-amber-600 text-white"
-                                : "bg-red-500 hover:bg-red-600 text-white"
+                                  ? "bg-amber-500 hover:bg-amber-600 text-white"
+                                  : "bg-red-500 hover:bg-red-600 text-white",
                             )}
                           >
                             {rec.faculty_decision === "C"
                               ? "Certify (C)"
                               : rec.faculty_decision === "R"
-                              ? "Repeat (R)"
-                              : "Remediate (Re)"}
+                                ? "Repeat (R)"
+                                : "Remediate (Re)"}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-xs truncate max-w-[120px]">
@@ -247,7 +286,8 @@ export default function DoapPage() {
           <User className="h-10 w-10 text-muted-foreground mb-4" />
           <h3 className="font-semibold text-lg">No Student Context</h3>
           <p className="text-sm text-muted-foreground max-w-sm mt-1">
-            Please select a student from the dropdown above to view their DOAP progression pipeline.
+            Please select a student from the dropdown above to view their DOAP
+            progression pipeline.
           </p>
         </div>
       )}

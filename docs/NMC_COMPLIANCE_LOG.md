@@ -375,3 +375,31 @@ Any implementation notes or known limitations.
 - [x] Tested (console smoke test script)
 - [x] Verified
 **Notes:** Verified that student attendance percentages correctly evaluate eligibility per NMC theory (75%) and practical (80%) thresholds.
+
+## Session 24 Updates (2026-07-11)
+
+### LEV-NMC-20260711: Leave Request Resolution mapping to Student Profiles
+**Source:** NMC CBME 2019/2023 Guidelines — Student Leave of Absence and Attendance exemptions
+**Effective Date:** 2026-07-11
+**Applies To:** MBBS all phases
+**Implementing Module:** services/snx-academic/app/routers/leave.py
+**Test IDs:** None
+**Test File:** None
+**Compliance Status:**
+- [x] Implemented (Resolved user UUID to database student ID profiles)
+- [x] Tested (E2E student leave request submission passing)
+- [x] Verified
+**Notes:** Ensured student leave requests map properly to underlying operational profiles and do not violate database constraint keys.
+
+### ELEC-NMC-20260711: Electives catalog seeding and allocation validation
+**Source:** NMC CBME 2019/2023 Guidelines — Mandatory electives blocks selection and placement
+**Effective Date:** 2026-07-11
+**Applies To:** MBBS all phases
+**Implementing Module:** scripts/seed_electives_dev.py & frontend-web/tests/e2e/electives.spec.ts
+**Test IDs:** None
+**Test File:** None
+**Compliance Status:**
+- [x] Implemented (Pre-seeded dev database with active curriculum blocks and student preferences)
+- [x] Tested (E2E student preferences selection and admin live run allocation passing)
+- [x] Verified
+**Notes:** Verified that administrative elective allocation runs can dry run and commit live allocation of students matching their ranked preferences.

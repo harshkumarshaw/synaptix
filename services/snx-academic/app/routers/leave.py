@@ -15,7 +15,10 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.stubs import Student
 from app.schemas.leave import (
     LeaveApproveRequest,
     LeaveRejectRequest,
@@ -33,13 +36,13 @@ router = APIRouter(prefix="/leave", tags=["leave"])
 
 def _get_leave_service(
     current_user: Annotated[TokenPayload, Depends(get_current_user)],
-    db=Depends(get_db),
+    db: AsyncSession = Depends(get_db),
 ) -> LeaveService:
     """FastAPI dependency: construct LeaveService."""
     return LeaveService(
         db=db,
         tenant_id=current_user.tenant_uuid,
-        actor_id=current_user.user_uuid,
+        actor_id=current_user.user_uuid,  # type: ignore[attr-defined]
     )
 
 
@@ -56,8 +59,16 @@ async def create_leave_request(
 ) -> LeaveRequestOut:
     """Student creates a leave request. Starts in pending state."""
     try:
+        student_uuid = current_user.user_uuid  # type: ignore[attr-defined]
+        stmt = select(Student.id).where(
+            (Student.user_id == current_user.user_uuid) | (Student.id == current_user.user_uuid)  # type: ignore[attr-defined]
+        )
+        resolved_id = (await service._db.execute(stmt)).scalar_one_or_none()
+        if resolved_id:
+            student_uuid = resolved_id
+
         leave = await service.create_leave_request(
-            student_id=current_user.user_uuid,
+            student_id=student_uuid,
             req=req,
         )
         return LeaveRequestOut.model_validate(leave)
@@ -78,7 +89,19 @@ async def list_leave_requests(
     service: Annotated[LeaveService, Depends(_get_leave_service)] = None,  # type: ignore[assignment]
 ) -> list[LeaveRequestOut]:
     """List leave requests. Student sees own; HOD/Admin sees all or filtered."""
-    requests = await service.get_leave_requests(student_id=student_id, status=leave_status)
+    resolved_student_id = student_id
+    if not resolved_student_id and current_user and "student" in current_user.roles:
+        resolved_student_id = current_user.user_uuid  # type: ignore[attr-defined]
+
+    if resolved_student_id:
+        stmt = select(Student.id).where(
+            (Student.user_id == resolved_student_id) | (Student.id == resolved_student_id)
+        )
+        db_id = (await service._db.execute(stmt)).scalar_one_or_none()
+        if db_id:
+            resolved_student_id = db_id
+
+    requests = await service.get_leave_requests(student_id=resolved_student_id, status=leave_status)
     return [LeaveRequestOut.model_validate(r) for r in requests]
 
 

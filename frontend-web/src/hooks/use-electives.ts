@@ -20,13 +20,19 @@ export function useElectives(block?: "Block 1" | "Block 2") {
   });
 }
 
-export function useMyPreferences(studentId: string, block?: "Block 1" | "Block 2") {
+export function useMyPreferences(
+  studentId: string,
+  block?: "Block 1" | "Block 2",
+) {
   return useQuery({
     queryKey: ["electives", "preferences", studentId, block],
     queryFn: async () => {
-      const { data } = await api.get<any[]>(`/electives/preferences/${studentId}`, {
-        params: block ? { block } : {},
-      });
+      const { data } = await api.get<any[]>(
+        `/electives/preferences/${studentId}`,
+        {
+          params: block ? { block } : {},
+        },
+      );
       return data;
     },
     enabled: !!studentId,
@@ -55,19 +61,28 @@ export function useSubmitPreferences() {
 export function useRunAllocation() {
   return useMutation({
     mutationFn: async (payload: AllocationRunRequest) => {
-      const { data } = await api.post<AllocationRunResult>("/electives/allocate", payload);
+      const { data } = await api.post<AllocationRunResult>(
+        "/electives/allocate",
+        payload,
+      );
       return data;
     },
   });
 }
 
-export function useMyAllocations(studentId: string, block?: "Block 1" | "Block 2") {
+export function useMyAllocations(
+  studentId: string,
+  block?: "Block 1" | "Block 2",
+) {
   return useQuery({
     queryKey: ["electives", "allocations", studentId, block],
     queryFn: async () => {
-      const { data } = await api.get<ElectiveAllocation[]>(`/electives/allocations/${studentId}`, {
-        params: block ? { block } : {},
-      });
+      const { data } = await api.get<ElectiveAllocation[]>(
+        `/electives/allocations/${studentId}`,
+        {
+          params: block ? { block } : {},
+        },
+      );
       return data;
     },
     enabled: !!studentId,

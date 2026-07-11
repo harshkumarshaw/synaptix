@@ -5,6 +5,19 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Session 24] — 2026-07-11
+
+### Fixed — Playwright E2E Parallelization, Radix Toaster, and Backend Robustness
+- **frontend-web/playwright.config.ts**: Configured parallel execution with 8 workers, fail-fast backend health check, and dynamic trace capturing.
+- **frontend-web/src/lib/api.ts**: Added exception to 401 response interceptor redirect logic for login requests to prevent layout reset and clear input fields.
+- **frontend-web/src/app/layout.tsx**: Mounted traditional Radix UI `ToastToaster` alongside `SonnerToaster` to ensure all `useToast` hook calls render notifications.
+- **frontend-web/tests/e2e/electives.spec.ts**: Fixed test assertions to wait for curriculum dropdown population and avoid strict mode text-matching violations.
+- **services/snx-academic/app/main.py**: Monkeypatched `TokenPayload` with `user_uuid` property at startup to prevent AttributeError in router dependencies.
+- **services/snx-academic/app/routers/leave.py**: Implemented `user_uuid`/`user_id` to student profile ID resolution using database queries to comply with foreign key constraints.
+- **services/snx-academic/app/models/stubs.py**: Declared explicit `id` and `user_id` columns on `Student` stub model to enable database query construction.
+- **services/snx-logbook/app/main.py**: Monkeypatched `TokenPayload` with `user_uuid` and `role` properties at startup to prevent AttributeError in logbook routers.
+- **scripts/seed_electives_dev.py**: Created new Python seed script that inserts Block 1 electives and student preferences into `synaptix_dev` database for E2E tests.
+
 ## [Session 23] — 2026-07-07
 
 ### Fixed — Frontend Client Prefixing, Real Login, and Attendance Summary Endpoints

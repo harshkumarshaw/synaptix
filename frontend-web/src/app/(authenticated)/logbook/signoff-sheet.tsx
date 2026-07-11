@@ -3,7 +3,12 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -29,9 +34,10 @@ const signoffSchema = z
       return true;
     },
     {
-      message: "Rating Below Expectation (B) cannot be Certified (C). Select Repeat or Remediate.",
+      message:
+        "Rating Below Expectation (B) cannot be Certified (C). Select Repeat or Remediate.",
       path: ["faculty_decision"],
-    }
+    },
   );
 
 type SignoffValues = z.infer<typeof signoffSchema>;
@@ -43,7 +49,12 @@ interface SignoffSheetProps {
   onSuccess: () => void;
 }
 
-export function SignoffSheet({ entry, isOpen, onClose, onSuccess }: SignoffSheetProps) {
+export function SignoffSheet({
+  entry,
+  isOpen,
+  onClose,
+  onSuccess,
+}: SignoffSheetProps) {
   const signoffMutation = useSignoffEntry();
 
   const form = useForm<SignoffValues>({
@@ -88,7 +99,8 @@ export function SignoffSheet({ entry, isOpen, onClose, onSuccess }: SignoffSheet
       toast.success("Logbook entry signed off successfully");
       onSuccess();
     } catch (err: any) {
-      const msg = err.response?.data?.detail?.message || "Failed to submit signoff";
+      const msg =
+        err.response?.data?.detail?.message || "Failed to submit signoff";
       toast.error(msg);
     }
   }
@@ -109,30 +121,44 @@ export function SignoffSheet({ entry, isOpen, onClose, onSuccess }: SignoffSheet
             <h3 className="font-semibold text-base">Entry Details</h3>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
-                <span className="text-muted-foreground block">Subject Code</span>
-                <span className="font-medium">{entry.subject_code || "N/A (Elective)"}</span>
+                <span className="text-muted-foreground block">
+                  Subject Code
+                </span>
+                <span className="font-medium">
+                  {entry.subject_code || "N/A (Elective)"}
+                </span>
               </div>
               {entry.elective_id && (
                 <div>
-                  <span className="text-muted-foreground block">Elective ID</span>
-                  <span className="font-medium truncate block">{entry.elective_id}</span>
+                  <span className="text-muted-foreground block">
+                    Elective ID
+                  </span>
+                  <span className="font-medium truncate block">
+                    {entry.elective_id}
+                  </span>
                 </div>
               )}
               <div>
                 <span className="text-muted-foreground block">Competency</span>
-                <span className="font-medium">{entry.competency_code} ({entry.nmc_level})</span>
+                <span className="font-medium">
+                  {entry.competency_code} ({entry.nmc_level})
+                </span>
               </div>
               <div>
                 <span className="text-muted-foreground block">Date</span>
                 <span className="font-medium">{entry.activity_date}</span>
               </div>
               <div className="col-span-2">
-                <span className="text-muted-foreground block">Activity Name</span>
+                <span className="text-muted-foreground block">
+                  Activity Name
+                </span>
                 <span className="font-medium">{entry.activity_name}</span>
               </div>
               {entry.reflection && (
                 <div className="col-span-2">
-                  <span className="text-muted-foreground block">Student Reflection</span>
+                  <span className="text-muted-foreground block">
+                    Student Reflection
+                  </span>
                   <p className="mt-1 bg-background p-2 rounded text-muted-foreground break-words italic">
                     "{entry.reflection}"
                   </p>
@@ -209,7 +235,9 @@ export function SignoffSheet({ entry, isOpen, onClose, onSuccess }: SignoffSheet
                 </label>
               </div>
               {form.formState.errors.faculty_decision && (
-                <p className="text-xs text-destructive">{form.formState.errors.faculty_decision.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.faculty_decision.message}
+                </p>
               )}
               {isBlocked && (
                 <p className="text-xs text-destructive font-semibold">
@@ -227,7 +255,9 @@ export function SignoffSheet({ entry, isOpen, onClose, onSuccess }: SignoffSheet
                 {...form.register("faculty_initials")}
               />
               {form.formState.errors.faculty_initials && (
-                <p className="text-xs text-destructive">{form.formState.errors.faculty_initials.message}</p>
+                <p className="text-xs text-destructive">
+                  {form.formState.errors.faculty_initials.message}
+                </p>
               )}
             </div>
 
@@ -242,7 +272,12 @@ export function SignoffSheet({ entry, isOpen, onClose, onSuccess }: SignoffSheet
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button type="button" variant="outline" className="flex-1" onClick={onClose}>
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={onClose}
+              >
                 Cancel
               </Button>
               <Button
@@ -250,7 +285,11 @@ export function SignoffSheet({ entry, isOpen, onClose, onSuccess }: SignoffSheet
                 className="flex-1"
                 disabled={signoffMutation.isPending || isBlocked}
               >
-                {signoffMutation.isPending ? "Submitting..." : decision === "C" ? "Certify" : "Request Revision"}
+                {signoffMutation.isPending
+                  ? "Submitting..."
+                  : decision === "C"
+                    ? "Certify"
+                    : "Request Revision"}
               </Button>
             </div>
           </form>

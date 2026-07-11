@@ -33,6 +33,10 @@ from packages.shared.errors import (
     TokenInvalidError,
 )
 from packages.shared.logging import configure_logging, get_logger
+from packages.shared.auth.jwt import TokenPayload
+
+# Monkeypatch TokenPayload to add user_uuid alias to comply with router assumptions
+TokenPayload.user_uuid = property(lambda self: self.user_id)
 
 logger = get_logger(__name__)
 

@@ -1,22 +1,45 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GripVertical, ArrowUp, ArrowDown, Sparkles, CheckCircle2, AlertCircle } from "lucide-react";
-import { useElectives, useMyPreferences, useSubmitPreferences } from "@/hooks/use-electives";
+import {
+  GripVertical,
+  ArrowUp,
+  ArrowDown,
+  Sparkles,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
+import {
+  useElectives,
+  useMyPreferences,
+  useSubmitPreferences,
+} from "@/hooks/use-electives";
 import { useToast } from "@/hooks/use-toast";
 import { useAuthStore } from "@/stores/auth-store";
 import type { Elective } from "@/types/electives";
 
 export function StudentPreferences() {
-  const [activeBlock, setActiveBlock] = useState<"Block 1" | "Block 2">("Block 1");
+  const [activeBlock, setActiveBlock] = useState<"Block 1" | "Block 2">(
+    "Block 1",
+  );
   const user = useAuthStore((state) => state.user);
   const studentId = user?.student_id || user?.id || "";
 
-  const { data: electives, isLoading: isElectivesLoading } = useElectives(activeBlock);
-  const { data: existing, isLoading: isPrefsLoading } = useMyPreferences(studentId, activeBlock);
+  const { data: electives, isLoading: isElectivesLoading } =
+    useElectives(activeBlock);
+  const { data: existing, isLoading: isPrefsLoading } = useMyPreferences(
+    studentId,
+    activeBlock,
+  );
   const submitPrefs = useSubmitPreferences();
   const { toast } = useToast();
 
@@ -26,7 +49,9 @@ export function StudentPreferences() {
   useEffect(() => {
     if (existing) {
       // Sort existing by rank_position
-      const sorted = [...existing].sort((a, b) => a.rank_position - b.rank_position);
+      const sorted = [...existing].sort(
+        (a, b) => a.rank_position - b.rank_position,
+      );
       setRanked(sorted.map((p) => p.elective_id));
     } else {
       setRanked([]);
@@ -73,17 +98,19 @@ export function StudentPreferences() {
         onSuccess: () => {
           toast({
             title: "Success",
-            description: "Your elective preferences have been submitted successfully.",
+            description:
+              "Your elective preferences have been submitted successfully.",
           });
         },
         onError: (err: any) => {
           toast({
             title: "Submission Failed",
-            description: err.response?.data?.detail || "Could not save preferences.",
+            description:
+              err.response?.data?.detail || "Could not save preferences.",
             variant: "destructive",
           });
         },
-      }
+      },
     );
   }
 
@@ -102,11 +129,14 @@ export function StudentPreferences() {
         <div className="absolute right-0 top-0 translate-x-1/4 -translate-y-1/4 w-72 h-72 rounded-full bg-primary/5 blur-3xl" />
         <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2">
-            <h1 className="text-3xl font-extrabold tracking-tight">Electives Portal</h1>
+            <h1 className="text-3xl font-extrabold tracking-tight">
+              Electives Portal
+            </h1>
             <Sparkles className="h-5 w-5 text-yellow-500 animate-pulse" />
           </div>
           <p className="text-muted-foreground text-sm max-w-md">
-            Rank your preferred electives. NMC CBME mandates separate clinical/non-clinical choices across blocks.
+            Rank your preferred electives. NMC CBME mandates separate
+            clinical/non-clinical choices across blocks.
           </p>
         </div>
         <div className="flex items-center gap-2 relative z-10 bg-background/60 p-1 rounded-xl border backdrop-blur-md self-start sm:self-center">
@@ -133,7 +163,8 @@ export function StudentPreferences() {
         <div className="flex items-center gap-3 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 dark:text-emerald-400 rounded-xl">
           <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
           <div className="text-sm font-medium">
-            Preferences for {activeBlock} are saved. You can adjust and resubmit them at any time before the allocation run starts.
+            Preferences for {activeBlock} are saved. You can adjust and resubmit
+            them at any time before the allocation run starts.
           </div>
         </div>
       )}
@@ -153,9 +184,13 @@ export function StudentPreferences() {
                   <CardTitle className="text-lg font-semibold flex items-center gap-2">
                     My Choice Sequence
                   </CardTitle>
-                  <CardDescription>Drag or use arrows to define order of preference</CardDescription>
+                  <CardDescription>
+                    Drag or use arrows to define order of preference
+                  </CardDescription>
                 </div>
-                <Badge variant={rankedElectives.length > 0 ? "default" : "secondary"}>
+                <Badge
+                  variant={rankedElectives.length > 0 ? "default" : "secondary"}
+                >
                   {rankedElectives.length} Selected
                 </Badge>
               </div>
@@ -168,7 +203,8 @@ export function StudentPreferences() {
                     Your choice list is empty.
                   </p>
                   <p className="text-xs text-muted-foreground max-w-xs mt-1">
-                    Select electives from the available catalog on the right to build your preference ranking.
+                    Select electives from the available catalog on the right to
+                    build your preference ranking.
                   </p>
                 </div>
               ) : (
@@ -186,7 +222,9 @@ export function StudentPreferences() {
                         {i + 1}
                       </Badge>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold truncate">{elective.title}</p>
+                        <p className="text-sm font-semibold truncate">
+                          {elective.title}
+                        </p>
                         <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
                           <span className="capitalize px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border">
                             {elective.elective_type.replace("_", " ")}
@@ -232,7 +270,9 @@ export function StudentPreferences() {
                 onClick={handleSubmit}
                 disabled={ranked.length === 0 || submitPrefs.isPending}
               >
-                {submitPrefs.isPending ? "Submitting Choices..." : `Submit Ranking List`}
+                {submitPrefs.isPending
+                  ? "Submitting Choices..."
+                  : `Submit Ranking List`}
               </Button>
             </CardContent>
           </Card>
@@ -241,8 +281,12 @@ export function StudentPreferences() {
           <Card className="lg:col-span-2 border-primary/10 shadow-lg bg-background/85">
             <CardHeader className="border-b pb-4">
               <div>
-                <CardTitle className="text-lg font-semibold">Available Electives</CardTitle>
-                <CardDescription>Select electives to add to your rankings</CardDescription>
+                <CardTitle className="text-lg font-semibold">
+                  Available Electives
+                </CardTitle>
+                <CardDescription>
+                  Select electives to add to your rankings
+                </CardDescription>
               </div>
             </CardHeader>
             <CardContent className="pt-6 max-h-[500px] overflow-y-auto space-y-3">

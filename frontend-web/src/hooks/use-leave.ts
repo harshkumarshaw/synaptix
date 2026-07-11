@@ -2,7 +2,10 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/api";
 import type { LeaveRequest, LeaveRequestCreate } from "@/types/leave";
 
-export function useLeaveRequests(filters?: { student_id?: string; leave_status?: string }) {
+export function useLeaveRequests(filters?: {
+  student_id?: string;
+  leave_status?: string;
+}) {
   return useQuery({
     queryKey: ["leave", "requests", filters],
     queryFn: async () => {
@@ -31,9 +34,12 @@ export function useApproveLeave() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, remarks }: { id: string; remarks: string }) => {
-      const { data } = await api.post<LeaveRequest>(`/leave/requests/${id}/approve`, {
-        remarks,
-      });
+      const { data } = await api.post<LeaveRequest>(
+        `/leave/requests/${id}/approve`,
+        {
+          remarks,
+        },
+      );
       return data;
     },
     onSuccess: () => {
@@ -46,9 +52,12 @@ export function useRejectLeave() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, remarks }: { id: string; remarks: string }) => {
-      const { data } = await api.post<LeaveRequest>(`/leave/requests/${id}/reject`, {
-        remarks,
-      });
+      const { data } = await api.post<LeaveRequest>(
+        `/leave/requests/${id}/reject`,
+        {
+          remarks,
+        },
+      );
       return data;
     },
     onSuccess: () => {
@@ -61,7 +70,9 @@ export function useCancelLeave() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { data } = await api.post<LeaveRequest>(`/leave/requests/${id}/cancel`);
+      const { data } = await api.post<LeaveRequest>(
+        `/leave/requests/${id}/cancel`,
+      );
       return data;
     },
     onSuccess: () => {

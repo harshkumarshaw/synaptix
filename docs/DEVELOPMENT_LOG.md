@@ -2,6 +2,18 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-11 — Playwright E2E Parallelization & Backend Robustness (Session 24)
+**Agent:** solo-dev-agent
+**Duration:** ~45 mins
+**Focus:** Parallelize Playwright tests, resolve race conditions and strict mode violations, fix backend AttributeError and database constraints, and ensure 100% green passing E2E suite.
+- Optimized Playwright config to run in parallel with 8 workers and fail-fast backend health check.
+- Added dynamic 401 response interceptor exception for the login endpoint to prevent page reloads during failed login attempts.
+- Monkeypatched `TokenPayload` with `user_uuid` and `role` properties in `snx-academic` and `snx-logbook` services to resolve routing AttributeErrors.
+- Declared explicit columns on `Student` stub model in `snx-academic` to allow queries filtering by `user_id` and resolving to `student_id`.
+- Mounted `ToastToaster` alongside `SonnerToaster` in RootLayout to ensure Radix UI toast hooks display notifications.
+- Seeded curriculum electives and student preferences in `synaptix_dev` database using new Python script.
+- Fixed E2E test assertions to wait for curriculum dropdowns and avoid strict mode violations.
+
 ## 2026-07-07 — Frontend Client Prefixing, Real Login & UAT Verification (Session 23)
 **Agent:** solo-dev-agent
 **Duration:** ~39 mins

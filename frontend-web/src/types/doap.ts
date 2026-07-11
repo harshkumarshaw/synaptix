@@ -14,7 +14,13 @@ export interface DoapRecord {
 export interface DoapState {
   student_id: string;
   competency_code: string;
-  current_state: "not_started" | "demonstrated" | "observed" | "assisted" | "performed" | "certified";
+  current_state:
+    | "not_started"
+    | "demonstrated"
+    | "observed"
+    | "assisted"
+    | "performed"
+    | "certified";
   records_per_stage: Record<string, number>;
   certified_stages: string[];
   pending_stage: string | null;
