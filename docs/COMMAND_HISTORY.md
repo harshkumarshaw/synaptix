@@ -157,3 +157,13 @@ Format: `[YYYY-MM-DD HH:MM:SS] [agent-id] command`
 [2026-07-06 22:30:20] [solo-dev-agent] Invoke-WebRequest -UseBasicParsing http://localhost:8010/
 ```
 
+## 2026-07-11 — Session 26
+
+```
+[2026-07-11 19:44:00] [02-backend] uv add weasyprint "qrcode[pil]"
+[2026-07-11 19:52:00] [02-backend] docker compose up -d postgres postgres-test
+[2026-07-11 19:52:30] [02-backend] alembic upgrade head
+[2026-07-11 19:54:00] [02-backend] pytest tests/unit/exam/test_grading.py -v --tb=short
+[2026-07-11 19:57:00] [02-backend] pytest tests/unit/exam/ tests/compliance/exam/ -v --tb=short
+```
+

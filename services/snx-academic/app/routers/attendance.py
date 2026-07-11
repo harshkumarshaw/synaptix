@@ -160,9 +160,10 @@ async def get_student_attendance_summary(
     db=Depends(get_db),
 ) -> list[dict]:
     """Fetch attendance summaries for a student across all courses."""
-    from app.models.course import Course
-    from app.models.attendance import AttendanceSummary
     from sqlalchemy import select
+
+    from app.models.attendance import AttendanceSummary
+    from app.models.course import Course
 
     student_uuid = await _resolve_student_id(db, student_id)
 

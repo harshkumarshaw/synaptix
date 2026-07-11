@@ -2,6 +2,18 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-11 — Result Processing, Grade Calculation, & Mark Sheet PDF Generation (Session 26)
+**Agent:** Backend (02)
+**Duration:** ~30 mins
+**Focus:** Implement Phase 3 R4.3 Result Processing + Grading and R4.4 Mark Sheet PDF Generation with WeasyPrint, and resolve database audit_log uppercase CHECK constraints.
+- Implemented theory and practical grading calculation independently (distinction, pass, fail) and overall fail conditions.
+- Implemented grace marks applying configured limits and supplementary exam restrictions (no grace, max 4 attempts).
+- Implemented HOD verification, Principal approval, and bulk publishing workflow.
+- Implemented multi-examiner moderation average of two, and closest pair with third examiner (gap >15%).
+- Implemented mark sheet HTML template rendering and WeasyPrint PDF conversion with dynamic QR code verification.
+- Fixed audit_log table CHECK constraint crashes by standardizing all logged action names to uppercase (e.g. SUBMIT_RESULT, RECORD_MODERATION).
+- Implemented 8 grading and moderation tests, removed all xfail markers, and verified all 50 exam/compliance tests are passing.
+
 ## 2026-07-11 — Playwright E2E Parallelization & Backend Robustness (Session 24)
 **Agent:** solo-dev-agent
 **Duration:** ~45 mins

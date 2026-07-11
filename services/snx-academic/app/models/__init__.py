@@ -31,7 +31,7 @@ from app.models.lesson_plan import LessonPlan
 from app.models.program import Program
 from app.models.section import Section
 from app.models.session import Session, SessionFaculty
-from app.models.stubs import Student, WorkflowInstance
+from app.models.stubs import LogbookAssessment, MdmConfig, Student, WorkflowInstance
 from app.models.tenant import Tenant
 from app.models.timetable_entry import TimetableEntry
 from app.models.timetable_slot import TimetableSlot
@@ -79,4 +79,6 @@ __all__ = [
     "ExamModeration",
     "MarkSheet",
     "QuestionPaper",
+    "MdmConfig",
+    "LogbookAssessment",
 ]

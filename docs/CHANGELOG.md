@@ -5,6 +5,38 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Session 26] — 2026-07-11
+
+### Added — Phase 3 R4.3 Result Processing + R4.4 Mark Sheet PDF Generation
+- **services/snx-academic/app/services/exam_service.py**: Implemented `submit_result` which validates student eligibility, checks maximum attempt limits, computes theory/practical/overall grades independently, and applies grace marks (with supplementary restriction).
+- **services/snx-academic/app/services/exam_service.py**: Implemented `record_moderation` supporting multi-examiner averaging (gap <= 15%) and third examiner mandatory reconciliation (gap > 15%).
+- **services/snx-academic/app/services/exam_service.py**: Implemented result workflow status transitions (`verify_result`, `approve_result`, `publish_results`).
+- **services/snx-academic/app/services/exam_service.py**: Implemented WeasyPrint HTML-to-PDF mark sheet generation (`generate_mark_sheet`) with embedded verification QR code and digital asset storage.
+- **services/snx-academic/app/models/stubs.py**: Added `DigitalAsset` stub model mapping to the `digital_assets` table.
+- **services/snx-academic/app/schemas/exam.py**: Added new Pydantic models for result submission, moderation request/response, and mark sheet generation responses.
+- **services/snx-academic/app/routers/exam.py**: Exposed result submission, moderation, workflow status, and mark sheet endpoints.
+- **tests/unit/exam/test_grading.py**: Fully implemented 8 unit tests covering all grading, grace marks, workflow status, and examiner moderation logic, removing all `xfail` markers.
+
+### Fixed
+- **services/snx-academic/app/services/exam_service.py**: Converted all `write_audit_log` actions to uppercase to satisfy the `chk_audit_log_action` check constraint in the database.
+
+### Result
+- **50 tests passed** (0 failures, 0 xfailed, 0 skipped) across unit and compliance suites.
+
+## [Session 25] — 2026-07-11
+
+### Fixed — Phase 3 R4.1/R4.2 Exam Service: IA Aggregation & Eligibility Engine
+- **services/snx-academic/app/services/exam_service.py**: Fixed `aggregate_ia()` to query `LogbookAssessment` by `course.subject_code` instead of `course.code` (the code field holds a unique suffixed value, subject_code holds the subject abbreviation like `ANAT`).
+- **services/snx-academic/app/services/exam_service.py**: Fixed `check_student_eligibility()` to also use `course.subject_code` for logbook lookup and `get_prerequisites()` call.
+- **services/snx-academic/app/services/exam_service.py**: Added tenant isolation check in `check_student_eligibility()` — validates `exam.tenant_id == tenant_id` and `student.tenant_id == tenant_id` before proceeding.
+- **services/snx-academic/app/services/exam_service.py**: Fixed `generate_hall_ticket()` to honour existing eligibility overrides by checking `exam_eligibility` table first before re-running the full eligibility computation.
+- **tests/unit/exam/test_ia_aggregation.py**: Rewrote seed helpers to generate unique emails/roll numbers/codes per test; fixed all tests to pass `fac_user_id` (user_id FK) to `viva_scores.examiner_id` and `clinical_evaluations.evaluator_id`.
+- **tests/unit/exam/test_eligibility.py**: Rewrote seed helpers with unique values per test; fixed cross-tenant isolation test; fixed OSPE/OSCE tests to pass `fac_user_id` to `practical_assessments.examiner_id`.
+- **tests/compliance/exam/test_nmc_compliance.py**: Added missing `select` import; fixed `seed_faculty_with_user` to return `user_id`; fixed OSPE/OSCE/clinical tests to use `fac_user_id`; fixed AETCOM query to filter by `subject_code`.
+
+### Result
+- **42 tests passed, 8 xfailed** across `tests/unit/exam/` and `tests/compliance/exam/` — all green.
+
 ## [Session 24] — 2026-07-11
 
 ### Fixed — Playwright E2E Parallelization, Radix Toaster, and Backend Robustness

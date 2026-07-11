@@ -403,3 +403,16 @@ Any implementation notes or known limitations.
 - [x] Tested (E2E student preferences selection and admin live run allocation passing)
 - [x] Verified
 **Notes:** Verified that administrative elective allocation runs can dry run and commit live allocation of students matching their ranked preferences.
+
+### EXM-NMC-20260711: Grade Calculation, Grace Marks, and Mark Sheet Generation
+**Source:** NMC Guidelines for University Examinations and Moderation (ADR-040, ADR-041, ADR-042, ADR-048)
+**Effective Date:** 2026-07-11
+**Applies To:** MBBS all phases
+**Implementing Module:** services/snx-academic/app/services/exam_service.py
+**Test IDs:** RES-001, RES-002, RES-003, RES-004, EXM-010, RES-005, RES-006, RES-009
+**Test File:** tests/unit/exam/test_grading.py
+**Compliance Status:**
+- [x] Implemented (Theory/practical graded independently, configurable grace marks, 3rd examiner moderation gap >15%, WeasyPrint PDF QR verify)
+- [x] Tested (Passing grading, moderation, and PDF generation tests verified)
+- [x] Verified
+**Notes:** Grace marks are disabled in supplementary exams. Moderation averages scores if difference <=15%, else mandates third examiner reconciliation.

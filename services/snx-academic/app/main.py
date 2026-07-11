@@ -18,11 +18,13 @@ from app.routers import (
     attendance,
     calendar,
     curriculum_migration,
+    dashboard,
+    exam,
     leave,
     lesson_plan,
     session,
-    dashboard,
 )
+from packages.shared.auth.jwt import TokenPayload
 from packages.shared.auth.tenant_context import TenantContextMiddleware
 from packages.shared.errors import (
     AuthenticationError,
@@ -33,7 +35,6 @@ from packages.shared.errors import (
     TokenInvalidError,
 )
 from packages.shared.logging import configure_logging, get_logger
-from packages.shared.auth.jwt import TokenPayload
 
 # Monkeypatch TokenPayload to add user_uuid alias to comply with router assumptions
 TokenPayload.user_uuid = property(lambda self: self.user_id)
@@ -124,6 +125,7 @@ def create_app() -> FastAPI:
     app.include_router(leave.router, prefix="/api/v1")
     app.include_router(admissions.router, prefix="/api/v1")
     app.include_router(dashboard.router, prefix="/api/v1")
+    app.include_router(exam.router, prefix="/api/v1")
 
     @app.get("/")
     async def root() -> dict[str, str]:
