@@ -2,6 +2,43 @@
 
 Chronological record of all development sessions.
 
+## 2026-07-11 — Result Processing, Grade Calculation, & Mark Sheet PDF Generation (Session 26)
+**Agent:** Backend (02)
+**Duration:** ~30 mins
+**Focus:** Implement Phase 3 R4.3 Result Processing + Grading and R4.4 Mark Sheet PDF Generation with WeasyPrint, and resolve database audit_log uppercase CHECK constraints.
+- Implemented theory and practical grading calculation independently (distinction, pass, fail) and overall fail conditions.
+- Implemented grace marks applying configured limits and supplementary exam restrictions (no grace, max 4 attempts).
+- Implemented HOD verification, Principal approval, and bulk publishing workflow.
+- Implemented multi-examiner moderation average of two, and closest pair with third examiner (gap >15%).
+- Implemented mark sheet HTML template rendering and WeasyPrint PDF conversion with dynamic QR code verification.
+- Fixed audit_log table CHECK constraint crashes by standardizing all logged action names to uppercase (e.g. SUBMIT_RESULT, RECORD_MODERATION).
+- Implemented 8 grading and moderation tests, removed all xfail markers, and verified all 50 exam/compliance tests are passing.
+
+## 2026-07-11 — Playwright E2E Parallelization & Backend Robustness (Session 24)
+**Agent:** solo-dev-agent
+**Duration:** ~45 mins
+**Focus:** Parallelize Playwright tests, resolve race conditions and strict mode violations, fix backend AttributeError and database constraints, and ensure 100% green passing E2E suite.
+- Optimized Playwright config to run in parallel with 8 workers and fail-fast backend health check.
+- Added dynamic 401 response interceptor exception for the login endpoint to prevent page reloads during failed login attempts.
+- Monkeypatched `TokenPayload` with `user_uuid` and `role` properties in `snx-academic` and `snx-logbook` services to resolve routing AttributeErrors.
+- Declared explicit columns on `Student` stub model in `snx-academic` to allow queries filtering by `user_id` and resolving to `student_id`.
+- Mounted `ToastToaster` alongside `SonnerToaster` in RootLayout to ensure Radix UI toast hooks display notifications.
+- Seeded curriculum electives and student preferences in `synaptix_dev` database using new Python script.
+- Fixed E2E test assertions to wait for curriculum dropdowns and avoid strict mode violations.
+
+## 2026-07-07 — Frontend Client Prefixing, Real Login & UAT Verification (Session 23)
+**Agent:** solo-dev-agent
+**Duration:** ~39 mins
+**Focus:** Fix frontend API request prefixing, login payloads, and resolve missing endpoints/UAT summary mismatches.
+- Added dynamic `/api/v1` prefix prepending for all outgoing API requests from the frontend client.
+- Added default `tenant_id` payload to login form requests.
+- Allowed extracting tenant ID from `X-Tenant-ID` header even on exempt paths like login.
+- Replaced `get_session_with_tenant` dependency with standard `get_db` to avoid query parameter inference.
+- Added `/student/{student_id}/summary` endpoint to retrieve a list of attendance summaries for a student.
+- Created and registered the `/dashboard/stats` router in `snx-academic`.
+- Bulk recalculated and populated the `attendance_summary` table from raw records.
+- Created `scripts/smoke-test.py` to verify UAT flow and verified all backend services.
+
 ## 2026-07-06 — Backend Container Startup & Route Index Fixes (Session 22)
 **Agent:** solo-dev-agent
 **Duration:** ~25 mins

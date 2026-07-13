@@ -2,18 +2,33 @@
 
 import { useLeaveRequests, useCancelLeave } from "@/hooks/use-leave";
 import { useAuthStore } from "@/stores/auth-store";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Calendar, Trash2 } from "lucide-react";
 
 export function LeaveHistory() {
   const user = useAuthStore((state) => state.user);
   const studentId = user?.student_id || user?.id || "";
 
-  const { data: requests, isLoading } = useLeaveRequests({ student_id: studentId });
+  const { data: requests, isLoading } = useLeaveRequests({
+    student_id: studentId,
+  });
   const cancelLeave = useCancelLeave();
   const { toast } = useToast();
 
@@ -28,13 +43,29 @@ export function LeaveHistory() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
-        return <Badge className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/20">Approved</Badge>;
+        return (
+          <Badge className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 border-emerald-500/20">
+            Approved
+          </Badge>
+        );
       case "rejected":
-        return <Badge className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/20">Rejected</Badge>;
+        return (
+          <Badge className="bg-red-500/10 hover:bg-red-500/20 text-red-500 border-red-500/20">
+            Rejected
+          </Badge>
+        );
       case "pending":
-        return <Badge className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border-yellow-500/20">Pending</Badge>;
+        return (
+          <Badge className="bg-yellow-500/10 hover:bg-yellow-500/20 text-yellow-500 border-yellow-500/20">
+            Pending
+          </Badge>
+        );
       case "cancelled":
-        return <Badge className="bg-muted hover:bg-muted text-muted-foreground border-muted">Cancelled</Badge>;
+        return (
+          <Badge className="bg-muted hover:bg-muted text-muted-foreground border-muted">
+            Cancelled
+          </Badge>
+        );
       default:
         return <Badge variant="secondary">{status}</Badge>;
     }
@@ -51,7 +82,8 @@ export function LeaveHistory() {
       onError: (err: any) => {
         toast({
           title: "Cancellation Failed",
-          description: err.response?.data?.detail || "Could not cancel leave request.",
+          description:
+            err.response?.data?.detail || "Could not cancel leave request.",
           variant: "destructive",
         });
       },
@@ -65,7 +97,9 @@ export function LeaveHistory() {
           <Calendar className="h-5 w-5 text-primary" />
           Leave History
         </CardTitle>
-        <CardDescription>Track all your submitted leave requests and their outcomes</CardDescription>
+        <CardDescription>
+          Track all your submitted leave requests and their outcomes
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -85,22 +119,37 @@ export function LeaveHistory() {
                 <TableRow>
                   <TableHead className="font-semibold">Type</TableHead>
                   <TableHead className="font-semibold">Dates</TableHead>
-                  <TableHead className="font-semibold text-center">Days</TableHead>
+                  <TableHead className="font-semibold text-center">
+                    Days
+                  </TableHead>
                   <TableHead className="font-semibold">Status</TableHead>
-                  <TableHead className="font-semibold text-right">Action</TableHead>
+                  <TableHead className="font-semibold text-right">
+                    Action
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {requests.map((req) => {
-                  const duration = getDurationDays(req.start_date, req.end_date);
-                  const canCancel = req.status === "pending" || req.status === "approved";
+                  const duration = getDurationDays(
+                    req.start_date,
+                    req.end_date,
+                  );
+                  const canCancel =
+                    req.status === "pending" || req.status === "approved";
                   return (
-                    <TableRow key={req.id} className="hover:bg-muted/30 transition-colors">
-                      <TableCell className="capitalize font-medium">{req.leave_type}</TableCell>
+                    <TableRow
+                      key={req.id}
+                      className="hover:bg-muted/30 transition-colors"
+                    >
+                      <TableCell className="capitalize font-medium">
+                        {req.leave_type}
+                      </TableCell>
                       <TableCell className="text-xs">
                         {req.start_date} to {req.end_date}
                       </TableCell>
-                      <TableCell className="text-center text-xs font-semibold">{duration}</TableCell>
+                      <TableCell className="text-center text-xs font-semibold">
+                        {duration}
+                      </TableCell>
                       <TableCell>{getStatusBadge(req.status)}</TableCell>
                       <TableCell className="text-right">
                         {canCancel && (

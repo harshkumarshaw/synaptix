@@ -23,6 +23,27 @@ from packages.shared.errors import (
     TokenInvalidError,
 )
 from packages.shared.logging import configure_logging, get_logger
+from packages.shared.auth.jwt import TokenPayload
+
+# Monkeypatch TokenPayload to add user_uuid and role properties to comply with router assumptions
+TokenPayload.user_uuid = property(lambda self: self.user_id)
+
+def _get_primary_role(self) -> str:
+    if not self.roles:
+        return "student"
+    role_map = {
+        "institution_admin": "admin",
+        "super_admin": "super_admin",
+        "hod": "hod",
+        "faculty": "faculty",
+        "student": "student"
+    }
+    for r in self.roles:
+        if r in role_map:
+            return role_map[r]
+    return self.roles[0]
+
+TokenPayload.role = property(_get_primary_role)
 
 logger = get_logger(__name__)
 

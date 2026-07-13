@@ -1,28 +1,66 @@
 "use client";
 
 import { useState } from "react";
-import { useLeaveRequests, useApproveLeave, useRejectLeave, useLeaveImpactPreview } from "@/hooks/use-leave";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  useLeaveRequests,
+  useApproveLeave,
+  useRejectLeave,
+  useLeaveImpactPreview,
+} from "@/hooks/use-leave";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetFooter,
+} from "@/components/ui/sheet";
 import { Progress } from "@/components/ui/progress";
-import { Check, X, ShieldAlert, FileText, User, CalendarDays, AlertTriangle } from "lucide-react";
+import {
+  Check,
+  X,
+  ShieldAlert,
+  FileText,
+  User,
+  CalendarDays,
+  AlertTriangle,
+} from "lucide-react";
 import type { LeaveRequest } from "@/types/leave";
 
 export function ApprovalQueue() {
-  const { data: requests, isLoading } = useLeaveRequests({ leave_status: "pending" });
+  const { data: requests, isLoading } = useLeaveRequests({
+    leave_status: "pending",
+  });
   const approveLeave = useApproveLeave();
   const rejectLeave = useRejectLeave();
   const { toast } = useToast();
 
-  const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<LeaveRequest | null>(
+    null,
+  );
   const [remarks, setRemarks] = useState<string>("");
 
-  const { data: impactPreview, isLoading: isImpactLoading } = useLeaveImpactPreview(selectedRequest?.id || "");
+  const { data: impactPreview, isLoading: isImpactLoading } =
+    useLeaveImpactPreview(selectedRequest?.id || "");
 
   const getDurationDays = (startStr: string, endStr: string) => {
     const start = new Date(startStr);
@@ -47,11 +85,12 @@ export function ApprovalQueue() {
         onError: (err: any) => {
           toast({
             title: "Approval Failed",
-            description: err.response?.data?.detail || "Could not approve leave request.",
+            description:
+              err.response?.data?.detail || "Could not approve leave request.",
             variant: "destructive",
           });
         },
-      }
+      },
     );
   }
 
@@ -79,11 +118,12 @@ export function ApprovalQueue() {
         onError: (err: any) => {
           toast({
             title: "Rejection Failed",
-            description: err.response?.data?.detail || "Could not reject leave request.",
+            description:
+              err.response?.data?.detail || "Could not reject leave request.",
             variant: "destructive",
           });
         },
-      }
+      },
     );
   }
 
@@ -94,7 +134,9 @@ export function ApprovalQueue() {
           <ShieldAlert className="h-6 w-6 text-primary animate-pulse" />
           Leave Approval Queue
         </CardTitle>
-        <CardDescription>Review and action student and CRMI intern leave applications</CardDescription>
+        <CardDescription>
+          Review and action student and CRMI intern leave applications
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {isLoading ? (
@@ -121,7 +163,10 @@ export function ApprovalQueue() {
               </TableHeader>
               <TableBody>
                 {requests.map((req) => {
-                  const duration = getDurationDays(req.start_date, req.end_date);
+                  const duration = getDurationDays(
+                    req.start_date,
+                    req.end_date,
+                  );
                   return (
                     <TableRow
                       key={req.id}
@@ -131,14 +176,24 @@ export function ApprovalQueue() {
                       }}
                       className="cursor-pointer hover:bg-muted/40 transition-colors"
                     >
-                      <TableCell className="font-semibold">{req.student_name || "Unknown Student"}</TableCell>
-                      <TableCell className="capitalize text-xs font-semibold">{req.leave_type}</TableCell>
+                      <TableCell className="font-semibold">
+                        {req.student_name || "Unknown Student"}
+                      </TableCell>
+                      <TableCell className="capitalize text-xs font-semibold">
+                        {req.leave_type}
+                      </TableCell>
                       <TableCell className="text-xs">
                         {req.start_date} to {req.end_date}
                       </TableCell>
-                      <TableCell className="text-center text-xs font-bold">{duration}</TableCell>
+                      <TableCell className="text-center text-xs font-bold">
+                        {duration}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="outline" size="sm" className="rounded-lg text-xs font-medium">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="rounded-lg text-xs font-medium"
+                        >
                           Review
                         </Button>
                       </TableCell>
@@ -152,7 +207,10 @@ export function ApprovalQueue() {
       </CardContent>
 
       {/* Slide-out detail sheet */}
-      <Sheet open={!!selectedRequest} onOpenChange={(open) => !open && setSelectedRequest(null)}>
+      <Sheet
+        open={!!selectedRequest}
+        onOpenChange={(open) => !open && setSelectedRequest(null)}
+      >
         <SheetContent className="sm:max-w-md overflow-y-auto">
           {selectedRequest && (
             <div className="space-y-6">
@@ -171,15 +229,24 @@ export function ApprovalQueue() {
                 <div className="flex items-center gap-3">
                   <User className="h-5 w-5 text-muted-foreground" />
                   <div>
-                    <div className="text-sm font-semibold">{selectedRequest.student_name}</div>
-                    <div className="text-xs text-muted-foreground">ID: {selectedRequest.student_id.slice(0, 8)}</div>
+                    <div className="text-sm font-semibold">
+                      {selectedRequest.student_name}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      ID: {selectedRequest.student_id.slice(0, 8)}
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 border-t pt-3">
                   <CalendarDays className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <div className="text-xs font-semibold capitalize">
-                      {selectedRequest.leave_type} Leave · {getDurationDays(selectedRequest.start_date, selectedRequest.end_date)} days
+                      {selectedRequest.leave_type} Leave ·{" "}
+                      {getDurationDays(
+                        selectedRequest.start_date,
+                        selectedRequest.end_date,
+                      )}{" "}
+                      days
                     </div>
                     <div className="text-[10px] text-muted-foreground">
                       {selectedRequest.start_date} to {selectedRequest.end_date}
@@ -190,7 +257,9 @@ export function ApprovalQueue() {
 
               {/* Application Reason */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">Reason for Application</label>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Reason for Application
+                </label>
                 <div className="p-3 border rounded-xl bg-muted/30 text-sm whitespace-pre-line leading-relaxed">
                   {selectedRequest.reason}
                 </div>
@@ -198,7 +267,9 @@ export function ApprovalQueue() {
 
               {/* Attendance Impact Preview */}
               <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground">Attendance Impact Preview</label>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Attendance Impact Preview
+                </label>
                 {isImpactLoading ? (
                   <div className="h-10 bg-muted animate-pulse rounded-lg" />
                 ) : impactPreview ? (
@@ -208,8 +279,12 @@ export function ApprovalQueue() {
                       Attendance warning threshold violation!
                     </p>
                     <p className="leading-relaxed">
-                      If approved, the student's Anatomy attendance will drop from {impactPreview.current_attendance}% to{" "}
-                      <span className="font-bold">{impactPreview.predicted_attendance}%</span>, which is below the NMC 75% minimum threshold.
+                      If approved, the student's Anatomy attendance will drop
+                      from {impactPreview.current_attendance}% to{" "}
+                      <span className="font-bold">
+                        {impactPreview.predicted_attendance}%
+                      </span>
+                      , which is below the NMC 75% minimum threshold.
                     </p>
                   </div>
                 ) : (
@@ -221,7 +296,9 @@ export function ApprovalQueue() {
 
               {/* Remarks/Feedback */}
               <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-muted-foreground">Remarks / Action Feedback</label>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Remarks / Action Feedback
+                </label>
                 <Input
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}

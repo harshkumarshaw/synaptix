@@ -1,7 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -63,7 +69,8 @@ export function LeaveRequestForm() {
     if (start < today && reason.length < 20) {
       toast({
         title: "Backdated Request",
-        description: "For backdated leave requests, please provide a detailed reason (minimum 20 characters).",
+        description:
+          "For backdated leave requests, please provide a detailed reason (minimum 20 characters).",
         variant: "destructive",
       });
       return;
@@ -72,7 +79,8 @@ export function LeaveRequestForm() {
     if (reason.length < 10) {
       toast({
         title: "Validation Error",
-        description: "Please provide a detailed reason (minimum 10 characters).",
+        description:
+          "Please provide a detailed reason (minimum 10 characters).",
         variant: "destructive",
       });
       return;
@@ -81,7 +89,8 @@ export function LeaveRequestForm() {
     if (needsMedicalCert && !fileAttached) {
       toast({
         title: "Medical Certificate Required",
-        description: "Medical leave for 3 or more days requires a medical certificate upload.",
+        description:
+          "Medical leave for 3 or more days requires a medical certificate upload.",
         variant: "destructive",
       });
       return;
@@ -109,11 +118,12 @@ export function LeaveRequestForm() {
         onError: (err: any) => {
           toast({
             title: "Request Failed",
-            description: err.response?.data?.detail || "Could not submit leave request.",
+            description:
+              err.response?.data?.detail || "Could not submit leave request.",
             variant: "destructive",
           });
         },
-      }
+      },
     );
   }
 
@@ -124,7 +134,9 @@ export function LeaveRequestForm() {
           <CalendarRange className="h-5 w-5 text-primary" />
           Request Leave
         </CardTitle>
-        <CardDescription>Submit a new leave application for approval</CardDescription>
+        <CardDescription>
+          Submit a new leave application for approval
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -175,7 +187,9 @@ export function LeaveRequestForm() {
 
           {/* Reason */}
           <div className="space-y-1.5">
-            <label className="text-sm font-semibold">Reason / Description</label>
+            <label className="text-sm font-semibold">
+              Reason / Description
+            </label>
             <Textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -189,13 +203,18 @@ export function LeaveRequestForm() {
           {needsMedicalCert && (
             <div className="space-y-2 p-4 border-2 border-dashed rounded-xl bg-muted/20 flex flex-col items-center justify-center text-center">
               <FileUp className="h-8 w-8 text-primary/60 mb-2" />
-              <div className="text-xs font-semibold">Upload Medical Certificate</div>
+              <div className="text-xs font-semibold">
+                Upload Medical Certificate
+              </div>
               <p className="text-[10px] text-muted-foreground max-w-xs mt-0.5">
-                Medical leave for 3 or more days requires verified certification (PDF or JPEG, max 5MB).
+                Medical leave for 3 or more days requires verified certification
+                (PDF or JPEG, max 5MB).
               </p>
               {fileAttached ? (
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-xs text-emerald-500 font-bold">✓ Certificate attached</span>
+                  <span className="text-xs text-emerald-500 font-bold">
+                    ✓ Certificate attached
+                  </span>
                   <button
                     type="button"
                     onClick={() => setFileAttached(false)}
@@ -223,7 +242,9 @@ export function LeaveRequestForm() {
             className="w-full mt-2 py-6 rounded-lg font-semibold transition-transform hover:-translate-y-0.5"
             disabled={createLeave.isPending}
           >
-            {createLeave.isPending ? "Submitting Application..." : "Submit Application"}
+            {createLeave.isPending
+              ? "Submitting Application..."
+              : "Submit Application"}
           </Button>
         </form>
       </CardContent>

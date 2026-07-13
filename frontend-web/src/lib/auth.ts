@@ -2,7 +2,11 @@ import api from "./api";
 import { useAuthStore } from "@/stores/auth-store";
 
 export async function login(email: string, password: string): Promise<void> {
-  const response = await api.post("/auth/login", { email, password });
+  const response = await api.post("/auth/login", {
+    email,
+    password,
+    tenant_id: "00000000-0000-0000-0000-000000000001",
+  });
   const { access_token } = response.data;
   useAuthStore.getState().setAuth(access_token);
 }

@@ -78,10 +78,6 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
         Returns:
             The HTTP response.
         """
-        # Skip tenant extraction for exempt paths
-        if request.url.path in self.exempt_paths:
-            return await call_next(request)
-
         # Try to get tenant_id from JWT claims (set by auth middleware earlier in chain)
         tenant_id_str: str | None = getattr(request.state, "jwt_tenant_id", None)
 
@@ -90,6 +86,9 @@ class TenantContextMiddleware(BaseHTTPMiddleware):
             tenant_id_str = request.headers.get(TENANT_ID_HEADER)
 
         if tenant_id_str is None:
+            # Skip tenant extraction for exempt paths if header not present
+            if request.url.path in self.exempt_paths:
+                return await call_next(request)
             logger.warning(
                 "Request without tenant context",
                 extra={

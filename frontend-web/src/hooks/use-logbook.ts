@@ -8,7 +8,10 @@ import type {
   IAAssessment,
 } from "@/types/logbook";
 
-export function useStudentEntries(studentId: string, filters?: Record<string, any>) {
+export function useStudentEntries(
+  studentId: string,
+  filters?: Record<string, any>,
+) {
   return useQuery({
     queryKey: ["logbook", "entries", studentId, filters],
     queryFn: async () => {
@@ -25,7 +28,10 @@ export function useCreateEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: LogbookEntryCreate) => {
-      const { data } = await api.post<LogbookEntry>("/logbook/entries", payload);
+      const { data } = await api.post<LogbookEntry>(
+        "/logbook/entries",
+        payload,
+      );
       return data;
     },
     onSuccess: (_, variables) => {
@@ -37,8 +43,17 @@ export function useCreateEntry() {
 export function useSubmitEntry() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ entryId, payload }: { entryId: string; payload: LogbookSubmit }) => {
-      const { data } = await api.patch<LogbookEntry>(`/logbook/entries/${entryId}/submit`, payload);
+    mutationFn: async ({
+      entryId,
+      payload,
+    }: {
+      entryId: string;
+      payload: LogbookSubmit;
+    }) => {
+      const { data } = await api.patch<LogbookEntry>(
+        `/logbook/entries/${entryId}/submit`,
+        payload,
+      );
       return data;
     },
     onSuccess: () => {
@@ -50,8 +65,17 @@ export function useSubmitEntry() {
 export function useSignoffEntry() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ entryId, payload }: { entryId: string; payload: LogbookSignoff }) => {
-      const { data } = await api.patch<LogbookEntry>(`/logbook/entries/${entryId}/signoff`, payload);
+    mutationFn: async ({
+      entryId,
+      payload,
+    }: {
+      entryId: string;
+      payload: LogbookSignoff;
+    }) => {
+      const { data } = await api.patch<LogbookEntry>(
+        `/logbook/entries/${entryId}/signoff`,
+        payload,
+      );
       return data;
     },
     onSuccess: () => {
@@ -60,12 +84,16 @@ export function useSignoffEntry() {
   });
 }
 
-export function useIAAssessment(studentId: string, subjectCode: string, phase: string) {
+export function useIAAssessment(
+  studentId: string,
+  subjectCode: string,
+  phase: string,
+) {
   return useQuery({
     queryKey: ["logbook", "assessment", studentId, subjectCode, phase],
     queryFn: async () => {
       const { data } = await api.get<IAAssessment>(
-        `/logbook/assessments/${studentId}/${subjectCode}/${phase}`
+        `/logbook/assessments/${studentId}/${subjectCode}/${phase}`,
       );
       return data;
     },
@@ -82,4 +110,3 @@ export function useStudents() {
     },
   });
 }
-

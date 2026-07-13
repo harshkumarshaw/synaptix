@@ -2,18 +2,48 @@
 
 import { useState } from "react";
 import { useAuthStore } from "@/stores/auth-store";
-import { useStudentEntries, useSubmitEntry, useIAAssessment } from "@/hooks/use-logbook";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  useStudentEntries,
+  useSubmitEntry,
+  useIAAssessment,
+} from "@/hooks/use-logbook";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { CreateEntryForm } from "./create-entry-form";
 import FacultyQueue from "./faculty-queue";
 import { LogbookEntry } from "@/types/logbook";
-import { BookOpen, PlusCircle, CheckCircle2, AlertCircle, FileSpreadsheet } from "lucide-react";
+import {
+  BookOpen,
+  PlusCircle,
+  CheckCircle2,
+  AlertCircle,
+  FileSpreadsheet,
+} from "lucide-react";
 import { toast } from "sonner";
 
 export default function LogbookPage() {
@@ -25,18 +55,26 @@ export default function LogbookPage() {
   const [selectedSubject, setSelectedSubject] = useState<string>("ANAT");
   const [selectedPhase, setSelectedPhase] = useState<string>("Phase I");
   const [showCreateDialog, setShowCreateDialog] = useState(false);
-  const [submittingEntry, setSubmittingEntry] = useState<LogbookEntry | null>(null);
+  const [submittingEntry, setSubmittingEntry] = useState<LogbookEntry | null>(
+    null,
+  );
   const [studentInitials, setStudentInitials] = useState("");
 
-  const { data: entries, isLoading: loadingEntries, refetch } = useStudentEntries(
+  const {
+    data: entries,
+    isLoading: loadingEntries,
+    refetch,
+  } = useStudentEntries(
     studentId,
-    isStudent ? { subject_code: selectedSubject, professional_phase: selectedPhase } : undefined
+    isStudent
+      ? { subject_code: selectedSubject, professional_phase: selectedPhase }
+      : undefined,
   );
 
   const { data: iaAssessment, isLoading: loadingIA } = useIAAssessment(
     studentId,
     selectedSubject,
-    selectedPhase
+    selectedPhase,
   );
 
   const submitMutation = useSubmitEntry();
@@ -68,7 +106,9 @@ export default function LogbookPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-2xl font-bold">Logbook Queue</h1>
-            <p className="text-sm text-muted-foreground">Review and sign off on student digital logbooks</p>
+            <p className="text-sm text-muted-foreground">
+              Review and sign off on student digital logbooks
+            </p>
           </div>
         </div>
         <FacultyQueue />
@@ -87,9 +127,14 @@ export default function LogbookPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold">My Digital Logbook</h1>
-          <p className="text-sm text-muted-foreground">Log and submit your academic session reflections</p>
+          <p className="text-sm text-muted-foreground">
+            Log and submit your academic session reflections
+          </p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} className="flex items-center gap-2">
+        <Button
+          onClick={() => setShowCreateDialog(true)}
+          className="flex items-center gap-2"
+        >
           <PlusCircle className="h-4 w-4" />
           New Log Entry
         </Button>
@@ -101,7 +146,9 @@ export default function LogbookPage() {
         <Card className="md:col-span-1">
           <CardHeader>
             <CardTitle>Filters</CardTitle>
-            <CardDescription>Filter logbook entries by subject and phase</CardDescription>
+            <CardDescription>
+              Filter logbook entries by subject and phase
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -139,22 +186,33 @@ export default function LogbookPage() {
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Internal Assessment Summary</CardTitle>
-            <CardDescription>Completion status and IA marks breakdown for {selectedSubject}</CardDescription>
+            <CardDescription>
+              Completion status and IA marks breakdown for {selectedSubject}
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {loadingIA ? (
-              <div className="h-24 flex items-center justify-center text-muted-foreground">Loading IA metrics...</div>
+              <div className="h-24 flex items-center justify-center text-muted-foreground">
+                Loading IA metrics...
+              </div>
             ) : (
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">Completed Entries</p>
-                    <p className="text-2xl font-bold">{completed} / {total}</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Completed Entries
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {completed} / {total}
+                    </p>
                   </div>
                   <div className="text-right space-y-1">
-                    <p className="text-sm font-medium text-muted-foreground">IA Marks Awarded</p>
+                    <p className="text-sm font-medium text-muted-foreground">
+                      IA Marks Awarded
+                    </p>
                     <p className="text-2xl font-bold text-green-600">
-                      {iaAssessment?.ia_marks_awarded?.toFixed(2) || "0.00"} / {iaAssessment?.ia_marks_pct?.toFixed(2) || "4.00"}
+                      {iaAssessment?.ia_marks_awarded?.toFixed(2) || "0.00"} /{" "}
+                      {iaAssessment?.ia_marks_pct?.toFixed(2) || "4.00"}
                     </p>
                   </div>
                 </div>
@@ -175,7 +233,8 @@ export default function LogbookPage() {
                       </span>
                     ) : (
                       <span className="text-amber-500 font-semibold flex items-center gap-1">
-                        <AlertCircle className="h-3 w-3" /> Minimum Required Not Met
+                        <AlertCircle className="h-3 w-3" /> Minimum Required Not
+                        Met
                       </span>
                     )}
                   </div>
@@ -190,17 +249,22 @@ export default function LogbookPage() {
       <Card>
         <CardHeader>
           <CardTitle>Logbook Entries</CardTitle>
-          <CardDescription>A list of your registered activities and their signoff statuses</CardDescription>
+          <CardDescription>
+            A list of your registered activities and their signoff statuses
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loadingEntries ? (
-            <div className="py-8 text-center text-muted-foreground">Loading entries...</div>
+            <div className="py-8 text-center text-muted-foreground">
+              Loading entries...
+            </div>
           ) : !entries || entries.length === 0 ? (
             <div className="py-12 text-center border border-dashed rounded-lg">
               <FileSpreadsheet className="h-8 w-8 text-muted-foreground mx-auto mb-3" />
               <h3 className="font-semibold text-lg">No entries logged</h3>
               <p className="text-sm text-muted-foreground mt-1 max-w-xs mx-auto">
-                You haven't logged any entries for {selectedSubject} in {selectedPhase} yet. Click "New Log Entry" above to add one.
+                You haven't logged any entries for {selectedSubject} in{" "}
+                {selectedPhase} yet. Click "New Log Entry" above to add one.
               </p>
             </div>
           ) : (
@@ -221,13 +285,18 @@ export default function LogbookPage() {
                     <TableCell className="font-semibold">
                       {entry.competency_code} ({entry.nmc_level})
                       {entry.is_core && (
-                        <Badge variant="default" className="ml-2 text-[10px] bg-red-500 text-white border-transparent">
+                        <Badge
+                          variant="default"
+                          className="ml-2 text-[10px] bg-red-500 text-white border-transparent"
+                        >
                           Core
                         </Badge>
                       )}
                     </TableCell>
                     <TableCell>
-                      <span className="font-medium block">{entry.activity_name}</span>
+                      <span className="font-medium block">
+                        {entry.activity_name}
+                      </span>
                       {entry.reflection && (
                         <span className="text-xs text-muted-foreground italic truncate block max-w-xs">
                           "{entry.reflection}"
@@ -237,7 +306,10 @@ export default function LogbookPage() {
                     <TableCell>
                       {entry.activity_date}
                       {entry.backdated && (
-                        <Badge variant="outline" className="ml-2 text-amber-500 border-amber-500 text-[10px]">
+                        <Badge
+                          variant="outline"
+                          className="ml-2 text-amber-500 border-amber-500 text-[10px]"
+                        >
                           Backdated
                         </Badge>
                       )}
@@ -248,35 +320,49 @@ export default function LogbookPage() {
                           entry.status === "approved"
                             ? "default"
                             : entry.status === "submitted"
-                            ? "secondary"
-                            : entry.status === "rejected"
-                            ? "destructive"
-                            : "outline"
+                              ? "secondary"
+                              : entry.status === "rejected"
+                                ? "destructive"
+                                : "outline"
                         }
                         className="capitalize"
                       >
-                        {entry.status === "pending" ? "Draft" : entry.status === "rejected" ? "Needs Revision" : entry.status}
+                        {entry.status === "pending"
+                          ? "Draft"
+                          : entry.status === "rejected"
+                            ? "Needs Revision"
+                            : entry.status}
                       </Badge>
                     </TableCell>
                     <TableCell>
                       {entry.status === "approved" ? (
                         <div className="text-xs text-muted-foreground">
-                          <span className="text-green-600 font-semibold block">Certified ✓</span>
-                          Initials: {entry.faculty_initials} | Rating: {entry.rating}
+                          <span className="text-green-600 font-semibold block">
+                            Certified ✓
+                          </span>
+                          Initials: {entry.faculty_initials} | Rating:{" "}
+                          {entry.rating}
                         </div>
                       ) : entry.status === "rejected" ? (
                         <div className="text-xs text-muted-foreground">
-                          <span className="text-red-500 font-semibold block">Revision Requested</span>
+                          <span className="text-red-500 font-semibold block">
+                            Revision Requested
+                          </span>
                           Initials: {entry.faculty_initials}
                         </div>
                       ) : entry.status === "submitted" ? (
-                        <span className="text-xs text-muted-foreground">Signed: {entry.student_initials} (Submitted)</span>
+                        <span className="text-xs text-muted-foreground">
+                          Signed: {entry.student_initials} (Submitted)
+                        </span>
                       ) : (
-                        <span className="text-xs text-muted-foreground">Unsubmitted draft</span>
+                        <span className="text-xs text-muted-foreground">
+                          Unsubmitted draft
+                        </span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {entry.status === "pending" || entry.status === "rejected" ? (
+                      {entry.status === "pending" ||
+                      entry.status === "rejected" ? (
                         <Button
                           size="sm"
                           onClick={() => setSubmittingEntry(entry)}
@@ -317,12 +403,16 @@ export default function LogbookPage() {
       </Dialog>
 
       {/* Dialog for Submit Confirmation */}
-      <Dialog open={submittingEntry !== null} onOpenChange={(open) => !open && setSubmittingEntry(null)}>
+      <Dialog
+        open={submittingEntry !== null}
+        onOpenChange={(open) => !open && setSubmittingEntry(null)}
+      >
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
             <DialogTitle>Submit Logbook Entry</DialogTitle>
             <DialogDescription>
-              To submit this entry for review, please enter your initials as a digital signature.
+              To submit this entry for review, please enter your initials as a
+              digital signature.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
@@ -340,7 +430,10 @@ export default function LogbookPage() {
             <Button variant="outline" onClick={() => setSubmittingEntry(null)}>
               Cancel
             </Button>
-            <Button onClick={handleSubmitting} disabled={submitMutation.isPending}>
+            <Button
+              onClick={handleSubmitting}
+              disabled={submitMutation.isPending}
+            >
               {submitMutation.isPending ? "Submitting..." : "Confirm & Submit"}
             </Button>
           </DialogFooter>

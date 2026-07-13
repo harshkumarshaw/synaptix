@@ -53,5 +53,29 @@ await session.commit()
 - **FastAPI double dependency definition:** Never specify `Depends(...)` both inside `Annotated[..., Depends(...)]` and as a default value `= Depends(...)` in the same parameter. Doing so raises an `AssertionError` in FastAPI. Use `Annotated[..., Depends(...)]` without the default value assignment.
 - **APIRouter registration error:** When registering routers in main app using `include_router`, check if the router is imported directly as the APIRouter instance from the module's `__init__.py`. Trying to access `.router` on an already-imported APIRouter object throws an `AttributeError`.
 
+## Session 23 Learnings (2026-07-07)
 
+- **FastAPI Dependency Query Parameter Inference:** If a dependency function (such as `get_session_with_tenant`) has parameter variables without default values or explicit dependency injection (like `tenant_id: uuid.UUID`), FastAPI will automatically infer those parameters as required HTTP query parameters. To prevent query parameters from being forced on every endpoint depending on that service, use parameter-less dependencies (like standard `get_db`) that extract parameters from the request state dynamically set by the middleware.
+- **Tenant Context and Exempt Paths:** Authentication endpoints (like `/login`) are typically placed on `exempt_paths` to allow unauthenticated access. However, if those endpoints still access the database via a tenant-scoped session helper, they will crash if the middleware bypasses tenant ID extraction entirely. Update the middleware to always try to extract the tenant context (e.g. from custom header `X-Tenant-ID` or request payload) even for exempt paths, and skip early exit if the context is successfully found.
 
+## Session 25 Learnings (2026-07-11)
+
+- **course.code vs course.subject_code (CRITICAL):** In snx-academic, `courses.code` always has a unique UUID suffix appended (e.g. `ANAT_ee68c1`). `courses.subject_code` holds the canonical subject abbreviation (e.g. `ANAT`, `PATH`). All service-level logic that joins or filters logbooks, prerequisites, and MDM configs by subject must use `course.subject_code`, never `course.code`.
+
+- **Faculty FK references in assessment tables:** All three assessment tables reference faculty by `user_id`, NOT by `faculty.id`:
+  - `clinical_evaluations.evaluator_id → faculty(tenant_id, user_id)`
+  - `practical_assessments.examiner_id → faculty(tenant_id, user_id)`
+  - `viva_scores.examiner_id → faculty(tenant_id, user_id)`
+  - Always capture and pass the `user_id` returned by `seed_faculty_with_user()`, not the `faculty_id` row PK.
+
+- **Test seed helpers must generate unique values per call:** Using hardcoded values like `"student@jmn.edu.in"`, `"R123"`, or `"MBBS2026"` with `ON CONFLICT DO NOTHING` silently produces NULL FK references because the conflicting row's ID is never returned. Always suffix all unique fields (email, roll_number, batch code, AY name) with `uuid.uuid4().hex[:N]` and never suppress uniqueness conflicts.
+
+- **Override-aware eligibility in generate_hall_ticket():** The eligibility engine must check the stored `exam_eligibility` record first (which may have been marked eligible via a principal/dean override) before re-computing. Re-computing after an override wipes out the override result.
+
+- **Tenant isolation in check_student_eligibility():** Before writing an `exam_eligibility` row, verify that `exam.tenant_id == tenant_id` AND `student.tenant_id == tenant_id`. Otherwise cross-tenant calls write FK-violating rows before the application can detect the mismatch.
+
+## Session 26 Learnings (2026-07-11)
+
+- **audit_log.action CHECK constraint (CRITICAL):** The `audit_log` table enforces a strict regex constraint `action ~ '^[A-Z_]+$'`. All action names logged via `write_audit_log` must be strictly uppercase with underscores only (e.g. `SUBMIT_RESULT`, `RECORD_MODERATION`). Lowercase action names will trigger a PostgreSQL `CheckViolationError` and crash the transaction.
+- **WeasyPrint and qrcode installation:** Mark sheet generation (R4.4) relies on WeasyPrint and qrcode packages. Ensure they are added using `uv add weasyprint "qrcode[pil]"` to support HTML-to-PDF rendering and verification QR code embedding.
+- **Academic DB tables naming:** Be careful with seed tables names in tests; the database uses `programs` (not `programmes`), and references must join curricula using `program_id` (not `programme_id`).

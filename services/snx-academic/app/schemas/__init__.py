@@ -18,6 +18,16 @@ from app.schemas.curriculum_migration import (
     CurriculumMigrationAuditCreate,
     CurriculumMigrationAuditResponse,
 )
+from app.schemas.exam import (
+    EligibilityOverrideRequest,
+    ExamEligibilityResponse,
+    ExaminationCreate,
+    ExaminationResponse,
+    ExamScheduleCreate,
+    ExamScheduleResponse,
+    IAAggregationRequest,
+    IAAggregationResponse,
+)
 from app.schemas.lesson_plan import (
     LessonPlanCreate,
     LessonPlanResponse,
@@ -46,4 +56,12 @@ __all__ = [
     "CurriculumMigrationAuditResponse",
     "AdmissionApplicationCreate",
     "AdmissionApplicationResponse",
+    "ExaminationCreate",
+    "ExaminationResponse",
+    "ExamScheduleCreate",
+    "ExamScheduleResponse",
+    "IAAggregationRequest",
+    "IAAggregationResponse",
+    "ExamEligibilityResponse",
+    "EligibilityOverrideRequest",
 ]

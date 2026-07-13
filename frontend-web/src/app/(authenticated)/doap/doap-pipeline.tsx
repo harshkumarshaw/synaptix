@@ -18,7 +18,11 @@ interface DoapPipelineProps {
   onStageClick: (stage: string) => void;
 }
 
-export function DoapPipeline({ state, activeStage, onStageClick }: DoapPipelineProps) {
+export function DoapPipeline({
+  state,
+  activeStage,
+  onStageClick,
+}: DoapPipelineProps) {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-xl bg-card border shadow-xs max-w-2xl mx-auto">
       {STAGES.map((stage, i) => {
@@ -30,8 +34,8 @@ export function DoapPipeline({ state, activeStage, onStageClick }: DoapPipelineP
         const colorClass = isCertified
           ? "bg-green-500 text-white shadow-green-500/20"
           : isCurrent
-          ? "bg-blue-500 text-white shadow-blue-500/20"
-          : "bg-zinc-200 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-600";
+            ? "bg-blue-500 text-white shadow-blue-500/20"
+            : "bg-zinc-200 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-600";
 
         return (
           <Fragment key={stage}>
@@ -41,7 +45,9 @@ export function DoapPipeline({ state, activeStage, onStageClick }: DoapPipelineP
                 <div
                   className={cn(
                     "h-full bg-green-500 transition-all duration-300",
-                    state.certified_stages.includes(STAGES[i - 1]) ? "w-full" : "w-0"
+                    state.certified_stages.includes(STAGES[i - 1])
+                      ? "w-full"
+                      : "w-0",
                   )}
                 />
               </div>
@@ -52,14 +58,23 @@ export function DoapPipeline({ state, activeStage, onStageClick }: DoapPipelineP
               onClick={() => onStageClick(stage)}
               className={cn(
                 "flex flex-col items-center cursor-pointer transition-all duration-200 hover:scale-105",
-                isActive ? "ring-2 ring-primary ring-offset-2" : ""
+                isActive ? "ring-2 ring-primary ring-offset-2" : "",
               )}
             >
-              <div className={cn("h-12 w-12 rounded-full flex items-center justify-center text-base font-bold shadow-md transition-all duration-300", colorClass)}>
+              <div
+                className={cn(
+                  "h-12 w-12 rounded-full flex items-center justify-center text-base font-bold shadow-md transition-all duration-300",
+                  colorClass,
+                )}
+              >
                 {stage}
               </div>
-              <p className="text-xs font-semibold mt-2 text-foreground">{STAGE_LABELS[stage]}</p>
-              <p className="text-[10px] text-muted-foreground">{count} record(s)</p>
+              <p className="text-xs font-semibold mt-2 text-foreground">
+                {STAGE_LABELS[stage]}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                {count} record(s)
+              </p>
               <p className="text-[10px] font-medium mt-1">
                 {isCertified ? (
                   <span className="text-green-600">✓ Certified</span>

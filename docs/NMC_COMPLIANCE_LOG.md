@@ -362,5 +362,57 @@ Any implementation notes or known limitations.
 - [x] Tested
 - [x] Verified
 **Notes:** Updated student seeding script to align populated DOAP levels and logbook entries with NMC CBME standards.
- 
- 
+
+### NMC-COMP-20260707-UAT: UAT Smoke Test Verification of two-threshold attendance
+**Source:** NMC CBME 2019/2023 Guidelines
+**Effective Date:** 2026-07-07
+**Applies To:** MBBS all phases
+**Implementing Module:** scripts/smoke-test.py & services/snx-academic/app/routers/attendance.py
+**Test IDs:** None
+**Test File:** None
+**Compliance Status:**
+- [x] Implemented
+- [x] Tested (console smoke test script)
+- [x] Verified
+**Notes:** Verified that student attendance percentages correctly evaluate eligibility per NMC theory (75%) and practical (80%) thresholds.
+
+## Session 24 Updates (2026-07-11)
+
+### LEV-NMC-20260711: Leave Request Resolution mapping to Student Profiles
+**Source:** NMC CBME 2019/2023 Guidelines — Student Leave of Absence and Attendance exemptions
+**Effective Date:** 2026-07-11
+**Applies To:** MBBS all phases
+**Implementing Module:** services/snx-academic/app/routers/leave.py
+**Test IDs:** None
+**Test File:** None
+**Compliance Status:**
+- [x] Implemented (Resolved user UUID to database student ID profiles)
+- [x] Tested (E2E student leave request submission passing)
+- [x] Verified
+**Notes:** Ensured student leave requests map properly to underlying operational profiles and do not violate database constraint keys.
+
+### ELEC-NMC-20260711: Electives catalog seeding and allocation validation
+**Source:** NMC CBME 2019/2023 Guidelines — Mandatory electives blocks selection and placement
+**Effective Date:** 2026-07-11
+**Applies To:** MBBS all phases
+**Implementing Module:** scripts/seed_electives_dev.py & frontend-web/tests/e2e/electives.spec.ts
+**Test IDs:** None
+**Test File:** None
+**Compliance Status:**
+- [x] Implemented (Pre-seeded dev database with active curriculum blocks and student preferences)
+- [x] Tested (E2E student preferences selection and admin live run allocation passing)
+- [x] Verified
+**Notes:** Verified that administrative elective allocation runs can dry run and commit live allocation of students matching their ranked preferences.
+
+### EXM-NMC-20260711: Grade Calculation, Grace Marks, and Mark Sheet Generation
+**Source:** NMC Guidelines for University Examinations and Moderation (ADR-040, ADR-041, ADR-042, ADR-048)
+**Effective Date:** 2026-07-11
+**Applies To:** MBBS all phases
+**Implementing Module:** services/snx-academic/app/services/exam_service.py
+**Test IDs:** RES-001, RES-002, RES-003, RES-004, EXM-010, RES-005, RES-006, RES-009
+**Test File:** tests/unit/exam/test_grading.py
+**Compliance Status:**
+- [x] Implemented (Theory/practical graded independently, configurable grace marks, 3rd examiner moderation gap >15%, WeasyPrint PDF QR verify)
+- [x] Tested (Passing grading, moderation, and PDF generation tests verified)
+- [x] Verified
+**Notes:** Grace marks are disabled in supplementary exams. Moderation averages scores if difference <=15%, else mandates third examiner reconciliation.

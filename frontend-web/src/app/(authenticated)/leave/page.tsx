@@ -16,9 +16,12 @@ export default function LeavePage() {
     return (
       <div className="container mx-auto p-6 space-y-8 animate-in fade-in duration-300">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Leave Management</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight">
+            Leave Management
+          </h1>
           <p className="text-muted-foreground text-sm">
-            Submit leave requests, track their approval status, and view your academic leave history.
+            Submit leave requests, track their approval status, and view your
+            academic leave history.
           </p>
         </div>
         <div className="grid gap-8 lg:grid-cols-5">

@@ -5,6 +5,62 @@ All notable changes to this project are documented here.
 Format based on [Keep a Changelog](https://keepachangelog.com/).
 This project follows [Semantic Versioning](https://semver.org/).
 
+## [Session 26] — 2026-07-11
+
+### Added — Phase 3 R4.3 Result Processing + R4.4 Mark Sheet PDF Generation
+- **services/snx-academic/app/services/exam_service.py**: Implemented `submit_result` which validates student eligibility, checks maximum attempt limits, computes theory/practical/overall grades independently, and applies grace marks (with supplementary restriction).
+- **services/snx-academic/app/services/exam_service.py**: Implemented `record_moderation` supporting multi-examiner averaging (gap <= 15%) and third examiner mandatory reconciliation (gap > 15%).
+- **services/snx-academic/app/services/exam_service.py**: Implemented result workflow status transitions (`verify_result`, `approve_result`, `publish_results`).
+- **services/snx-academic/app/services/exam_service.py**: Implemented WeasyPrint HTML-to-PDF mark sheet generation (`generate_mark_sheet`) with embedded verification QR code and digital asset storage.
+- **services/snx-academic/app/models/stubs.py**: Added `DigitalAsset` stub model mapping to the `digital_assets` table.
+- **services/snx-academic/app/schemas/exam.py**: Added new Pydantic models for result submission, moderation request/response, and mark sheet generation responses.
+- **services/snx-academic/app/routers/exam.py**: Exposed result submission, moderation, workflow status, and mark sheet endpoints.
+- **tests/unit/exam/test_grading.py**: Fully implemented 8 unit tests covering all grading, grace marks, workflow status, and examiner moderation logic, removing all `xfail` markers.
+
+### Fixed
+- **services/snx-academic/app/services/exam_service.py**: Converted all `write_audit_log` actions to uppercase to satisfy the `chk_audit_log_action` check constraint in the database.
+
+### Result
+- **50 tests passed** (0 failures, 0 xfailed, 0 skipped) across unit and compliance suites.
+
+## [Session 25] — 2026-07-11
+
+### Fixed — Phase 3 R4.1/R4.2 Exam Service: IA Aggregation & Eligibility Engine
+- **services/snx-academic/app/services/exam_service.py**: Fixed `aggregate_ia()` to query `LogbookAssessment` by `course.subject_code` instead of `course.code` (the code field holds a unique suffixed value, subject_code holds the subject abbreviation like `ANAT`).
+- **services/snx-academic/app/services/exam_service.py**: Fixed `check_student_eligibility()` to also use `course.subject_code` for logbook lookup and `get_prerequisites()` call.
+- **services/snx-academic/app/services/exam_service.py**: Added tenant isolation check in `check_student_eligibility()` — validates `exam.tenant_id == tenant_id` and `student.tenant_id == tenant_id` before proceeding.
+- **services/snx-academic/app/services/exam_service.py**: Fixed `generate_hall_ticket()` to honour existing eligibility overrides by checking `exam_eligibility` table first before re-running the full eligibility computation.
+- **tests/unit/exam/test_ia_aggregation.py**: Rewrote seed helpers to generate unique emails/roll numbers/codes per test; fixed all tests to pass `fac_user_id` (user_id FK) to `viva_scores.examiner_id` and `clinical_evaluations.evaluator_id`.
+- **tests/unit/exam/test_eligibility.py**: Rewrote seed helpers with unique values per test; fixed cross-tenant isolation test; fixed OSPE/OSCE tests to pass `fac_user_id` to `practical_assessments.examiner_id`.
+- **tests/compliance/exam/test_nmc_compliance.py**: Added missing `select` import; fixed `seed_faculty_with_user` to return `user_id`; fixed OSPE/OSCE/clinical tests to use `fac_user_id`; fixed AETCOM query to filter by `subject_code`.
+
+### Result
+- **42 tests passed, 8 xfailed** across `tests/unit/exam/` and `tests/compliance/exam/` — all green.
+
+## [Session 24] — 2026-07-11
+
+### Fixed — Playwright E2E Parallelization, Radix Toaster, and Backend Robustness
+- **frontend-web/playwright.config.ts**: Configured parallel execution with 8 workers, fail-fast backend health check, and dynamic trace capturing.
+- **frontend-web/src/lib/api.ts**: Added exception to 401 response interceptor redirect logic for login requests to prevent layout reset and clear input fields.
+- **frontend-web/src/app/layout.tsx**: Mounted traditional Radix UI `ToastToaster` alongside `SonnerToaster` to ensure all `useToast` hook calls render notifications.
+- **frontend-web/tests/e2e/electives.spec.ts**: Fixed test assertions to wait for curriculum dropdown population and avoid strict mode text-matching violations.
+- **services/snx-academic/app/main.py**: Monkeypatched `TokenPayload` with `user_uuid` property at startup to prevent AttributeError in router dependencies.
+- **services/snx-academic/app/routers/leave.py**: Implemented `user_uuid`/`user_id` to student profile ID resolution using database queries to comply with foreign key constraints.
+- **services/snx-academic/app/models/stubs.py**: Declared explicit `id` and `user_id` columns on `Student` stub model to enable database query construction.
+- **services/snx-logbook/app/main.py**: Monkeypatched `TokenPayload` with `user_uuid` and `role` properties at startup to prevent AttributeError in logbook routers.
+- **scripts/seed_electives_dev.py**: Created new Python seed script that inserts Block 1 electives and student preferences into `synaptix_dev` database for E2E tests.
+
+## [Session 23] — 2026-07-07
+
+### Fixed — Frontend Client Prefixing, Real Login, and Attendance Summary Endpoints
+- **frontend-web/src/lib/api.ts**: Added dynamic `/api/v1` prefix prepending for all outgoing API requests.
+- **frontend-web/src/lib/auth.ts**: Added default `tenant_id` payload to login requests.
+- **packages/shared/auth/tenant_context.py**: Allowed extracting `tenant_id` from the `X-Tenant-ID` header even on exempt paths like login, avoiding 403 Forbidden crashes on DB access.
+- **services/snx-academic/app/routers/attendance.py**: Replaced `get_session_with_tenant` dependency with standard `get_db` to avoid query parameter inference, added `/student/{student_id}/summary` endpoint, and mapped `user_id` to student primary key `id`.
+- **services/snx-academic/app/routers/dashboard.py**: Created new dashboard stats endpoint `/dashboard/stats`.
+- **services/snx-academic/app/main.py**: Registered the dashboard router.
+- **scripts/smoke-test.py**: Created E2E backend smoke test script verifying health checks, login, and stats/summaries.
+
 ## [Session 22] — 2026-07-06
 
 ### Fixed — Backend Container Startup Crashes & Index Paths

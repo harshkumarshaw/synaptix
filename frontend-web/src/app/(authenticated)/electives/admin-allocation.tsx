@@ -1,27 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Play, Eye, Settings2, BarChart2, Users, CheckCircle, AlertTriangle } from "lucide-react";
+import {
+  Play,
+  Eye,
+  Settings2,
+  BarChart2,
+  Users,
+  CheckCircle,
+  AlertTriangle,
+} from "lucide-react";
 import { useElectives, useRunAllocation } from "@/hooks/use-electives";
 import { useToast } from "@/hooks/use-toast";
 import type { AllocationRunResult, Elective } from "@/types/electives";
 
 export function AdminAllocation() {
-  const [selectedBlock, setSelectedBlock] = useState<"Block 1" | "Block 2">("Block 1");
+  const [selectedBlock, setSelectedBlock] = useState<"Block 1" | "Block 2">(
+    "Block 1",
+  );
   const [algorithm, setAlgorithm] = useState<"fcfs" | "ranked">("ranked");
-  const [reallocateMode, setReallocateMode] = useState<"additive" | "full" | "none">("none");
+  const [reallocateMode, setReallocateMode] = useState<
+    "additive" | "full" | "none"
+  >("none");
   const [runResult, setRunResult] = useState<AllocationRunResult | null>(null);
 
-  const { data: electives, isLoading: isElectivesLoading, refetch: refetchElectives } = useElectives(selectedBlock);
+  const {
+    data: electives,
+    isLoading: isElectivesLoading,
+    refetch: refetchElectives,
+  } = useElectives(selectedBlock);
   const runAllocation = useRunAllocation();
   const { toast } = useToast();
 
   // Extract unique curriculum IDs from electives list
-  const curriculumIds = Array.from(new Set(electives?.map((e) => e.curriculum_id) ?? []));
+  const curriculumIds = Array.from(
+    new Set(electives?.map((e) => e.curriculum_id) ?? []),
+  );
   const [selectedCurriculum, setSelectedCurriculum] = useState<string>("");
 
   // Default to first curriculum ID when loaded
@@ -61,7 +85,10 @@ export function AdminAllocation() {
       onError: (err: any) => {
         toast({
           title: "Allocation Failed",
-          description: err.response?.data?.detail?.message || err.response?.data?.detail || "Could not complete allocation.",
+          description:
+            err.response?.data?.detail?.message ||
+            err.response?.data?.detail ||
+            "Could not complete allocation.",
           variant: "destructive",
         });
       },
@@ -72,9 +99,12 @@ export function AdminAllocation() {
     <div className="space-y-8 animate-in fade-in duration-300">
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-extrabold tracking-tight">Electives Allocation Engine</h1>
+        <h1 className="text-3xl font-extrabold tracking-tight">
+          Electives Allocation Engine
+        </h1>
         <p className="text-muted-foreground text-sm">
-          Run allocation algorithms to assign students to curriculum electives based on preference rank and submission order.
+          Run allocation algorithms to assign students to curriculum electives
+          based on preference rank and submission order.
         </p>
       </div>
 
@@ -86,7 +116,9 @@ export function AdminAllocation() {
               <Settings2 className="h-5 w-5 text-primary" />
               Run Configuration
             </CardTitle>
-            <CardDescription>Specify parameters for the elective allocation run</CardDescription>
+            <CardDescription>
+              Specify parameters for the elective allocation run
+            </CardDescription>
           </CardHeader>
           <CardContent className="pt-6 space-y-6">
             {/* Curriculum Selector */}
@@ -106,7 +138,9 @@ export function AdminAllocation() {
                     </option>
                   ))}
                   {curriculumIds.length === 0 && (
-                    <option value="">No curriculum found in available electives</option>
+                    <option value="">
+                      No curriculum found in available electives
+                    </option>
                   )}
                 </select>
               )}
@@ -135,7 +169,9 @@ export function AdminAllocation() {
 
             {/* Algorithm Selector */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold">Allocation Algorithm</label>
+              <label className="text-sm font-semibold">
+                Allocation Algorithm
+              </label>
               <div className="grid grid-cols-2 gap-4">
                 <div
                   className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${
@@ -180,9 +216,15 @@ export function AdminAllocation() {
                 onChange={(e) => setReallocateMode(e.target.value as any)}
                 className="w-full h-10 px-3 border rounded-md bg-background focus:outline-none focus:ring-2 focus:ring-primary/20"
               >
-                <option value="none">Additive Only (Unallocated students only)</option>
-                <option value="additive">Additive Overwrite (Preserve prior but run leftovers)</option>
-                <option value="full">Full Reallocate (Clear existing allocations first!)</option>
+                <option value="none">
+                  Additive Only (Unallocated students only)
+                </option>
+                <option value="additive">
+                  Additive Overwrite (Preserve prior but run leftovers)
+                </option>
+                <option value="full">
+                  Full Reallocate (Clear existing allocations first!)
+                </option>
               </select>
             </div>
 
@@ -222,7 +264,9 @@ export function AdminAllocation() {
                       Allocation Results
                     </CardTitle>
                     <CardDescription>
-                      {runResult.dry_run ? "Simulation preview (Dry Run)" : "Live Run Results"}
+                      {runResult.dry_run
+                        ? "Simulation preview (Dry Run)"
+                        : "Live Run Results"}
                     </CardDescription>
                   </div>
                   <Badge variant={runResult.dry_run ? "secondary" : "default"}>
@@ -237,40 +281,57 @@ export function AdminAllocation() {
                       <Users className="h-3.5 w-3.5" />
                       Total Considered
                     </div>
-                    <div className="text-2xl font-bold mt-1">{runResult.total_students_considered}</div>
+                    <div className="text-2xl font-bold mt-1">
+                      {runResult.total_students_considered}
+                    </div>
                   </div>
                   <div className="p-4 border rounded-xl bg-card">
                     <div className="text-xs font-semibold text-emerald-500 flex items-center gap-1.5">
                       <CheckCircle className="h-3.5 w-3.5" />
                       Total Allocated
                     </div>
-                    <div className="text-2xl font-bold text-emerald-500 mt-1">{runResult.total_allocated}</div>
+                    <div className="text-2xl font-bold text-emerald-500 mt-1">
+                      {runResult.total_allocated}
+                    </div>
                   </div>
-                  <div className={`p-4 border rounded-xl ${
-                    runResult.total_unallocated_pending_review > 0
-                      ? "bg-red-500/10 border-red-500/20 text-red-500"
-                      : "bg-card"
-                  }`}>
+                  <div
+                    className={`p-4 border rounded-xl ${
+                      runResult.total_unallocated_pending_review > 0
+                        ? "bg-red-500/10 border-red-500/20 text-red-500"
+                        : "bg-card"
+                    }`}
+                  >
                     <div className="text-xs font-semibold flex items-center gap-1.5">
                       <AlertTriangle className="h-3.5 w-3.5" />
                       Pending Review
                     </div>
-                    <div className="text-2xl font-bold mt-1">{runResult.total_unallocated_pending_review}</div>
+                    <div className="text-2xl font-bold mt-1">
+                      {runResult.total_unallocated_pending_review}
+                    </div>
                   </div>
                 </div>
 
                 {/* Rank Distribution */}
                 <div className="space-y-3">
-                  <h4 className="text-sm font-semibold">Allocations by Rank Choice</h4>
+                  <h4 className="text-sm font-semibold">
+                    Allocations by Rank Choice
+                  </h4>
                   <div className="grid grid-cols-5 gap-2 text-center">
-                    {Object.entries(runResult.allocations_by_rank ?? {}).slice(0, 5).map(([rank, count]) => (
-                      <div key={rank} className="p-2 border rounded bg-muted/30">
-                        <div className="text-[10px] font-bold text-muted-foreground capitalize">
-                          {rank.replace("_", " ")}
+                    {Object.entries(runResult.allocations_by_rank ?? {})
+                      .slice(0, 5)
+                      .map(([rank, count]) => (
+                        <div
+                          key={rank}
+                          className="p-2 border rounded bg-muted/30"
+                        >
+                          <div className="text-[10px] font-bold text-muted-foreground capitalize">
+                            {rank.replace("_", " ")}
+                          </div>
+                          <div className="text-sm font-bold mt-0.5">
+                            {count}
+                          </div>
                         </div>
-                        <div className="text-sm font-bold mt-0.5">{count}</div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
               </CardContent>
@@ -280,8 +341,12 @@ export function AdminAllocation() {
           {/* Electives Capacity Utilization */}
           <Card className="border-primary/10 shadow-lg bg-background/80">
             <CardHeader className="border-b pb-4">
-              <CardTitle className="text-lg font-semibold">Capacity Utilization</CardTitle>
-              <CardDescription>Allocated seats per elective in {selectedBlock}</CardDescription>
+              <CardTitle className="text-lg font-semibold">
+                Capacity Utilization
+              </CardTitle>
+              <CardDescription>
+                Allocated seats per elective in {selectedBlock}
+              </CardDescription>
             </CardHeader>
             <CardContent className="pt-6 space-y-4 max-h-[400px] overflow-y-auto">
               {isElectivesLoading ? (
@@ -292,16 +357,25 @@ export function AdminAllocation() {
                 </div>
               ) : (
                 electives?.map((elective) => {
-                  const percent = (elective.allocated_count / elective.capacity) * 100;
+                  const percent =
+                    (elective.allocated_count / elective.capacity) * 100;
                   return (
-                    <div key={elective.id} className="space-y-1.5 p-3 border rounded-xl bg-card">
+                    <div
+                      key={elective.id}
+                      className="space-y-1.5 p-3 border rounded-xl bg-card"
+                    >
                       <div className="flex items-center justify-between">
                         <div className="min-w-0 pr-4">
-                          <p className="text-sm font-semibold truncate">{elective.title}</p>
-                          <p className="text-xs text-muted-foreground">Code: {elective.code}</p>
+                          <p className="text-sm font-semibold truncate">
+                            {elective.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            Code: {elective.code}
+                          </p>
                         </div>
                         <div className="text-xs font-bold text-right shrink-0">
-                          {elective.allocated_count} / {elective.capacity} filled
+                          {elective.allocated_count} / {elective.capacity}{" "}
+                          filled
                         </div>
                       </div>
                       <Progress value={percent} className="h-2" />

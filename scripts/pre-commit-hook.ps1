@@ -41,12 +41,24 @@ Run-Check "Type checking: snx-academic (modified files)" {
     & "$root\.venv\Scripts\mypy" --strict --ignore-missing-imports "$root\services\snx-academic\app\models\attendance.py" "$root\services\snx-academic\app\models\leave_request.py" "$root\services\snx-academic\app\schemas\attendance.py" "$root\services\snx-academic\app\services\attendance_service.py"
 }
 
-# 3. TS Lint (if exists)
+# 3. TS Lint (if exists and frontend files are staged)
 if (Test-Path "$root\frontend-web\package.json") {
-    Push-Location "$root\frontend-web"
-    Run-Check "TS lint (eslint)" { npm run lint }
-    Run-Check "TS format (prettier)" { npx prettier --check . }
-    Pop-Location
+    $staged = git diff --cached --name-only
+    $hasFrontend = $false
+    foreach ($f in $staged) {
+        if ($f -like "frontend-web/*") {
+            $hasFrontend = $true
+            break
+        }
+    }
+    if ($staged.Count -eq 0 -or $hasFrontend) {
+        Push-Location "$root\frontend-web"
+        Run-Check "TS lint (eslint)" { npm run lint }
+        Run-Check "TS format (prettier)" { npx prettier --check . }
+        Pop-Location
+    } else {
+        Write-Host "Skipping TS checks (no frontend files staged)." -ForegroundColor Gray
+    }
 }
 
 # 4. Run Pytest Groups (separate PYTHONPATH to prevent app shading)
